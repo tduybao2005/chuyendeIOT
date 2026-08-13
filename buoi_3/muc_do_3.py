@@ -87,82 +87,103 @@ light_filter = MovingAverageFilter(window_size=5)
 distance_filter = MovingAverageFilter(window_size=5)
 voltage_filter = MovingAverageFilter(window_size=5)
 
+temp_display = 0
+humi_display = 0
+light_display = 0.0
+voltage_display = 0.0
+distance_display = 0.0
+
 
 def show_temp_humi_value():
+    global temp_display, humi_display
+
     humi_raw, temp_raw = sensor_temp_humi.read()
-    humi_raw, temp_raw = float(humi_raw), float(temp_raw)
+    humi_raw, temp_raw = int(humi_raw), int(temp_raw)
 
     temp_filtered = None
     humi_filtered = None
 
     if is_valid(temp_raw, *TEMP_RANGE):
         temp_filtered = temp_filter.update(temp_raw)
+        temp_display = round(temp_filtered)
     else:
         log_event('invalid_reading', temp=temp_raw,
                    note=f'Nhiet do ngoai khoang hop le {TEMP_RANGE}')
 
     if is_valid(humi_raw, *HUMI_RANGE):
         humi_filtered = humi_filter.update(humi_raw)
+        humi_display = round(humi_filtered)
     else:
         log_event('invalid_reading', humi=humi_raw,
                    note=f'Do am ngoai khoang hop le {HUMI_RANGE}')
 
-    if temp_filtered is not None and humi_filtered is not None:
-        lcd.setCursor(0, 0)
-        lcd.write('T:{0:2},H:{1:2}'.format(temp_filtered, humi_filtered))
-        log_event('reading', temp=f'{temp_filtered:.1f}', humi=f'{humi_filtered:.1f}', note='OK')
-        print(f"temp: raw={temp_raw:.1f} filtered={temp_filtered:.1f}, "
-              f"humi: raw={humi_raw:.1f} filtered={humi_filtered:.1f}")
+    lcd.setCursor(0, 0)
+    lcd.write('T:{0:2},H:{1:2}'.format(temp_display, humi_display))
+    log_event('reading', temp=f'{temp_display}', humi=f'{humi_display}', note='OK')
+    print(f"temp: raw={temp_raw} filtered={temp_display}, "
+          f"humi: raw={humi_raw} filtered={humi_display}")
 
     return temp_filtered, humi_filtered
 
 
 def show_light_value():
-    light_raw = sensor_light.Light
+    global light_display
 
-    if not is_valid(light_raw, *LIGHT_RANGE):
+    light_raw = sensor_light.Light
+    valid = is_valid(light_raw, *LIGHT_RANGE)
+
+    if valid:
+        light_display = light_filter.update(light_raw)
+    else:
         log_event('invalid_reading', light=light_raw,
                    note=f'Anh sang ngoai khoang hop le {LIGHT_RANGE}')
-        return None
 
-    light_filtered = light_filter.update(light_raw)
     lcd.setCursor(1, 0)
-    lcd.write('l:{0:3}'.format(light_filtered))
-    log_event('reading', light=f'{light_filtered:.1f}', note='OK')
-    print(f"light: raw={light_raw} filtered={light_filtered:.1f}")
-    return light_filtered
+    lcd.write('l:{0:3}'.format(light_display))
+    log_event('reading', light=f'{light_display:.1f}', note='OK')
+    print(f"light: raw={light_raw} filtered={light_display:.1f}")
+
+    return light_display if valid else None
 
 
 def show_rotary_angle_value():
-    voltage_raw = sensor_rotary_angle.read_voltage(2)
+    global voltage_display
 
-    if not is_valid(voltage_raw, *VOLTAGE_RANGE):
+    voltage_raw = sensor_rotary_angle.read_voltage(2)
+    valid = is_valid(voltage_raw, *VOLTAGE_RANGE)
+
+    if valid:
+        voltage_display = voltage_filter.update(voltage_raw)
+    else:
         log_event('invalid_reading', voltage=voltage_raw,
                    note=f'Dien ap ngoai khoang hop le {VOLTAGE_RANGE}')
-        return None
 
-    voltage_filtered = voltage_filter.update(voltage_raw)
     lcd.setCursor(1, 9)
-    lcd.write(',V:{0:4}'.format(voltage_filtered))
-    log_event('reading', voltage=f'{voltage_filtered:.1f}', note='OK')
-    print(f"voltage: raw={voltage_raw} filtered={voltage_filtered:.1f}")
-    return voltage_filtered
+    lcd.write(',V:{0:4}'.format(voltage_display))
+    log_event('reading', voltage=f'{voltage_display:.1f}', note='OK')
+    print(f"voltage: raw={voltage_raw} filtered={voltage_display:.1f}")
+
+    return voltage_display if valid else None
 
 
 def show_distance_value():
-    distance_raw = sensor_distance.get_distance()
+    global distance_display
 
-    if not is_valid(distance_raw, *DISTANCE_RANGE):
+    distance_raw = sensor_distance.get_distance()
+    valid = is_valid(distance_raw, *DISTANCE_RANGE)
+
+    if valid:
+        distance_display = distance_filter.update(distance_raw)
+    else:
         log_event('invalid_reading', distance=distance_raw,
                    note=f'Khoang cach ngoai khoang hop le {DISTANCE_RANGE}')
-        return None
 
-    distance_filtered = distance_filter.update(distance_raw)
     lcd.setCursor(0, 9)
-    lcd.write(',D:{0:3.0f}'.format(distance_filtered))
-    log_event('reading', distance=f'{distance_filtered:.1f}', note='OK')
-    print(f"Distance: raw={distance_raw:.1f} filtered={distance_filtered:.1f}")
-    return distance_filtered
+    lcd.write(',D:{0:3.0f}'.format(distance_display))
+    log_event('reading', distance=f'{distance_display:.1f}', note='OK')
+    print(f"Distance: raw={distance_raw:.1f} filtered={distance_display:.1f}")
+
+    return distance_display if valid else None
 
 
 def send_to_thingspeak_http(**fields):
@@ -224,9 +245,9 @@ def send_window_average(window):
 
     fields = {}
     if 'temp' in averages:
-        fields['field1'] = averages['temp']
+        fields['field1'] = round(averages['temp'])
     if 'humi' in averages:
-        fields['field2'] = averages['humi']
+        fields['field2'] = round(averages['humi'])
     if 'light' in averages:
         fields['field3'] = averages['light']
     if 'distance' in averages:
