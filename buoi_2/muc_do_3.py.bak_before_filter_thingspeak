@@ -1,0 +1,81 @@
+from gpiozero import LED 
+from signal import pause 
+from grove.adc import ADC 
+from seeed_dht import DHT 
+from grove.display.jhd1802 import JHD1802 
+from grove.grove_ultrasonic_ranger import GroveUltrasonicRanger
+from time import sleep 
+
+class GroveLightSensor:
+    def __init__(self, channel):
+        self.channel = channel 
+        self.adc = ADC(address = 0x08)
+
+    @property
+    def Light(self):
+        value = self.adc.read(self.channel)
+        return value 
+
+lcd = JHD1802()
+sensor_temp_humi = DHT('11', 16)
+sensor_distance = GroveUltrasonicRanger(5)
+sensor_light = GroveLightSensor(0)
+sensor_rotary_angle = ADC(0x08)
+
+led_red = LED(26)
+led_yellow = LED(22)
+led_blue = LED(24)
+
+def show_temp_humi_value():
+    humi, temp = sensor_temp_humi.read()
+    humi, temp = float(humi), float(temp)
+    lcd.setCursor(0, 0)
+    lcd.write('T:{0:2},H:{1:2}'.format(temp, humi))
+    
+    if temp > 40:
+        led_red.on()
+    elif temp < 30:
+        led_red.off()
+
+    if humi > 70:
+        led_yellow.on()
+    elif humi < 40:
+        led_yellow.off()
+
+    print(f"temp: {temp}, humi: {humi}")
+
+def show_light_value():
+    lcd.setCursor(1,0)
+    lcd.write('l:{0:3}'.format(sensor_light.Light))
+    print(f"light: {sensor_light.Light}")
+
+def show_rotary_angle_value():
+    value = sensor_rotary_angle.read_voltage(2)
+    lcd.setCursor(1, 9)
+    lcd.write(',V:{0:4}'.format(value))
+    
+    if value / 1000 > 2:
+        led_blue.on()
+    elif value / 1000 < 1:
+        led_blue.off()
+
+    print(f"voltage: {value}")
+
+def show_distance_value():
+    distance = sensor_distance.get_distance()
+    lcd.setCursor(0, 9)
+    lcd.write(',D:{0:3.0f}'.format(distance))
+    print(f"Distance: {distance}")
+
+def main():
+    lcd.clear()
+    while True:
+        show_temp_humi_value()
+        show_light_value()
+        show_rotary_angle_value()
+        show_distance_value()
+        sleep(1)
+
+if __name__ == '__main__':
+    main()
+
