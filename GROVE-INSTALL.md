@@ -119,6 +119,34 @@ Seeed-grove.py 0.7
 sgp30          0.1.6
 ```
 
+## Bước 7: Cài thư viện đọc cảm biến DHT11 (`seeed_dht`)
+
+Cảm biến DHT11 (cắm ở chân **D** trên Grove Base Hat, không phải A — xem giải thích ở phần dưới) dùng giao thức số riêng, đọc qua thư viện `seeed_dht` (module Python `seeed_dht`). Thư viện này **không nằm trong gói `Seeed-grove.py`** đã cài ở Bước 4, phải cài riêng:
+
+```bash
+pip3 install --break-system-packages --no-cache-dir seeed-python-dht
+```
+
+- Tên gói pip: `seeed-python-dht`, import bằng `from seeed_dht import DHT`
+- Có sẵn wheel arm64 trên piwheels (`seeed_python_dht-0.0.2-py3-none-arm64...whl`), cài nhanh, không cần build.
+
+Kiểm tra:
+
+```bash
+python3 -c "from seeed_dht import DHT; print('seeed_dht import OK')"
+```
+
+Ví dụ dùng (đọc DHT11 cắm ở chân D5):
+
+```python
+from seeed_dht import DHT
+
+sensor = DHT('11', 5)   # '11' = model DHT11, 5 = số chân D trên Grove Base Hat
+humi, temp = sensor.read()
+```
+
+**Vì sao DHT11 cắm chân D chứ không phải A:** DHT11 không xuất điện áp analog liên tục — nó gửi dữ liệu qua một dây tín hiệu số duy nhất theo giao thức timing riêng (bit 0/1 phân biệt bằng độ rộng xung cỡ micro giây). Chân A trên Grove Base Hat chỉ đọc được điện áp qua ADC, không đọc được chuỗi xung có timing chính xác đó; chân D nối thẳng GPIO số của Pi nên đọc/giải mã được.
+
 ## Tóm tắt toàn bộ lệnh (copy-paste nhanh)
 
 ```bash
@@ -136,13 +164,17 @@ pip3 install --break-system-packages --no-cache-dir rpi-ws281x bme680 bmm150 sgp
 pip3 install --break-system-packages --no-cache-dir --upgrade \
     https://github.com/Seeed-Studio/grove.py/archive/master.zip
 
-# 5. Kiểm tra
+# 5. Thư viện đọc cảm biến DHT11
+pip3 install --break-system-packages --no-cache-dir seeed-python-dht
+
+# 6. Kiểm tra
 python3 -c "import grove; print('grove import OK')"
+python3 -c "from seeed_dht import DHT; print('seeed_dht import OK')"
 sudo i2cdetect -y 1
 ```
 
 ## Gỡ cài đặt
 
 ```bash
-pip3 uninstall -y Seeed-grove.py
+pip3 uninstall -y Seeed-grove.py seeed-python-dht
 ```
