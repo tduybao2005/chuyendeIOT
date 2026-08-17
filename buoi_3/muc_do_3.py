@@ -3,7 +3,6 @@ from seeed_dht import DHT
 from grove.display.jhd1802 import JHD1802
 from grove.grove_ultrasonic_ranger import GroveUltrasonicRanger
 from time import sleep
-from collections import deque
 from datetime import datetime
 import time
 import csv
@@ -20,7 +19,6 @@ TEMP_RANGE = (0, 50)
 HUMI_RANGE = (20, 95)
 LIGHT_RANGE = (0, 1000)
 DISTANCE_RANGE = (2, 400)
-VOLTAGE_RANGE = (0, 3300)
 
 THINGSPEAK_URL = "https://api.thingspeak.com/update.json"
 THINGSPEAK_API_KEY = "DAN_WRITE_API_KEY_CUA_BAN_VAO_DAY"
@@ -44,23 +42,14 @@ class GroveLightSensor:
         return value
 
 
-class MovingAverageFilter:
-    def __init__(self, window_size=5):
-        self._buffer = deque(maxlen=window_size)
-
-    def update(self, value):
-        self._buffer.append(value)
-        return sum(self._buffer) / len(self._buffer)
-
-
 def is_valid(value, min_val, max_val):
     return min_val <= value <= max_val
 
 
-LOG_FIELDS = ['timestamp', 'event', 'temp', 'humi', 'light', 'distance', 'voltage', 'note']
+LOG_FIELDS = ['timestamp', 'event', 'temp', 'humi', 'light', 'distance', 'note']
 
 
-def log_event(event, temp='', humi='', light='', distance='', voltage='', note=''):
+def log_event(event, temp='', humi='', light='', distance='', note=''):
     file_exists = os.path.isfile(LOG_FILE)
     with open(LOG_FILE, 'a', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=LOG_FIELDS)
@@ -70,7 +59,7 @@ def log_event(event, temp='', humi='', light='', distance='', voltage='', note='
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             'event': event,
             'temp': temp, 'humi': humi, 'light': light,
-            'distance': distance, 'voltage': voltage,
+            'distance': distance,
             'note': note,
         })
 
@@ -79,18 +68,10 @@ lcd = JHD1802()
 sensor_temp_humi = DHT('11', 16)
 sensor_distance = GroveUltrasonicRanger(5)
 sensor_light = GroveLightSensor(0)
-sensor_rotary_angle = ADC(0x08)
-
-temp_filter = MovingAverageFilter(window_size=5)
-humi_filter = MovingAverageFilter(window_size=5)
-light_filter = MovingAverageFilter(window_size=5)
-distance_filter = MovingAverageFilter(window_size=5)
-voltage_filter = MovingAverageFilter(window_size=5)
 
 temp_display = 0
 humi_display = 0
-light_display = 0.0
-voltage_display = 0.0
+light_display = 0
 distance_display = 0.0
 
 
@@ -100,19 +81,17 @@ def show_temp_humi_value():
     humi_raw, temp_raw = sensor_temp_humi.read()
     humi_raw, temp_raw = int(humi_raw), int(temp_raw)
 
-    temp_filtered = None
-    humi_filtered = None
+    temp_valid = is_valid(temp_raw, *TEMP_RANGE)
+    humi_valid = is_valid(humi_raw, *HUMI_RANGE)
 
-    if is_valid(temp_raw, *TEMP_RANGE):
-        temp_filtered = temp_filter.update(temp_raw)
-        temp_display = round(temp_filtered)
+    if temp_valid:
+        temp_display = temp_raw
     else:
         log_event('invalid_reading', temp=temp_raw,
                    note=f'Nhiet do ngoai khoang hop le {TEMP_RANGE}')
 
-    if is_valid(humi_raw, *HUMI_RANGE):
-        humi_filtered = humi_filter.update(humi_raw)
-        humi_display = round(humi_filtered)
+    if humi_valid:
+        humi_display = humi_raw
     else:
         log_event('invalid_reading', humi=humi_raw,
                    note=f'Do am ngoai khoang hop le {HUMI_RANGE}')
@@ -120,10 +99,10 @@ def show_temp_humi_value():
     lcd.setCursor(0, 0)
     lcd.write('T:{0:2},H:{1:2}'.format(temp_display, humi_display))
     log_event('reading', temp=f'{temp_display}', humi=f'{humi_display}', note='OK')
-    print(f"temp: raw={temp_raw} filtered={temp_display}, "
-          f"humi: raw={humi_raw} filtered={humi_display}")
+    print(f"temp: raw={temp_raw} used={temp_display}, "
+          f"humi: raw={humi_raw} used={humi_display}")
 
-    return temp_filtered, humi_filtered
+    return (temp_raw if temp_valid else None), (humi_raw if humi_valid else None)
 
 
 def show_light_value():
@@ -133,37 +112,17 @@ def show_light_value():
     valid = is_valid(light_raw, *LIGHT_RANGE)
 
     if valid:
-        light_display = light_filter.update(light_raw)
+        light_display = light_raw
     else:
         log_event('invalid_reading', light=light_raw,
                    note=f'Anh sang ngoai khoang hop le {LIGHT_RANGE}')
 
     lcd.setCursor(1, 0)
     lcd.write('l:{0:3}'.format(light_display))
-    log_event('reading', light=f'{light_display:.1f}', note='OK')
-    print(f"light: raw={light_raw} filtered={light_display:.1f}")
+    log_event('reading', light=f'{light_display}', note='OK')
+    print(f"light: raw={light_raw} used={light_display}")
 
-    return light_display if valid else None
-
-
-def show_rotary_angle_value():
-    global voltage_display
-
-    voltage_raw = sensor_rotary_angle.read_voltage(2)
-    valid = is_valid(voltage_raw, *VOLTAGE_RANGE)
-
-    if valid:
-        voltage_display = voltage_filter.update(voltage_raw)
-    else:
-        log_event('invalid_reading', voltage=voltage_raw,
-                   note=f'Dien ap ngoai khoang hop le {VOLTAGE_RANGE}')
-
-    lcd.setCursor(1, 9)
-    lcd.write(',V:{0:4}'.format(voltage_display))
-    log_event('reading', voltage=f'{voltage_display:.1f}', note='OK')
-    print(f"voltage: raw={voltage_raw} filtered={voltage_display:.1f}")
-
-    return voltage_display if valid else None
+    return light_raw if valid else None
 
 
 def show_distance_value():
@@ -173,7 +132,7 @@ def show_distance_value():
     valid = is_valid(distance_raw, *DISTANCE_RANGE)
 
     if valid:
-        distance_display = distance_filter.update(distance_raw)
+        distance_display = distance_raw
     else:
         log_event('invalid_reading', distance=distance_raw,
                    note=f'Khoang cach ngoai khoang hop le {DISTANCE_RANGE}')
@@ -181,9 +140,9 @@ def show_distance_value():
     lcd.setCursor(0, 9)
     lcd.write(',D:{0:3.0f}'.format(distance_display))
     log_event('reading', distance=f'{distance_display:.1f}', note='OK')
-    print(f"Distance: raw={distance_raw:.1f} filtered={distance_display:.1f}")
+    print(f"Distance: raw={distance_raw:.1f} used={distance_display:.1f}")
 
-    return distance_display if valid else None
+    return distance_raw if valid else None
 
 
 def send_to_thingspeak_http(**fields):
@@ -252,8 +211,6 @@ def send_window_average(window):
         fields['field3'] = averages['light']
     if 'distance' in averages:
         fields['field4'] = averages['distance']
-    if 'voltage' in averages:
-        fields['field5'] = averages['voltage']
 
     send_to_thingspeak_http(**fields)
     send_to_thingspeak_mqtt(**fields)
@@ -263,25 +220,22 @@ def main():
     lcd.clear()
 
     window_start = time.time()
-    window = {'temp': [], 'humi': [], 'light': [], 'distance': [], 'voltage': []}
+    window = {'temp': [], 'humi': [], 'light': [], 'distance': []}
 
     try:
         while True:
-            temp_f, humi_f = show_temp_humi_value()
-            light_f = show_light_value()
-            voltage_f = show_rotary_angle_value()
-            distance_f = show_distance_value()
+            temp_r, humi_r = show_temp_humi_value()
+            light_r = show_light_value()
+            distance_r = show_distance_value()
 
-            if temp_f is not None:
-                window['temp'].append(temp_f)
-            if humi_f is not None:
-                window['humi'].append(humi_f)
-            if light_f is not None:
-                window['light'].append(light_f)
-            if voltage_f is not None:
-                window['voltage'].append(voltage_f)
-            if distance_f is not None:
-                window['distance'].append(distance_f)
+            if temp_r is not None:
+                window['temp'].append(temp_r)
+            if humi_r is not None:
+                window['humi'].append(humi_r)
+            if light_r is not None:
+                window['light'].append(light_r)
+            if distance_r is not None:
+                window['distance'].append(distance_r)
 
             if time.time() - window_start >= WINDOW_SECONDS:
                 send_window_average(window)
