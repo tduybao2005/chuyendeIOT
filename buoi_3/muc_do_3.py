@@ -15,10 +15,10 @@ DISPLAY_INTERVAL = 2
 WINDOW_SECONDS = 20
 LOG_FILE = 'sensor_log.csv'
 
-TEMP_RANGE = (0, 50)
+TEMP_RANGE = (0, 100)
 HUMI_RANGE = (20, 95)
 LIGHT_RANGE = (0, 1000)
-DISTANCE_RANGE = (2, 400)
+DISTANCE_RANGE = (5, 400)
 
 THINGSPEAK_URL = "https://api.thingspeak.com/update.json"
 THINGSPEAK_API_KEY = "DAN_WRITE_API_KEY_CUA_BAN_VAO_DAY"
@@ -69,15 +69,8 @@ sensor_temp_humi = DHT('11', 16)
 sensor_distance = GroveUltrasonicRanger(5)
 sensor_light = GroveLightSensor(0)
 
-temp_display = 0
-humi_display = 0
-light_display = 0
-distance_display = 0.0
-
 
 def show_temp_humi_value():
-    global temp_display, humi_display
-
     humi_raw, temp_raw = sensor_temp_humi.read()
     humi_raw, temp_raw = int(humi_raw), int(temp_raw)
 
@@ -85,62 +78,69 @@ def show_temp_humi_value():
     humi_valid = is_valid(humi_raw, *HUMI_RANGE)
 
     if temp_valid:
-        temp_display = temp_raw
+        print(f"temp: {temp_raw}")
+        temp_str = '{0:2}'.format(temp_raw)
     else:
         log_event('invalid_reading', temp=temp_raw,
                    note=f'Nhiet do ngoai khoang hop le {TEMP_RANGE}')
+        print(f"temp: {temp_raw} (gia tri bi loi/ngoai range)")
+        temp_str = '  '
 
     if humi_valid:
-        humi_display = humi_raw
+        print(f"humi: {humi_raw}")
+        humi_str = '{0:2}'.format(humi_raw)
     else:
         log_event('invalid_reading', humi=humi_raw,
                    note=f'Do am ngoai khoang hop le {HUMI_RANGE}')
+        print(f"humi: {humi_raw} (gia tri bi loi/ngoai range)")
+        humi_str = '  '
 
     lcd.setCursor(0, 0)
-    lcd.write('T:{0:2},H:{1:2}'.format(temp_display, humi_display))
-    log_event('reading', temp=f'{temp_display}', humi=f'{humi_display}', note='OK')
-    print(f"temp: raw={temp_raw} used={temp_display}, "
-          f"humi: raw={humi_raw} used={humi_display}")
+    lcd.write('T:{0},H:{1}'.format(temp_str, humi_str))
+    log_event('reading',
+               temp=f'{temp_raw}' if temp_valid else '',
+               humi=f'{humi_raw}' if humi_valid else '',
+               note='OK')
 
     return (temp_raw if temp_valid else None), (humi_raw if humi_valid else None)
 
 
 def show_light_value():
-    global light_display
-
     light_raw = sensor_light.Light
     valid = is_valid(light_raw, *LIGHT_RANGE)
 
     if valid:
-        light_display = light_raw
+        print(f"light: {light_raw}")
+        light_str = '{0:3}'.format(light_raw)
     else:
         log_event('invalid_reading', light=light_raw,
                    note=f'Anh sang ngoai khoang hop le {LIGHT_RANGE}')
+        print(f"light: {light_raw} (gia tri bi loi/ngoai range)")
+        light_str = '   '
 
     lcd.setCursor(1, 0)
-    lcd.write('l:{0:3}'.format(light_display))
-    log_event('reading', light=f'{light_display}', note='OK')
-    print(f"light: raw={light_raw} used={light_display}")
+    lcd.write('l:{0}'.format(light_str))
+    log_event('reading', light=f'{light_raw}' if valid else '', note='OK')
 
     return light_raw if valid else None
 
 
 def show_distance_value():
-    global distance_display
-
     distance_raw = sensor_distance.get_distance()
     valid = is_valid(distance_raw, *DISTANCE_RANGE)
 
     if valid:
-        distance_display = distance_raw
+        print(f"Distance: {distance_raw:.1f}")
+        distance_str = '{0:3.0f}'.format(distance_raw)
     else:
         log_event('invalid_reading', distance=distance_raw,
                    note=f'Khoang cach ngoai khoang hop le {DISTANCE_RANGE}')
+        print(f"Distance: {distance_raw:.1f} (gia tri bi loi/ngoai range)")
+        distance_str = '   '
 
     lcd.setCursor(0, 9)
-    lcd.write(',D:{0:3.0f}'.format(distance_display))
-    log_event('reading', distance=f'{distance_display:.1f}', note='OK')
-    print(f"Distance: raw={distance_raw:.1f} used={distance_display:.1f}")
+    lcd.write(',D:{0}'.format(distance_str))
+    log_event('reading', distance=f'{distance_raw:.1f}' if valid else '', note='OK')
 
     return distance_raw if valid else None
 
