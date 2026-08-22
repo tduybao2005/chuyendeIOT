@@ -1,6 +1,5 @@
 from grove.adc import ADC
 from seeed_dht import DHT
-from grove.display.jhd1802 import JHD1802
 from time import sleep
 from collections import deque
 import time
@@ -42,7 +41,6 @@ class MovingAverageFilter:
         return sum(self._buffer) / len(self._buffer)
 
 
-lcd = JHD1802()
 sensor_temp_humi = DHT('11', 16)
 sensor_rotary_angle = ADC(0x08)
 
@@ -71,23 +69,10 @@ def show_temp_humi_value():
     if temp_valid:
         history_temp_raw.append(temp_raw)
         history_temp_filtered.append(temp_filtered)
-        print(f"temp: raw={temp_raw}, filtered={temp_filtered:.1f}")
-        temp_str = '{0:4.1f}'.format(temp_filtered)
-    else:
-        print(f"temp: {temp_raw} (gia tri bi loi/ngoai range)")
-        temp_str = '    '
 
     if humi_valid:
         history_humi_raw.append(humi_raw)
         history_humi_filtered.append(humi_filtered)
-        print(f"humi: raw={humi_raw}, filtered={humi_filtered:.1f}")
-        humi_str = '{0:4.1f}'.format(humi_filtered)
-    else:
-        print(f"humi: {humi_raw} (gia tri bi loi/ngoai range)")
-        humi_str = '    '
-
-    lcd.setCursor(0, 0)
-    lcd.write('T:{0},H:{1}'.format(temp_str, humi_str))
 
     return temp_filtered, humi_filtered
 
@@ -101,14 +86,6 @@ def show_voltage_value():
     if valid:
         history_voltage_raw.append(voltage_raw)
         history_voltage_filtered.append(voltage_filtered)
-        print(f"voltage: raw={voltage_raw:.2f}, filtered={voltage_filtered:.2f}")
-        voltage_str = '{0:4.2f}'.format(voltage_filtered)
-    else:
-        print(f"voltage: {voltage_raw:.2f} (gia tri bi loi/ngoai range)")
-        voltage_str = '    '
-
-    lcd.setCursor(1, 0)
-    lcd.write('V:{0}'.format(voltage_str))
 
     return voltage_filtered
 
@@ -119,10 +96,8 @@ def send_to_thingspeak_http(**fields):
     try:
         response = requests.post(THINGSPEAK_URL, json=payload, timeout=5)
         response.raise_for_status()
-        print(f"[HTTP] Gui thanh cong, entry_id={response.text}")
         return True
-    except requests.RequestException as e:
-        print(f"[HTTP] Gui that bai: {e}")
+    except requests.RequestException:
         return False
 
 
@@ -150,17 +125,14 @@ def send_to_thingspeak_mqtt(**fields):
         if connect_result['rc'] != 0:
             client.loop_stop()
             client.disconnect()
-            print(f"[MQTT] Ket noi/xac thuc that bai, reason_code={connect_result['rc']}")
             return False
 
         info = client.publish(topic, payload, qos=1)
         info.wait_for_publish(timeout=5)
         client.loop_stop()
         client.disconnect()
-        print(f"[MQTT] Gui thanh cong: {payload}")
         return True
-    except Exception as e:
-        print(f"[MQTT] Gui that bai: {e}")
+    except Exception:
         return False
 
 
@@ -184,7 +156,6 @@ def send_window_average(window):
 
 def plot_noise_comparison():
     if not history_temp_raw:
-        print("Chua co du lieu de ve bieu do.")
         return
 
     plt.figure(figsize=(10, 9))
@@ -213,12 +184,9 @@ def plot_noise_comparison():
 
     plt.tight_layout()
     plt.savefig('noise_comparison.png')
-    print("Da luu bieu do so sanh: noise_comparison.png")
 
 
 def main():
-    lcd.clear()
-
     window_start = time.time()
     window = {'temp': [], 'humi': [], 'voltage': []}
 
@@ -239,10 +207,8 @@ def main():
                 window = {k: [] for k in window}
                 window_start = time.time()
 
-            print("###############################")
             sleep(DISPLAY_INTERVAL)
     except KeyboardInterrupt:
-        print("\nDa dung chuong trinh.")
         plot_noise_comparison()
 
 
