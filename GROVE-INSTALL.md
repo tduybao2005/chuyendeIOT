@@ -147,6 +147,33 @@ humi, temp = sensor.read()
 
 **Vì sao DHT11 cắm chân D chứ không phải A:** DHT11 không xuất điện áp analog liên tục — nó gửi dữ liệu qua một dây tín hiệu số duy nhất theo giao thức timing riêng (bit 0/1 phân biệt bằng độ rộng xung cỡ micro giây). Chân A trên Grove Base Hat chỉ đọc được điện áp qua ADC, không đọc được chuỗi xung có timing chính xác đó; chân D nối thẳng GPIO số của Pi nên đọc/giải mã được.
 
+## Bước 8: Cài thư viện gửi dữ liệu lên ThingSpeak (HTTP, MQTT) và vẽ đồ thị (matplotlib)
+
+Các bài `buoi_3`, `buoi_4` (chuong_trinh_1/2, nang_cao_1/2) và `buoi_2/muc_do_3_nangcao.py` gửi dữ liệu cảm biến lên ThingSpeak qua cả HTTP và MQTT, đồng thời một số bản nâng cao còn vẽ đồ thị so sánh dữ liệu trước/sau khi lọc nhiễu. Ba thư viện này **không nằm trong `Seeed-grove.py`**, cần cài riêng:
+
+```bash
+pip3 install --break-system-packages --no-cache-dir requests paho-mqtt matplotlib
+```
+
+- `requests` — gửi HTTP POST/GET tới ThingSpeak REST API (`api.thingspeak.com`), import bằng `import requests`
+- `paho-mqtt` — client MQTT, import bằng `import paho.mqtt.client as mqtt`, publish/subscribe tới broker `mqtt3.thingspeak.com:1883`. Lưu ý: các file trong repo viết theo **API v2** của paho-mqtt (`mqtt.CallbackAPIVersion.VERSION2`, callback `on_connect(client, userdata, flags, reason_code, properties)`) — bản paho-mqtt quá cũ (1.x) sẽ không có `CallbackAPIVersion` và báo lỗi.
+- `matplotlib` — vẽ đồ thị so sánh dữ liệu raw/đã lọc, lưu ra file PNG. Trên máy này `matplotlib` (3.10.1) đã có sẵn qua gói apt `python3-matplotlib` (thường đi kèm Raspberry Pi OS), nên lệnh `pip3 install` ở trên có thể báo "already satisfied" — không sao, vẫn chạy đúng. Các file dùng `matplotlib.use('Agg')` trước khi `import matplotlib.pyplot` vì Pi chạy qua SSH không có màn hình GUI.
+
+Ngoài ra, `buoi_1`, `buoi_2`, và `buoi_4/chuong_trinh_2.py`/`nang_cao_2.py` dùng `gpiozero` (điều khiển LED/Button qua `from gpiozero import LED, Button`) — gói này thường **đã có sẵn** trên Raspberry Pi OS. Nếu máy báo `ModuleNotFoundError: No module named 'gpiozero'`, cài bổ sung:
+
+```bash
+pip3 install --break-system-packages --no-cache-dir gpiozero
+```
+
+Kiểm tra:
+
+```bash
+python3 -c "import requests; print('requests OK', requests.__version__)"
+python3 -c "import paho.mqtt.client; print('paho-mqtt OK')"
+python3 -c "import matplotlib; print('matplotlib OK', matplotlib.__version__)"
+python3 -c "import gpiozero; print('gpiozero OK', gpiozero.__version__)"
+```
+
 ## Tóm tắt toàn bộ lệnh (copy-paste nhanh)
 
 ```bash
@@ -167,14 +194,18 @@ pip3 install --break-system-packages --no-cache-dir --upgrade \
 # 5. Thư viện đọc cảm biến DHT11
 pip3 install --break-system-packages --no-cache-dir seeed-python-dht
 
-# 6. Kiểm tra
+# 6. Thư viện gửi ThingSpeak (HTTP, MQTT) + vẽ đồ thị + LED/Button
+pip3 install --break-system-packages --no-cache-dir requests paho-mqtt matplotlib gpiozero
+
+# 7. Kiểm tra
 python3 -c "import grove; print('grove import OK')"
 python3 -c "from seeed_dht import DHT; print('seeed_dht import OK')"
+python3 -c "import requests, paho.mqtt.client, matplotlib, gpiozero; print('requests/paho-mqtt/matplotlib/gpiozero import OK')"
 sudo i2cdetect -y 1
 ```
 
 ## Gỡ cài đặt
 
 ```bash
-pip3 uninstall -y Seeed-grove.py seeed-python-dht
+pip3 uninstall -y Seeed-grove.py seeed-python-dht requests paho-mqtt matplotlib gpiozero
 ```
