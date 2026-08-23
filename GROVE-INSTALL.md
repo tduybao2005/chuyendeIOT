@@ -204,6 +204,46 @@ python3 -c "import requests, paho.mqtt.client, matplotlib, gpiozero; print('requ
 sudo i2cdetect -y 1
 ```
 
+## Kiểm tra nhanh toàn bộ thư viện (dùng khi SSH vào máy đã cài sẵn từ trước)
+
+Nếu chỉ cần kiểm tra nhanh xem một máy (SSH vào) đã có đủ thư viện chưa — không phải cài mới từ đầu — chạy đoạn lệnh sau ngay sau khi SSH vào:
+
+```bash
+for mod in grove seeed_dht RPi.GPIO gpiozero requests paho.mqtt.client matplotlib; do
+    python3 -c "import $mod" 2>/dev/null && echo "OK     $mod" || echo "THIEU  $mod"
+done
+echo "---"
+ls /dev/i2c* >/dev/null 2>&1 && echo "I2C: da bat" || echo "I2C: CHUA BAT"
+```
+
+Kết quả mong đợi — mỗi dòng đều là `OK`, không có dòng nào `THIEU`:
+
+```
+OK     grove
+OK     seeed_dht
+OK     RPi.GPIO
+OK     gpiozero
+OK     requests
+OK     paho.mqtt.client
+OK     matplotlib
+---
+I2C: da bat
+```
+
+Nếu có dòng báo `THIEU <tên module>`, quay lại bước cài tương ứng ở trên: `RPi.GPIO` → Bước 2, `grove` → Bước 4, `seeed_dht` → Bước 7, `requests`/`paho.mqtt.client`/`matplotlib`/`gpiozero` → Bước 8. Nếu `I2C: CHUA BAT` thì quay lại Bước 1.
+
+Muốn xem thêm số phiên bản cụ thể đã cài (thay vì chỉ OK/THIEU), dùng:
+
+```bash
+pip3 list --user | grep -iE 'grove|smbus|rpi|ws281x|bme680|bmm150|sgp30|seeed|requests|paho|matplotlib|gpiozero'
+```
+
+Muốn kiểm tra Grove Base Hat và các cảm biến đang cắm có được nhận diện trên bus I2C hay không:
+
+```bash
+sudo i2cdetect -y 1
+```
+
 ## Gỡ cài đặt
 
 ```bash
