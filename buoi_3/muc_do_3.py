@@ -7,7 +7,6 @@ from datetime import datetime
 import time
 import csv
 import os
-import json
 import requests
 import paho.mqtt.client as mqtt
 
@@ -160,7 +159,7 @@ def send_to_thingspeak_http(**fields):
 
 def send_to_thingspeak_mqtt(**fields):
     topic = f"channels/{THINGSPEAK_CHANNEL_ID}/publish"
-    payload = json.dumps(fields)
+    payload = "&".join(f"{key}={value}" for key, value in fields.items())
 
     connect_result = {'rc': None}
 
@@ -202,18 +201,22 @@ def send_window_average(window):
     if not averages:
         return
 
-    fields = {}
+    http_fields = {}
     if 'temp' in averages:
-        fields['field1'] = round(averages['temp'])
+        http_fields['field1'] = round(averages['temp'])
     if 'humi' in averages:
-        fields['field2'] = round(averages['humi'])
-    if 'light' in averages:
-        fields['field3'] = averages['light']
-    if 'distance' in averages:
-        fields['field4'] = averages['distance']
+        http_fields['field2'] = round(averages['humi'])
 
-    send_to_thingspeak_http(**fields)
-    send_to_thingspeak_mqtt(**fields)
+    mqtt_fields = {}
+    if 'light' in averages:
+        mqtt_fields['field3'] = averages['light']
+    if 'distance' in averages:
+        mqtt_fields['field4'] = averages['distance']
+
+    if http_fields:
+        send_to_thingspeak_http(**http_fields)
+    if mqtt_fields:
+        send_to_thingspeak_mqtt(**mqtt_fields)
 
 
 def main():
