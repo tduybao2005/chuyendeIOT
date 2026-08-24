@@ -18,11 +18,11 @@ HUMI_RANGE = (20, 95)
 VOLTAGE_RANGE = (0, 3.3)
 
 THINGSPEAK_URL = "https://api.thingspeak.com/update.json"
-THINGSPEAK_API_KEY = "DAN_WRITE_API_KEY_CUA_BAN_VAO_DAY"
+HTTP_WRITE_API_KEY = "DAN_HTTP_WRITE_API_KEY_CUA_BAN_VAO_DAY"
 
 MQTT_BROKER = "mqtt3.thingspeak.com"
 MQTT_PORT = 1883
-THINGSPEAK_CHANNEL_ID = "DIEN_CHANNEL_ID_CUA_BAN"
+MQTT_CHANNEL_ID = "DIEN_MQTT_CHANNEL_ID_CUA_BAN"
 MQTT_CLIENT_ID = "DIEN_MQTT_CLIENT_ID_CUA_BAN"
 MQTT_USERNAME = "DIEN_MQTT_USERNAME_CUA_BAN"
 MQTT_PASSWORD = "DIEN_MQTT_PASSWORD_CUA_BAN"
@@ -91,7 +91,7 @@ def show_voltage_value():
 
 
 def send_to_thingspeak_http(**fields):
-    payload = {"api_key": THINGSPEAK_API_KEY}
+    payload = {"api_key": HTTP_WRITE_API_KEY}
     payload.update(fields)
     try:
         response = requests.post(THINGSPEAK_URL, json=payload, timeout=5)
@@ -102,7 +102,7 @@ def send_to_thingspeak_http(**fields):
 
 
 def send_to_thingspeak_mqtt(**fields):
-    topic = f"channels/{THINGSPEAK_CHANNEL_ID}/publish"
+    topic = f"channels/{MQTT_CHANNEL_ID}/publish"
     payload = "&".join(f"{key}={value}" for key, value in fields.items())
 
     connect_result = {'rc': None}

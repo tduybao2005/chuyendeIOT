@@ -11,16 +11,17 @@ import paho.mqtt.client as mqtt
 DISPLAY_INTERVAL = 1
 LOG_FILE = 'server_log_nangcao.csv'
 
-THINGSPEAK_CHANNEL_ID = "DIEN_CHANNEL_ID_CUA_BAN"
+HTTP_CHANNEL_ID = "DIEN_HTTP_CHANNEL_ID_CUA_BAN"
 THINGSPEAK_READ_API_KEY = "DAN_READ_API_KEY_CUA_BAN_VAO_DAY"
-THINGSPEAK_READ_URL = f"https://api.thingspeak.com/channels/{THINGSPEAK_CHANNEL_ID}/feeds/last.json"
+THINGSPEAK_READ_URL = f"https://api.thingspeak.com/channels/{HTTP_CHANNEL_ID}/feeds/last.json"
 
 MQTT_BROKER = "mqtt3.thingspeak.com"
 MQTT_PORT = 1883
+MQTT_CHANNEL_ID = "DIEN_MQTT_CHANNEL_ID_CUA_BAN"
 MQTT_CLIENT_ID = "DIEN_MQTT_CLIENT_ID_CUA_BAN"
 MQTT_USERNAME = "DIEN_MQTT_USERNAME_CUA_BAN"
 MQTT_PASSWORD = "DIEN_MQTT_PASSWORD_CUA_BAN"
-MQTT_SUBSCRIBE_TOPIC = f"channels/{THINGSPEAK_CHANNEL_ID}/subscribe"
+MQTT_SUBSCRIBE_TOPIC = f"channels/{MQTT_CHANNEL_ID}/subscribe"
 
 LOG_FIELDS = ['timestamp', 'event', 'temp', 'humi', 'voltage', 'note']
 
