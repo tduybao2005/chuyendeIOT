@@ -1,0 +1,10 @@
+# Node / Expo (buoi_5/web-expo)
+node_modules/
+.expo/
+dist/
+web-build/
+
+# Credential files nhay cam - khong duoc push len GitHub cong khai
+mqtt_credentials*.txt
+*.env
+.env*
