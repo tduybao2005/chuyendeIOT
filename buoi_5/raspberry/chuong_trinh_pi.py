@@ -1,6 +1,6 @@
 """
 Buoi 5 - Chuong trinh Raspberry Pi
-Nhom 4
+Nhom 3
 
 Chuc nang:
 - Doc nhiet do, do am (DHT), dien ap tren bien tro (ADC), khoang cach (sieu am)

@@ -1,4 +1,4 @@
-# Buổi 5 - Nhóm 4
+# Buổi 5 - Nhóm 3
 
 Hệ thống Raspberry Pi + Web giám sát & điều khiển qua ThingSpeak.
 
