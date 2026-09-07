@@ -45,6 +45,7 @@
 #buoi5-root .legend-item { display:flex; align-items:center; margin-right:16px; font-size:12px; color:#666; }
 #buoi5-root .legend-dot { width:8px; height:8px; border-radius:4px; margin-right:4px; }
 #buoi5-root svg.chart { width:100%; height:200px; display:block; }
+#buoi5-root .chart-axis { display:flex; justify-content:space-between; font-size:11px; color:#999; margin-top:4px; }
 </style>
 
 <div id="buoi5-root">
@@ -111,14 +112,20 @@
     <div class="card full">
       <div class="card-title">Biểu đồ nhiệt độ / độ ẩm</div>
       <div class="legend">
-        <div class="legend-item"><span class="legend-dot" style="background:#E53935"></span>Nhiệt độ (°C)</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#1E88E5"></span>Độ ẩm (%)</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#E53935"></span>Nhiệt độ (°C): {{ tempMin !== null ? tempMin.toFixed(1) + ' - ' + tempMax.toFixed(1) : '--' }}</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#1E88E5"></span>Độ ẩm (%): {{ humiMin !== null ? humiMin.toFixed(1) + ' - ' + humiMax.toFixed(1) : '--' }}</div>
       </div>
       <svg class="chart" ng-attr-viewbox="0 0 {{chartWidth}} 200">
         <line ng-attr-x1="24" ng-attr-y1="176" ng-attr-x2="{{chartWidth-24}}" y2="176" stroke="#E0E0E0" stroke-width="1"></line>
         <polyline ng-attr-points="{{ tempPolyline }}" fill="none" stroke="#E53935" stroke-width="2"></polyline>
         <polyline ng-attr-points="{{ humiPolyline }}" fill="none" stroke="#1E88E5" stroke-width="2"></polyline>
+        <circle ng-if="tempLastPoint" ng-attr-cx="{{tempLastPoint.x}}" ng-attr-cy="{{tempLastPoint.y}}" r="3.5" fill="#E53935"></circle>
+        <circle ng-if="humiLastPoint" ng-attr-cx="{{humiLastPoint.x}}" ng-attr-cy="{{humiLastPoint.y}}" r="3.5" fill="#1E88E5"></circle>
       </svg>
+      <div class="chart-axis" ng-if="history.length>0">
+        <span>{{ chartFirstTime }}</span>
+        <span>{{ chartLastTime }}</span>
+      </div>
       <div ng-if="history.length===0" style="text-align:center;color:#999;padding:30px 0;">Chưa có dữ liệu</div>
     </div>
 
@@ -135,6 +142,10 @@
   scope.chartWidth = 800;
   scope.tempPolyline = '';
   scope.humiPolyline = '';
+  scope.tempMin = null; scope.tempMax = null;
+  scope.humiMin = null; scope.humiMax = null;
+  scope.tempLastPoint = null; scope.humiLastPoint = null;
+  scope.chartFirstTime = ''; scope.chartLastTime = '';
   scope.clockStr = '';
   scope.dateStr = '';
 
@@ -151,32 +162,49 @@
   tick();
   setInterval(function() { scope.$apply(tick); }, 1000);
 
-  function buildPolyline(values) {
+  // Moi duong (nhiet do / do am) tu chuan hoa theo min-max CUA RIENG NO, vi
+  // 2 dai gia tri (do C va %) khac nhau hoan toan - dung chung 1 thang se
+  // lam sai lech hinh dang tuong quan. Tra ve ca toa do diem cuoi cung de
+  // ve 1 cham tron danh dau gia tri moi nhat ngay tren duong.
+  function buildSeries(values) {
     var w = scope.chartWidth, h = 200, pad = 24;
-    var nums = values.filter(function(v) { return v !== null && v !== undefined; });
-    if (nums.length === 0) return '';
-    var allVals = [];
-    scope.history.forEach(function(p) {
-      if (p.temp !== null) allVals.push(p.temp);
-      if (p.humi !== null) allVals.push(p.humi);
-    });
-    var min = Math.min.apply(null, allVals), max = Math.max.apply(null, allVals);
+    var idxs = [], vals = [];
+    for (var i = 0; i < values.length; i++) {
+      if (values[i] !== null && values[i] !== undefined) { idxs.push(i); vals.push(values[i]); }
+    }
+    if (vals.length === 0) return { points: '', min: null, max: null, lastPoint: null };
+    var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
     var range = (max - min) || 1;
     var n = values.length;
     var pts = [];
-    for (var i = 0; i < n; i++) {
-      var v = values[i];
-      if (v === null || v === undefined) continue;
-      var x = pad + (n <= 1 ? 0 : (i / (n - 1)) * (w - pad * 2));
+    var lastPoint = null;
+    for (var k = 0; k < idxs.length; k++) {
+      var i2 = idxs[k], v = values[i2];
+      var x = pad + (n <= 1 ? 0 : (i2 / (n - 1)) * (w - pad * 2));
       var y = pad + (h - pad * 2) - ((v - min) / range) * (h - pad * 2);
       pts.push(x.toFixed(1) + ',' + y.toFixed(1));
+      lastPoint = { x: x.toFixed(1), y: y.toFixed(1) };
     }
-    return pts.join(' ');
+    return { points: pts.join(' '), min: min, max: max, lastPoint: lastPoint };
+  }
+
+  function formatChartTime(iso) {
+    if (!iso) return '';
+    try { return new Date(iso).toLocaleTimeString('vi-VN', { hour12: false }); }
+    catch (e) { return ''; }
   }
 
   function redrawChart() {
-    scope.tempPolyline = buildPolyline(scope.history.map(function(p) { return p.temp; }));
-    scope.humiPolyline = buildPolyline(scope.history.map(function(p) { return p.humi; }));
+    var t = buildSeries(scope.history.map(function(p) { return p.temp; }));
+    var h = buildSeries(scope.history.map(function(p) { return p.humi; }));
+    scope.tempPolyline = t.points;
+    scope.humiPolyline = h.points;
+    scope.tempMin = t.min; scope.tempMax = t.max; scope.tempLastPoint = t.lastPoint;
+    scope.humiMin = h.min; scope.humiMax = h.max; scope.humiLastPoint = h.lastPoint;
+    if (scope.history.length > 0) {
+      scope.chartFirstTime = formatChartTime(scope.history[0].createdAt);
+      scope.chartLastTime = formatChartTime(scope.history[scope.history.length - 1].createdAt);
+    }
   }
 
   scope.setMode = function(next) {
