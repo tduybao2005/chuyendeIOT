@@ -1,0 +1,209 @@
+<style>
+.nr-dashboard-theme .card-panel { background: transparent !important; box-shadow: none !important; }
+/* node-red-dashboard (ban AngularJS cu) bo widget (ui_template) trong 1
+   the <md-card class="nr-dashboard-template"> co width co dinh theo don vi
+   pixel cua ui_group (KHONG tu dong gian het chieu rong man hinh). De
+   dashboard nay hien du toan bo noi dung tren moi kich thuoc man hinh, ep
+   toan bo chuoi container cha (card/cardpanel/cardcontainer) gian ra 100%
+   chieu rong cua khu vuc noi dung (masonry-container), thay vi bi ket cung
+   theo so don vi da khai bao tren ui_group. */
+.nr-dashboard-template.nr-dashboard-template,
+.nr-dashboard-cardcontainer, .nr-dashboard-cardpanel, ui-card-panel {
+  width: 100% !important; max-width: 100% !important; left: 0 !important;
+  position: relative !important; overflow: visible !important; height: auto !important;
+}
+#buoi5-root { box-sizing: border-box; font-family: -apple-system, Roboto, Arial, sans-serif; background:#F4F6F8; padding:12px; }
+#buoi5-root * { box-sizing: border-box; }
+#buoi5-root .title { font-size:20px; font-weight:700; text-align:center; margin-bottom:12px; color:#222; }
+#buoi5-root .grid { display:grid; grid-template-columns: 1fr; gap:12px; }
+@media (min-width: 700px) { #buoi5-root .grid { grid-template-columns: 1fr 1fr; } }
+#buoi5-root .card { background:#fff; border-radius:12px; padding:16px; }
+#buoi5-root .card.full { grid-column: 1 / -1; }
+#buoi5-root .card-title { font-size:13px; color:#777; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
+#buoi5-root .dot { width:8px; height:8px; border-radius:4px; display:inline-block; margin-right:4px; }
+#buoi5-root .switch-row { display:flex; background:#F0F0F0; border-radius:10px; padding:4px; }
+#buoi5-root .switch-row button { flex:1; padding:10px; border:none; border-radius:8px; background:transparent; font-size:15px; font-weight:600; color:#666; cursor:pointer; }
+#buoi5-root .switch-row button.active { background:#1783B0; color:#fff; }
+#buoi5-root .clock { font-size:28px; font-weight:700; color:#1783B0; text-align:center; }
+#buoi5-root .clock-date { font-size:13px; color:#999; text-align:center; margin-top:2px; }
+#buoi5-root .reading-row { display:flex; justify-content:space-around; }
+#buoi5-root .reading-item { text-align:center; }
+#buoi5-root .reading-value { font-size:26px; font-weight:700; color:#222; }
+#buoi5-root .reading-label { font-size:12px; color:#999; margin-top:2px; }
+#buoi5-root .updated-at { font-size:12px; color:#999; margin-top:10px; text-align:center; }
+#buoi5-root .device-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid #F0F0F0; }
+#buoi5-root .device-row:last-child { border-bottom:none; }
+#buoi5-root .device-left { display:flex; align-items:center; }
+#buoi5-root .device-left .icon { font-size:20px; margin-right:8px; }
+#buoi5-root .device-left .label { font-size:15px; font-weight:600; color:#333; }
+#buoi5-root .badge { padding:3px 8px; border-radius:10px; margin-right:10px; color:#fff; font-size:11px; font-weight:700; }
+#buoi5-root .badge.on { background:#4CAF50; }
+#buoi5-root .badge.off { background:#BDBDBD; }
+#buoi5-root .device-btn { background:#1783B0; color:#fff; border:none; border-radius:8px; padding:8px 14px; min-width:56px; font-weight:600; font-size:13px; cursor:pointer; }
+#buoi5-root .device-btn:disabled { background:#CCC; cursor:not-allowed; }
+#buoi5-root .legend { display:flex; margin-bottom:8px; }
+#buoi5-root .legend-item { display:flex; align-items:center; margin-right:16px; font-size:12px; color:#666; }
+#buoi5-root .legend-dot { width:8px; height:8px; border-radius:4px; margin-right:4px; }
+#buoi5-root svg.chart { width:100%; height:200px; display:block; }
+</style>
+
+<div id="buoi5-root">
+  <div class="title">Giám sát &amp; Điều khiển - Nhóm 4</div>
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-title">
+        <span>Chế độ hoạt động</span>
+        <span><span class="dot" ng-style="{background: modeUpdatedRecently() ? '#4CAF50' : '#BDBDBD'}"></span>Cập nhật lúc {{modeUpdatedAt || '--'}}</span>
+      </div>
+      <div class="switch-row">
+        <button ng-class="{active: mode==='auto'}" ng-click="setMode('auto')">🤖 Auto</button>
+        <button ng-class="{active: mode==='manual'}" ng-click="setMode('manual')">✋ Manual</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Thời gian hiện tại</div>
+      <div class="clock">{{ clockStr }}</div>
+      <div class="clock-date">{{ dateStr }}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Giá trị mới nhất từ Server</div>
+      <div class="reading-row">
+        <div class="reading-item">
+          <div class="reading-value">{{ latest.temp !== null ? latest.temp.toFixed(1) + '°C' : '--' }}</div>
+          <div class="reading-label">Nhiệt độ</div>
+        </div>
+        <div class="reading-item">
+          <div class="reading-value">{{ latest.humi !== null ? latest.humi.toFixed(1) + '%' : '--' }}</div>
+          <div class="reading-label">Độ ẩm</div>
+        </div>
+      </div>
+      <div class="updated-at">Cập nhật lúc: {{ latest.updatedAt || '--' }}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Điều khiển thiết bị {{ mode !== 'manual' ? '(chỉ dùng được ở chế độ Manual)' : '' }}</div>
+      <div class="device-row">
+        <div class="device-left"><span class="icon">💡</span><span class="label">LED</span></div>
+        <div>
+          <span class="badge" ng-class="device.led ? 'on' : 'off'">{{ device.led ? 'ON' : 'OFF' }}</span>
+          <button class="device-btn" ng-disabled="mode!=='manual'" ng-click="toggleDevice('led')">{{ device.led ? 'Tắt' : 'Bật' }}</button>
+        </div>
+      </div>
+      <div class="device-row">
+        <div class="device-left"><span class="icon">🔊</span><span class="label">Buzzer</span></div>
+        <div>
+          <span class="badge" ng-class="device.buzzer ? 'on' : 'off'">{{ device.buzzer ? 'ON' : 'OFF' }}</span>
+          <button class="device-btn" ng-disabled="mode!=='manual'" ng-click="toggleDevice('buzzer')">{{ device.buzzer ? 'Tắt' : 'Bật' }}</button>
+        </div>
+      </div>
+      <div class="device-row">
+        <div class="device-left"><span class="icon">🔌</span><span class="label">Relay</span></div>
+        <div>
+          <span class="badge" ng-class="device.relay ? 'on' : 'off'">{{ device.relay ? 'ON' : 'OFF' }}</span>
+          <button class="device-btn" ng-disabled="mode!=='manual'" ng-click="toggleDevice('relay')">{{ device.relay ? 'Tắt' : 'Bật' }}</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card full">
+      <div class="card-title">Biểu đồ nhiệt độ / độ ẩm</div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot" style="background:#E53935"></span>Nhiệt độ (°C)</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#1E88E5"></span>Độ ẩm (%)</div>
+      </div>
+      <svg class="chart" ng-attr-viewbox="0 0 {{chartWidth}} 200">
+        <line ng-attr-x1="24" ng-attr-y1="176" ng-attr-x2="{{chartWidth-24}}" y2="176" stroke="#E0E0E0" stroke-width="1"></line>
+        <polyline ng-attr-points="{{ tempPolyline }}" fill="none" stroke="#E53935" stroke-width="2"></polyline>
+        <polyline ng-attr-points="{{ humiPolyline }}" fill="none" stroke="#1E88E5" stroke-width="2"></polyline>
+      </svg>
+      <div ng-if="history.length===0" style="text-align:center;color:#999;padding:30px 0;">Chưa có dữ liệu</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(scope) {
+  scope.mode = 'auto';
+  scope.modeUpdatedAt = null;
+  scope.device = { led: false, buzzer: false, relay: false };
+  scope.latest = { temp: null, humi: null, updatedAt: null };
+  scope.history = [];
+  scope.chartWidth = 800;
+  scope.tempPolyline = '';
+  scope.humiPolyline = '';
+  scope.clockStr = '';
+  scope.dateStr = '';
+
+  var lastModeMsgTime = 0;
+  scope.modeUpdatedRecently = function() {
+    return (Date.now() - lastModeMsgTime) < 20000;
+  };
+
+  function tick() {
+    var now = new Date();
+    scope.clockStr = now.toLocaleTimeString('vi-VN', { hour12: false });
+    scope.dateStr = now.toLocaleDateString('vi-VN');
+  }
+  tick();
+  setInterval(function() { scope.$apply(tick); }, 1000);
+
+  function buildPolyline(values) {
+    var w = scope.chartWidth, h = 200, pad = 24;
+    var nums = values.filter(function(v) { return v !== null && v !== undefined; });
+    if (nums.length === 0) return '';
+    var allVals = [];
+    scope.history.forEach(function(p) {
+      if (p.temp !== null) allVals.push(p.temp);
+      if (p.humi !== null) allVals.push(p.humi);
+    });
+    var min = Math.min.apply(null, allVals), max = Math.max.apply(null, allVals);
+    var range = (max - min) || 1;
+    var n = values.length;
+    var pts = [];
+    for (var i = 0; i < n; i++) {
+      var v = values[i];
+      if (v === null || v === undefined) continue;
+      var x = pad + (n <= 1 ? 0 : (i / (n - 1)) * (w - pad * 2));
+      var y = pad + (h - pad * 2) - ((v - min) / range) * (h - pad * 2);
+      pts.push(x.toFixed(1) + ',' + y.toFixed(1));
+    }
+    return pts.join(' ');
+  }
+
+  function redrawChart() {
+    scope.tempPolyline = buildPolyline(scope.history.map(function(p) { return p.temp; }));
+    scope.humiPolyline = buildPolyline(scope.history.map(function(p) { return p.humi; }));
+  }
+
+  scope.setMode = function(next) {
+    scope.mode = next; // phan hoi lac quan, se duoc xac nhan lai qua msg tiep theo
+    scope.send({ topic: 'mode', payload: next });
+  };
+
+  scope.toggleDevice = function(key) {
+    if (scope.mode !== 'manual') return;
+    var next = !scope.device[key];
+    scope.device[key] = next; // phan hoi lac quan
+    scope.send({ topic: key, payload: next });
+  };
+
+  scope.$watch('msg', function(msg) {
+    if (!msg || !msg.payload) return;
+    var p = msg.payload;
+    if (p.type === 'http_data') {
+      scope.history = p.history || [];
+      scope.latest = p.latest || scope.latest;
+      scope.device = p.deviceState || scope.device;
+      redrawChart();
+    } else if (p.type === 'mode_update') {
+      scope.mode = p.mode;
+      scope.modeUpdatedAt = new Date().toLocaleTimeString('vi-VN', { hour12: false });
+      lastModeMsgTime = Date.now();
+    }
+  });
+})(scope);
+</script>

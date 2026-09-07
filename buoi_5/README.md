@@ -1,45 +1,54 @@
 # Buổi 5 - Nhóm 4
 
-Hệ thống Web + Raspberry Pi giám sát & điều khiển qua ThingSpeak.
+Hệ thống Raspberry Pi + Web giám sát & điều khiển qua ThingSpeak.
+
+- **Raspberry Pi** (`raspberry/chuong_trinh_pi.py`): đọc cảm biến, hiển thị
+  LCD, điều khiển LED/Buzzer/Relay (chế độ Auto hoặc Manual theo lệnh từ Web).
+- **Web** (`node-red/`): dashboard **Node-RED chạy ngay trên Raspberry Pi**,
+  giao diện HTML/CSS/JS tự viết (không dùng widget dựng sẵn), xem chi tiết ở
+  `node-red/README.md`.
 
 ## Cấu trúc thư mục
 
 ```
 buoi_5/
 ├── raspberry/
-│   └── chuong_trinh_pi.py     # Chương trình chạy trên Raspberry Pi
-└── web-expo/                  # Giao diện Web (Expo + TypeScript)
-    ├── config.ts               # Điền API key / channel ID / MQTT credentials tại đây
-    ├── App.tsx
-    ├── hooks/                  # Logic (không dính UI)
-    │   ├── useThingSpeakData.ts   # Đọc dữ liệu qua HTTP (polling)
-    │   ├── useMqttMode.ts         # Kết nối MQTT (chọn chế độ + nghe realtime)
-    │   └── useDeviceCommand.ts    # Gửi lệnh LED/Buzzer/Relay qua HTTP
-    └── components/              # Từng khối giao diện, 1 file/1 chức năng
-        ├── ModeToggle.tsx
-        ├── DeviceControlPanel.tsx
-        ├── LatestReadingCard.tsx
-        ├── ClockCard.tsx
-        └── TempHumiChart.tsx
+│   └── chuong_trinh_pi.py     # Chuong trinh chay tren Raspberry Pi
+└── node-red/                  # Web: dashboard Node-RED (HTML/CSS/JS tuy chinh)
+    ├── flows.json               # Flow Node-RED day du (dien placeholder truoc khi dung)
+    ├── dashboard_template.html  # Noi dung HTML/CSS/JS cua node ui_template (de doc/diff)
+    └── README.md                # Huong dan cai dat + import flow chi tiet
 ```
 
-## Sơ đồ field ThingSpeak (dùng đủ 8 field)
+## Vì sao dùng 2 kênh ThingSpeak riêng?
 
-| Field | Dữ liệu | Ai ghi | Giao thức ghi | Bắt buộc? |
+Đề bài yêu cầu: đổi chế độ Auto/Manual **bắt buộc qua MQTT**, lệnh
+LED/Buzzer/Relay **bắt buộc qua HTTP**. Khi tạo thiết bị MQTT trên
+ThingSpeak (Devices > MQTT > Add a new device), thiết bị chỉ được **cấp
+quyền subscribe/publish trên 1 channel duy nhất** - khác với channel dùng
+để ghi/đọc HTTP. Vì vậy hệ thống dùng 2 channel:
+
+| Channel | Field | Ai ghi | Giao thức | Bắt buộc? |
 |---|---|---|---|---|
-| field1 | Nhiệt độ trung bình (20s) | Pi | HTTP | Tùy chọn HTTP/MQTT (đã chọn HTTP) |
-| field2 | Độ ẩm trung bình (20s) | Pi | HTTP | như trên |
-| field3 | Điện áp biến trở TB (20s) | Pi | HTTP | như trên |
-| field4 | Khoảng cách TB (20s) | Pi | HTTP | như trên |
-| field5 | Chế độ (0=Auto, 1=Manual) | Web | **MQTT** | **Bắt buộc** |
-| field6 | Lệnh LED (0/1) | Web | **HTTP** | **Bắt buộc** |
-| field7 | Lệnh Buzzer (0/1) | Web | **HTTP** | **Bắt buộc** |
-| field8 | Lệnh Relay (0/1) | Web | **HTTP** | **Bắt buộc** |
+| **HTTP** (`buoi_5_channel_1`) | field1 Nhiệt độ TB (20s) | Pi | HTTP | Tùy chọn HTTP/MQTT (đã chọn HTTP) |
+| | field2 Độ ẩm TB (20s) | Pi | HTTP | như trên |
+| | field3 Điện áp biến trở TB (20s) | Pi | HTTP | như trên |
+| | field4 Khoảng cách TB (20s) | Pi | HTTP | như trên |
+| | field5 Lệnh LED (0/1) | Web | **HTTP** | **Bắt buộc** |
+| | field6 Lệnh Buzzer (0/1) | Web | **HTTP** | **Bắt buộc** |
+| | field7 Lệnh Relay (0/1) | Web | **HTTP** | **Bắt buộc** |
+| **MQTT** (`buoi_5_channel_2`, riêng, chỉ 1 field) | field1 "Mode" (0=Auto, 1=Manual) | Web | **MQTT** | **Bắt buộc** |
 
-**Lưu ý về giao thức (đọc kỹ để không nhầm):**
-- Việc **Raspberry Pi gửi dữ liệu cảm biến lên Server** (field1-4): đề cho **chọn 1 trong 2** giao thức (HTTP hoặc MQTT) → code đã chọn **HTTP**.
-- Việc **Web gửi lệnh điều khiển lên Server** (field5-8): đề **bắt buộc dùng cả 2** — nút chọn chế độ dùng MQTT, nút điều khiển LED/Buzzer/Relay dùng HTTP. Không được chọn 1 trong 2 ở phần này.
-- Việc Pi **đọc lại** lệnh điều khiển từ Server không bị đề giới hạn giao thức — code Pi dùng MQTT subscribe (topic số 1 - toàn kênh) để phản hồi tức thời (đáp ứng yêu cầu đổi trạng thái ≤ 2 giây).
+**Lưu ý về giao thức đọc lại lệnh (không bị đề giới hạn):**
+- Pi đọc lệnh LED/Buzzer/Relay bằng cách **poll HTTP mỗi giây** trên kênh
+  HTTP (không thể subscribe MQTT trên kênh này).
+- Pi đọc chế độ Auto/Manual bằng **CẢ 2 cách**: MQTT subscribe (đường
+  nhanh, gần như tức thời) **cộng với** poll HTTP mỗi giây trên kênh MQTT
+  (dự phòng) - vì ThingSpeak **không lưu retained message thật sự** trên
+  topic dạng channel-feed, và vì ThingSpeak yêu cầu client_id phải trùng
+  username nên Web/Pi buộc dùng chung 1 danh tính MQTT → mỗi lần Web publish
+  có thể làm Pi mất gói tin tạm thời. Dùng cả 2 đường đảm bảo không bao giờ
+  bị "kẹt" ở chế độ cũ.
 
 ## GPIO / cổng Grove trên Raspberry Pi
 
@@ -47,7 +56,7 @@ buoi_5/
 |---|---|---|
 | DHT (nhiệt độ, độ ẩm) | D5 | GPIO5 |
 | Cảm biến siêu âm (khoảng cách) | D16 | GPIO16 |
-| Biến trở (điện áp) qua Grove ADC | I2C `0x08`, kênh 2 | — |
+| Biến trở (điện áp) qua Grove ADC | A2 | — |
 | LCD 16x2 (JHD1802) | I2C-1 (`0x3E` + `0x62`) | — |
 | LED | D18 | GPIO18 |
 | Buzzer | D24 | GPIO24 |
@@ -55,24 +64,31 @@ buoi_5/
 
 ## Cách chạy Raspberry Pi
 
-1. Điền `THINGSPEAK_CHANNEL_ID`, `THINGSPEAK_WRITE_API_KEY`, `MQTT_CLIENT_ID`, `MQTT_USERNAME`, `MQTT_PASSWORD` thật vào đầu file `raspberry/chuong_trinh_pi.py`.
+1. Điền các giá trị `DIEN_..._CUA_BAN` (channel ID, read/write API key, MQTT
+   client ID/username/password) thật vào đầu file `raspberry/chuong_trinh_pi.py`.
 2. Chạy: `python3 chuong_trinh_pi.py`
 
-## Cách chạy Web (Expo)
+## Cách chạy Web (Node-RED)
 
-1. Điền thông tin thật vào `web-expo/config.ts` (channel ID, read/write API key, MQTT client ID/username/password - lấy từ ThingSpeak > Devices > MQTT > Add a new device).
-2. Cài đặt & chạy:
-   ```
-   cd web-expo
-   npm install
-   npm run web
-   ```
-3. Mở trên iPad: dùng trình duyệt Safari truy cập địa chỉ Expo cấp (hoặc `npx expo export --platform web` rồi host file tĩnh trong thư mục `dist/`).
+Xem hướng dẫn đầy đủ (cài Node-RED, import flow, điền placeholder, chạy như
+systemd service) tại **[`node-red/README.md`](node-red/README.md)**. Tóm tắt:
 
-**Lưu ý:** giao diện được xây bằng Expo nhưng nhắm tới mục tiêu **Web** như đề yêu cầu (đã build-test qua `expo export --platform web` thành công). Chạy qua Expo Go trên native Android/iOS chưa được đảm bảo do thư viện `mqtt` cần môi trường WebSocket kiểu trình duyệt.
+1. Cài Node-RED v4 + `node-red-dashboard@3.6.6` trên Raspberry Pi.
+2. Điền các placeholder `DIEN_..._CUA_BAN` thật vào `node-red/flows.json`
+   (danh sách đầy đủ nằm trong `node-red/README.md`) - **không commit giá
+   trị thật lên git**.
+3. Import flow qua Node-RED editor hoặc Admin API, Deploy.
+4. Mở dashboard tại `http://<ip-cua-pi>:1880/ui`.
 
-## Đã kiểm tra (không cần phần cứng)
+## Đã kiểm tra trên phần cứng thật (Raspberry Pi `pi4-tdbao`)
 
-- `npx tsc --noEmit` — không lỗi type.
-- `npx expo export --platform web` — build thành công (232 modules), xác nhận Metro bundler xử lý được thư viện `mqtt` + `react-native-svg`.
-- Raspberry Pi: không thể test trực tiếp (Pi hiện không cắm điện), code viết theo đúng phong cách các file mẫu đã chạy được trước đó trong repo.
+- Cảm biến DHT/ADC/siêu âm đọc và gửi trung bình lên ThingSpeak đúng chu kỳ.
+- LCD hiển thị giờ + trạng thái Auto/Manual + LED/Buzzer/Relay.
+- Chế độ Auto/Manual: dashboard Node-RED publish MQTT → Pi nhận qua subscribe
+  (đường nhanh) hoặc qua HTTP polling dự phòng, xác nhận bằng cách đọc lại
+  feed trên ThingSpeak sau khi bấm nút.
+- Lệnh LED/Buzzer/Relay: dashboard gửi HTTP `update.json`, tự động thử lại
+  khi bị ThingSpeak từ chối do giới hạn 15s/lần ghi; Pi poll lại và áp dụng
+  đúng trạng thái (đã xác nhận qua feed `entry_id` mới xuất hiện đúng field).
+- Dashboard responsive: kiểm tra ở độ rộng desktop (1280px) và mobile (390px)
+  qua Playwright - xem `screenshots/`.

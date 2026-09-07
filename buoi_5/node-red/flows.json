@@ -1,0 +1,509 @@
+[
+  {
+    "id": "buoi5_flow",
+    "type": "tab",
+    "label": "Buoi 5 - Giam sat & Dieu khien",
+    "disabled": false,
+    "info": "Thay the web-expo bang Node-RED chay tren chinh Raspberry Pi. Dashboard HTML/CSS tuy chinh qua ui_template, doc/ghi ThingSpeak giong het logic cua chuong_trinh_pi.py va web-expo cu.",
+    "env": []
+  },
+  {
+    "id": "buoi5_ui_base",
+    "type": "ui_base",
+    "theme": {
+      "name": "theme-light",
+      "lightTheme": {
+        "default": "#0094CE",
+        "baseColor": "#0094CE",
+        "baseFont": "-apple-system,Helvetica Neue,Helvetica,Arial",
+        "edited": true,
+        "reset": false
+      },
+      "darkTheme": {
+        "default": "#097479",
+        "baseColor": "#097479",
+        "baseFont": "-apple-system,Helvetica Neue,Helvetica,Arial",
+        "edited": false
+      },
+      "customTheme": {
+        "name": "Untitled Theme 1",
+        "default": "#4B7930",
+        "baseColor": "#4B7930",
+        "baseFont": "-apple-system,Helvetica Neue,Helvetica,Arial"
+      },
+      "themeState": {
+        "base-color": {
+          "value": "#0094CE",
+          "edited": true
+        },
+        "page-titlebar-backgroundColor": {
+          "value": "#0094CE",
+          "edited": false
+        },
+        "page-backgroundColor": {
+          "value": "#F4F6F8",
+          "edited": false
+        },
+        "page-sidebar-backgroundColor": {
+          "value": "#ffffff",
+          "edited": false
+        },
+        "group-textColor": {
+          "value": "#1bbfff",
+          "edited": false
+        },
+        "group-borderColor": {
+          "value": "#ffffff",
+          "edited": false
+        },
+        "group-backgroundColor": {
+          "value": "#ffffff",
+          "edited": false
+        },
+        "widget-textColor": {
+          "value": "#111111",
+          "edited": false
+        },
+        "widget-backgroundColor": {
+          "value": "#0094CE",
+          "edited": false
+        },
+        "widget-borderColor": {
+          "value": "#ffffff",
+          "edited": false
+        },
+        "base-font": {
+          "value": "-apple-system,Helvetica Neue,Helvetica,Arial"
+        }
+      },
+      "angularTheme": {
+        "primary": "indigo",
+        "accents": "blue",
+        "warn": "red",
+        "background": "grey",
+        "palette": "light"
+      }
+    },
+    "site": {
+      "name": "Buoi 5 - Nhom 4",
+      "hideToolbar": "false",
+      "allowSwipe": "false",
+      "lockMenu": "false",
+      "allowTempTheme": "true",
+      "dateFormat": "DD/MM/YYYY",
+      "sizes": {
+        "sx": 48,
+        "sy": 48,
+        "gx": 6,
+        "gy": 6,
+        "cx": 6,
+        "cy": 6,
+        "px": 0,
+        "py": 0
+      }
+    }
+  },
+  {
+    "id": "buoi5_ui_tab",
+    "type": "ui_tab",
+    "name": "Buoi 5",
+    "icon": "dashboard",
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "buoi5_ui_group",
+    "type": "ui_group",
+    "name": "Giam sat & Dieu khien",
+    "tab": "buoi5_ui_tab",
+    "order": 1,
+    "disp": true,
+    "width": "6",
+    "collapse": false
+  },
+  {
+    "id": "buoi5_mqtt_broker",
+    "type": "mqtt-broker",
+    "name": "ThingSpeak MQTT (kenh Mode)",
+    "broker": "mqtt3.thingspeak.com",
+    "port": "1883",
+    "clientid": "DIEN_MQTT_CLIENT_ID_CUA_BAN",
+    "autoConnect": true,
+    "usetls": false,
+    "protocolVersion": "4",
+    "keepalive": "30",
+    "cleansession": true,
+    "birthTopic": "",
+    "closeTopic": "",
+    "willTopic": "",
+    "sessionExpiry": "",
+    "credentials": {
+      "user": "DIEN_MQTT_USERNAME_CUA_BAN",
+      "password": "DIEN_MQTT_PASSWORD_CUA_BAN"
+    }
+  },
+  {
+    "id": "n_inj_http",
+    "type": "inject",
+    "z": "buoi5_flow",
+    "name": "Moi 15s: doc kenh HTTP",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "15",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "1",
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "wires": [
+      [
+        "n_fn_prep_http"
+      ]
+    ]
+  },
+  {
+    "id": "n_fn_prep_http",
+    "type": "function",
+    "z": "buoi5_flow",
+    "name": "Chuan bi URL doc kenh HTTP",
+    "func": "// ================== CAU HINH - DIEN THAT TRUOC KHI DUNG ==================\nconst THINGSPEAK_CHANNEL_ID = \"DIEN_CHANNEL_ID_HTTP_CUA_BAN\";\nconst THINGSPEAK_READ_API_KEY = \"DIEN_READ_API_KEY_CUA_BAN\";\nconst HISTORY_RESULTS = 30;\n// ===========================================================================\nmsg.url = `https://api.thingspeak.com/channels/${THINGSPEAK_CHANNEL_ID}/feeds.json?api_key=${THINGSPEAK_READ_API_KEY}&results=${HISTORY_RESULTS}`;\nmsg.method = 'GET';\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "wires": [
+      [
+        "n_http_http"
+      ]
+    ]
+  },
+  {
+    "id": "n_http_http",
+    "type": "http request",
+    "z": "buoi5_flow",
+    "name": "GET feeds.json (kenh HTTP)",
+    "method": "use",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "insecureHTTPParser": false,
+    "authType": "",
+    "senderr": false,
+    "headers": [],
+    "wires": [
+      [
+        "n_fn_parse_http"
+      ]
+    ]
+  },
+  {
+    "id": "n_fn_parse_http",
+    "type": "function",
+    "z": "buoi5_flow",
+    "name": "Xu ly du lieu HTTP -> http_data",
+    "func": "const FIELD = { temp:'field1', humi:'field2', voltage:'field3', distance:'field4', led:'field5', buzzer:'field6', relay:'field7' };\n\nfunction toNumber(v) { if (v === undefined || v === null || v === '') return null; const n = Number(v); return Number.isNaN(n) ? null : n; }\nfunction toBool(v) { return toNumber(v) === 1; }\n\nconst feeds = (msg.payload && msg.payload.feeds) || [];\n\n// Moi lan ghi rieng le 1 field se tao 1 dong moi (cac field con lai null trong dong do).\n// Quet nguoc tu ban ghi moi nhat ve cu, lay gia tri KHONG null dau tien cho TUNG field.\nconst deviceState = { led: false, buzzer: false, relay: false };\nconst found = { led: false, buzzer: false, relay: false };\nfor (let i = feeds.length - 1; i >= 0 && !(found.led && found.buzzer && found.relay); i--) {\n  const f = feeds[i];\n  if (!found.led && f[FIELD.led] != null && f[FIELD.led] !== '') { deviceState.led = toBool(f[FIELD.led]); found.led = true; }\n  if (!found.buzzer && f[FIELD.buzzer] != null && f[FIELD.buzzer] !== '') { deviceState.buzzer = toBool(f[FIELD.buzzer]); found.buzzer = true; }\n  if (!found.relay && f[FIELD.relay] != null && f[FIELD.relay] !== '') { deviceState.relay = toBool(f[FIELD.relay]); found.relay = true; }\n}\n\nlet latest = { temp: null, humi: null, updatedAt: null };\nfor (let i = feeds.length - 1; i >= 0; i--) {\n  const f = feeds[i];\n  const temp = toNumber(f[FIELD.temp]);\n  const humi = toNumber(f[FIELD.humi]);\n  if (temp !== null || humi !== null) { latest = { temp, humi, updatedAt: f.created_at }; break; }\n}\n\nconst history = feeds\n  .map(f => ({ createdAt: f.created_at, temp: toNumber(f[FIELD.temp]), humi: toNumber(f[FIELD.humi]) }))\n  .filter(p => p.temp !== null || p.humi !== null);\n\nnode.status({ fill: 'green', shape: 'dot', text: 'OK ' + new Date().toLocaleTimeString('vi-VN') });\nmsg.payload = { type: 'http_data', history, latest, deviceState };\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "wires": [
+      [
+        "n_ui_template"
+      ]
+    ]
+  },
+  {
+    "id": "n_mqtt_in_mode",
+    "type": "mqtt in",
+    "z": "buoi5_flow",
+    "name": "MQTT subscribe che do (kenh Mode)",
+    "topic": "channels/DIEN_CHANNEL_ID_MQTT_CUA_BAN/subscribe",
+    "qos": "0",
+    "datatype": "utf8",
+    "broker": "buoi5_mqtt_broker",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "wires": [
+      [
+        "n_fn_parse_mode_mqtt"
+      ]
+    ]
+  },
+  {
+    "id": "n_fn_parse_mode_mqtt",
+    "type": "function",
+    "z": "buoi5_flow",
+    "name": "Xu ly che do (MQTT) -> mode_update",
+    "func": "// field \"Mode\" tren KENH MQTT RIENG nay chinh la field1 cua kenh nay\nconst FIELD_MODE = 'field1';\nlet data;\ntry {\n  data = JSON.parse(msg.payload);\n} catch (e) {\n  node.warn('Payload MQTT khong hop le: ' + e.message);\n  return null;\n}\nif (data[FIELD_MODE] === undefined || data[FIELD_MODE] === null) return null;\nconst mode = Number(data[FIELD_MODE]) === 1 ? 'manual' : 'auto';\nnode.status({ fill: 'blue', shape: 'dot', text: 'MQTT: ' + mode });\nmsg.payload = { type: 'mode_update', mode };\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "wires": [
+      [
+        "n_ui_template"
+      ]
+    ]
+  },
+  {
+    "id": "n_inj_mode_fb",
+    "type": "inject",
+    "z": "buoi5_flow",
+    "name": "Moi 15s: doc che do du phong (HTTP)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "15",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "2",
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "wires": [
+      [
+        "n_fn_prep_mode_fb"
+      ]
+    ]
+  },
+  {
+    "id": "n_fn_prep_mode_fb",
+    "type": "function",
+    "z": "buoi5_flow",
+    "name": "Chuan bi URL doc che do du phong",
+    "func": "// ================== CAU HINH - DIEN THAT TRUOC KHI DUNG ==================\nconst MQTT_CHANNEL_ID = \"DIEN_CHANNEL_ID_MQTT_CUA_BAN\";\nconst MQTT_CHANNEL_READ_API_KEY = \"DIEN_READ_API_KEY_CUA_KENH_MQTT_CUA_BAN\";\n// ===========================================================================\nmsg.url = `https://api.thingspeak.com/channels/${MQTT_CHANNEL_ID}/feeds.json?api_key=${MQTT_CHANNEL_READ_API_KEY}&results=10`;\nmsg.method = 'GET';\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "wires": [
+      [
+        "n_http_mode_fb"
+      ]
+    ]
+  },
+  {
+    "id": "n_http_mode_fb",
+    "type": "http request",
+    "z": "buoi5_flow",
+    "name": "GET feeds.json (kenh Mode)",
+    "method": "use",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "insecureHTTPParser": false,
+    "authType": "",
+    "senderr": false,
+    "headers": [],
+    "wires": [
+      [
+        "n_fn_parse_mode_fb"
+      ]
+    ]
+  },
+  {
+    "id": "n_fn_parse_mode_fb",
+    "type": "function",
+    "z": "buoi5_flow",
+    "name": "Xu ly che do (du phong HTTP) -> mode_update",
+    "func": "const FIELD_MODE = 'field1';\nfunction toNumber(v) { if (v === undefined || v === null || v === '') return null; const n = Number(v); return Number.isNaN(n) ? null : n; }\n\nconst feeds = (msg.payload && msg.payload.feeds) || [];\nfor (let i = feeds.length - 1; i >= 0; i--) {\n  const v = feeds[i][FIELD_MODE];\n  if (v !== undefined && v !== null && v !== '') {\n    const mode = toNumber(v) === 1 ? 'manual' : 'auto';\n    node.status({ fill: 'grey', shape: 'ring', text: 'HTTP: ' + mode });\n    msg.payload = { type: 'mode_update', mode };\n    return msg;\n  }\n}\nreturn null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "wires": [
+      [
+        "n_ui_template"
+      ]
+    ]
+  },
+  {
+    "id": "n_ui_template",
+    "type": "ui_template",
+    "z": "buoi5_flow",
+    "group": "buoi5_ui_group",
+    "name": "Dashboard Buoi 5 (HTML tuy chinh)",
+    "order": 1,
+    "width": "6",
+    "height": "0",
+    "format": "<style>\n.nr-dashboard-theme .card-panel { background: transparent !important; box-shadow: none !important; }\n/* node-red-dashboard (ban AngularJS cu) bo widget (ui_template) trong 1\n   the <md-card class=\"nr-dashboard-template\"> co width co dinh theo don vi\n   pixel cua ui_group (KHONG tu dong gian het chieu rong man hinh). De\n   dashboard nay hien du toan bo noi dung tren moi kich thuoc man hinh, ep\n   toan bo chuoi container cha (card/cardpanel/cardcontainer) gian ra 100%\n   chieu rong cua khu vuc noi dung (masonry-container), thay vi bi ket cung\n   theo so don vi da khai bao tren ui_group. */\n.nr-dashboard-template.nr-dashboard-template,\n.nr-dashboard-cardcontainer, .nr-dashboard-cardpanel, ui-card-panel {\n  width: 100% !important; max-width: 100% !important; left: 0 !important;\n  position: relative !important; overflow: visible !important; height: auto !important;\n}\n#buoi5-root { box-sizing: border-box; font-family: -apple-system, Roboto, Arial, sans-serif; background:#F4F6F8; padding:12px; }\n#buoi5-root * { box-sizing: border-box; }\n#buoi5-root .title { font-size:20px; font-weight:700; text-align:center; margin-bottom:12px; color:#222; }\n#buoi5-root .grid { display:grid; grid-template-columns: 1fr; gap:12px; }\n@media (min-width: 700px) { #buoi5-root .grid { grid-template-columns: 1fr 1fr; } }\n#buoi5-root .card { background:#fff; border-radius:12px; padding:16px; }\n#buoi5-root .card.full { grid-column: 1 / -1; }\n#buoi5-root .card-title { font-size:13px; color:#777; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }\n#buoi5-root .dot { width:8px; height:8px; border-radius:4px; display:inline-block; margin-right:4px; }\n#buoi5-root .switch-row { display:flex; background:#F0F0F0; border-radius:10px; padding:4px; }\n#buoi5-root .switch-row button { flex:1; padding:10px; border:none; border-radius:8px; background:transparent; font-size:15px; font-weight:600; color:#666; cursor:pointer; }\n#buoi5-root .switch-row button.active { background:#1783B0; color:#fff; }\n#buoi5-root .clock { font-size:28px; font-weight:700; color:#1783B0; text-align:center; }\n#buoi5-root .clock-date { font-size:13px; color:#999; text-align:center; margin-top:2px; }\n#buoi5-root .reading-row { display:flex; justify-content:space-around; }\n#buoi5-root .reading-item { text-align:center; }\n#buoi5-root .reading-value { font-size:26px; font-weight:700; color:#222; }\n#buoi5-root .reading-label { font-size:12px; color:#999; margin-top:2px; }\n#buoi5-root .updated-at { font-size:12px; color:#999; margin-top:10px; text-align:center; }\n#buoi5-root .device-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid #F0F0F0; }\n#buoi5-root .device-row:last-child { border-bottom:none; }\n#buoi5-root .device-left { display:flex; align-items:center; }\n#buoi5-root .device-left .icon { font-size:20px; margin-right:8px; }\n#buoi5-root .device-left .label { font-size:15px; font-weight:600; color:#333; }\n#buoi5-root .badge { padding:3px 8px; border-radius:10px; margin-right:10px; color:#fff; font-size:11px; font-weight:700; }\n#buoi5-root .badge.on { background:#4CAF50; }\n#buoi5-root .badge.off { background:#BDBDBD; }\n#buoi5-root .device-btn { background:#1783B0; color:#fff; border:none; border-radius:8px; padding:8px 14px; min-width:56px; font-weight:600; font-size:13px; cursor:pointer; }\n#buoi5-root .device-btn:disabled { background:#CCC; cursor:not-allowed; }\n#buoi5-root .legend { display:flex; margin-bottom:8px; }\n#buoi5-root .legend-item { display:flex; align-items:center; margin-right:16px; font-size:12px; color:#666; }\n#buoi5-root .legend-dot { width:8px; height:8px; border-radius:4px; margin-right:4px; }\n#buoi5-root svg.chart { width:100%; height:200px; display:block; }\n</style>\n\n<div id=\"buoi5-root\">\n  <div class=\"title\">Giám sát &amp; Điều khiển - Nhóm 4</div>\n  <div class=\"grid\">\n\n    <div class=\"card\">\n      <div class=\"card-title\">\n        <span>Chế độ hoạt động</span>\n        <span><span class=\"dot\" ng-style=\"{background: modeUpdatedRecently() ? '#4CAF50' : '#BDBDBD'}\"></span>Cập nhật lúc {{modeUpdatedAt || '--'}}</span>\n      </div>\n      <div class=\"switch-row\">\n        <button ng-class=\"{active: mode==='auto'}\" ng-click=\"setMode('auto')\">🤖 Auto</button>\n        <button ng-class=\"{active: mode==='manual'}\" ng-click=\"setMode('manual')\">✋ Manual</button>\n      </div>\n    </div>\n\n    <div class=\"card\">\n      <div class=\"card-title\">Thời gian hiện tại</div>\n      <div class=\"clock\">{{ clockStr }}</div>\n      <div class=\"clock-date\">{{ dateStr }}</div>\n    </div>\n\n    <div class=\"card\">\n      <div class=\"card-title\">Giá trị mới nhất từ Server</div>\n      <div class=\"reading-row\">\n        <div class=\"reading-item\">\n          <div class=\"reading-value\">{{ latest.temp !== null ? latest.temp.toFixed(1) + '°C' : '--' }}</div>\n          <div class=\"reading-label\">Nhiệt độ</div>\n        </div>\n        <div class=\"reading-item\">\n          <div class=\"reading-value\">{{ latest.humi !== null ? latest.humi.toFixed(1) + '%' : '--' }}</div>\n          <div class=\"reading-label\">Độ ẩm</div>\n        </div>\n      </div>\n      <div class=\"updated-at\">Cập nhật lúc: {{ latest.updatedAt || '--' }}</div>\n    </div>\n\n    <div class=\"card\">\n      <div class=\"card-title\">Điều khiển thiết bị {{ mode !== 'manual' ? '(chỉ dùng được ở chế độ Manual)' : '' }}</div>\n      <div class=\"device-row\">\n        <div class=\"device-left\"><span class=\"icon\">💡</span><span class=\"label\">LED</span></div>\n        <div>\n          <span class=\"badge\" ng-class=\"device.led ? 'on' : 'off'\">{{ device.led ? 'ON' : 'OFF' }}</span>\n          <button class=\"device-btn\" ng-disabled=\"mode!=='manual'\" ng-click=\"toggleDevice('led')\">{{ device.led ? 'Tắt' : 'Bật' }}</button>\n        </div>\n      </div>\n      <div class=\"device-row\">\n        <div class=\"device-left\"><span class=\"icon\">🔊</span><span class=\"label\">Buzzer</span></div>\n        <div>\n          <span class=\"badge\" ng-class=\"device.buzzer ? 'on' : 'off'\">{{ device.buzzer ? 'ON' : 'OFF' }}</span>\n          <button class=\"device-btn\" ng-disabled=\"mode!=='manual'\" ng-click=\"toggleDevice('buzzer')\">{{ device.buzzer ? 'Tắt' : 'Bật' }}</button>\n        </div>\n      </div>\n      <div class=\"device-row\">\n        <div class=\"device-left\"><span class=\"icon\">🔌</span><span class=\"label\">Relay</span></div>\n        <div>\n          <span class=\"badge\" ng-class=\"device.relay ? 'on' : 'off'\">{{ device.relay ? 'ON' : 'OFF' }}</span>\n          <button class=\"device-btn\" ng-disabled=\"mode!=='manual'\" ng-click=\"toggleDevice('relay')\">{{ device.relay ? 'Tắt' : 'Bật' }}</button>\n        </div>\n      </div>\n    </div>\n\n    <div class=\"card full\">\n      <div class=\"card-title\">Biểu đồ nhiệt độ / độ ẩm</div>\n      <div class=\"legend\">\n        <div class=\"legend-item\"><span class=\"legend-dot\" style=\"background:#E53935\"></span>Nhiệt độ (°C)</div>\n        <div class=\"legend-item\"><span class=\"legend-dot\" style=\"background:#1E88E5\"></span>Độ ẩm (%)</div>\n      </div>\n      <svg class=\"chart\" ng-attr-viewbox=\"0 0 {{chartWidth}} 200\">\n        <line ng-attr-x1=\"24\" ng-attr-y1=\"176\" ng-attr-x2=\"{{chartWidth-24}}\" y2=\"176\" stroke=\"#E0E0E0\" stroke-width=\"1\"></line>\n        <polyline ng-attr-points=\"{{ tempPolyline }}\" fill=\"none\" stroke=\"#E53935\" stroke-width=\"2\"></polyline>\n        <polyline ng-attr-points=\"{{ humiPolyline }}\" fill=\"none\" stroke=\"#1E88E5\" stroke-width=\"2\"></polyline>\n      </svg>\n      <div ng-if=\"history.length===0\" style=\"text-align:center;color:#999;padding:30px 0;\">Chưa có dữ liệu</div>\n    </div>\n\n  </div>\n</div>\n\n<script>\n(function(scope) {\n  scope.mode = 'auto';\n  scope.modeUpdatedAt = null;\n  scope.device = { led: false, buzzer: false, relay: false };\n  scope.latest = { temp: null, humi: null, updatedAt: null };\n  scope.history = [];\n  scope.chartWidth = 800;\n  scope.tempPolyline = '';\n  scope.humiPolyline = '';\n  scope.clockStr = '';\n  scope.dateStr = '';\n\n  var lastModeMsgTime = 0;\n  scope.modeUpdatedRecently = function() {\n    return (Date.now() - lastModeMsgTime) < 20000;\n  };\n\n  function tick() {\n    var now = new Date();\n    scope.clockStr = now.toLocaleTimeString('vi-VN', { hour12: false });\n    scope.dateStr = now.toLocaleDateString('vi-VN');\n  }\n  tick();\n  setInterval(function() { scope.$apply(tick); }, 1000);\n\n  function buildPolyline(values) {\n    var w = scope.chartWidth, h = 200, pad = 24;\n    var nums = values.filter(function(v) { return v !== null && v !== undefined; });\n    if (nums.length === 0) return '';\n    var allVals = [];\n    scope.history.forEach(function(p) {\n      if (p.temp !== null) allVals.push(p.temp);\n      if (p.humi !== null) allVals.push(p.humi);\n    });\n    var min = Math.min.apply(null, allVals), max = Math.max.apply(null, allVals);\n    var range = (max - min) || 1;\n    var n = values.length;\n    var pts = [];\n    for (var i = 0; i < n; i++) {\n      var v = values[i];\n      if (v === null || v === undefined) continue;\n      var x = pad + (n <= 1 ? 0 : (i / (n - 1)) * (w - pad * 2));\n      var y = pad + (h - pad * 2) - ((v - min) / range) * (h - pad * 2);\n      pts.push(x.toFixed(1) + ',' + y.toFixed(1));\n    }\n    return pts.join(' ');\n  }\n\n  function redrawChart() {\n    scope.tempPolyline = buildPolyline(scope.history.map(function(p) { return p.temp; }));\n    scope.humiPolyline = buildPolyline(scope.history.map(function(p) { return p.humi; }));\n  }\n\n  scope.setMode = function(next) {\n    scope.mode = next; // phan hoi lac quan, se duoc xac nhan lai qua msg tiep theo\n    scope.send({ topic: 'mode', payload: next });\n  };\n\n  scope.toggleDevice = function(key) {\n    if (scope.mode !== 'manual') return;\n    var next = !scope.device[key];\n    scope.device[key] = next; // phan hoi lac quan\n    scope.send({ topic: key, payload: next });\n  };\n\n  scope.$watch('msg', function(msg) {\n    if (!msg || !msg.payload) return;\n    var p = msg.payload;\n    if (p.type === 'http_data') {\n      scope.history = p.history || [];\n      scope.latest = p.latest || scope.latest;\n      scope.device = p.deviceState || scope.device;\n      redrawChart();\n    } else if (p.type === 'mode_update') {\n      scope.mode = p.mode;\n      scope.modeUpdatedAt = new Date().toLocaleTimeString('vi-VN', { hour12: false });\n      lastModeMsgTime = Date.now();\n    }\n  });\n})(scope);\n</script>\n",
+    "storeOutMessages": true,
+    "fwdInMessages": false,
+    "resendOnRefresh": true,
+    "templateScope": "local",
+    "className": "",
+    "wires": [
+      [
+        "n_switch_cmd"
+      ]
+    ]
+  },
+  {
+    "id": "n_switch_cmd",
+    "type": "switch",
+    "z": "buoi5_flow",
+    "name": "Phan loai lenh (mode / thiet bi)",
+    "property": "topic",
+    "propertyType": "msg",
+    "rules": [
+      {
+        "t": "eq",
+        "v": "mode",
+        "vt": "str"
+      },
+      {
+        "t": "else"
+      }
+    ],
+    "checkall": "true",
+    "repair": false,
+    "outputs": 2,
+    "wires": [
+      [
+        "n_fn_prep_mode_cmd"
+      ],
+      [
+        "n_fn_prep_device_cmd"
+      ]
+    ]
+  },
+  {
+    "id": "n_fn_prep_mode_cmd",
+    "type": "function",
+    "z": "buoi5_flow",
+    "name": "Chuan bi lenh Mode (MQTT)",
+    "func": "// ================== CAU HINH - DIEN THAT TRUOC KHI DUNG ==================\nconst MQTT_CHANNEL_ID = \"DIEN_CHANNEL_ID_MQTT_CUA_BAN\";\nconst FIELD_MODE = 'field1';\n// ===========================================================================\nmsg.topic = `channels/${MQTT_CHANNEL_ID}/publish/fields/${FIELD_MODE}`;\nmsg.payload = (msg.payload === 'manual') ? '1' : '0';\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "wires": [
+      [
+        "n_mqtt_out_mode"
+      ]
+    ]
+  },
+  {
+    "id": "n_mqtt_out_mode",
+    "type": "mqtt out",
+    "z": "buoi5_flow",
+    "name": "MQTT publish che do (retain)",
+    "topic": "",
+    "qos": "0",
+    "retain": "true",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "buoi5_mqtt_broker",
+    "wires": []
+  },
+  {
+    "id": "n_fn_prep_device_cmd",
+    "type": "function",
+    "z": "buoi5_flow",
+    "name": "Chuan bi lenh thiet bi (HTTP)",
+    "func": "// ================== CAU HINH - DIEN THAT TRUOC KHI DUNG ==================\nconst THINGSPEAK_WRITE_API_KEY = \"DIEN_WRITE_API_KEY_CUA_BAN\";\nconst FIELD = { led: 'field5', buzzer: 'field6', relay: 'field7' };\n// ===========================================================================\nconst field = FIELD[msg.topic];\nif (!field) { node.warn('Topic lenh khong hop le: ' + msg.topic); return null; }\n\nmsg.url = 'https://api.thingspeak.com/update.json';\nmsg.method = 'POST';\nmsg.headers = { 'Content-Type': 'application/json' };\nmsg.payload = { api_key: THINGSPEAK_WRITE_API_KEY, [field]: msg.payload ? '1' : '0' };\nmsg.attempt = 1;\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "wires": [
+      [
+        "n_http_device_cmd"
+      ]
+    ]
+  },
+  {
+    "id": "n_http_device_cmd",
+    "type": "http request",
+    "z": "buoi5_flow",
+    "name": "POST update.json (lenh thiet bi)",
+    "method": "use",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "insecureHTTPParser": false,
+    "authType": "",
+    "senderr": false,
+    "headers": [],
+    "wires": [
+      [
+        "n_fn_check_device_cmd"
+      ]
+    ]
+  },
+  {
+    "id": "n_fn_check_device_cmd",
+    "type": "function",
+    "z": "buoi5_flow",
+    "name": "Kiem tra ket qua, tu thu lai (toi da 3 lan / 3s)",
+    "func": "// ThingSpeak gioi han toi thieu 15s giua 2 lan ghi len CUNG 1 channel (channel\n// nay cung duoc Raspberry Pi ghi trung binh cam bien moi 20s, nen co the trung\n// nhip) - khi bi tu choi, tra ve HTTP 200 kem noi dung \"0\" (khong phai loi HTTP),\n// nen phai kiem tra entry_id thay vi chi dua vao ma trang thai HTTP.\nconst MAX_ATTEMPTS = 3;\nconst ok = msg.payload && typeof msg.payload === 'object' && Number(msg.payload.entry_id) > 0;\n\nif (ok) {\n  node.status({ fill: 'green', shape: 'dot', text: 'OK ' + new Date().toLocaleTimeString('vi-VN') });\n  return [msg, null];\n}\nif (msg.attempt < MAX_ATTEMPTS) {\n  node.warn(`Gui lenh dieu khien loi (lan ${msg.attempt}), thu lai sau 3s...`);\n  node.status({ fill: 'yellow', shape: 'ring', text: 'Thu lai lan ' + (msg.attempt + 1) });\n  msg.attempt += 1;\n  return [null, msg];\n}\nnode.status({ fill: 'red', shape: 'ring', text: 'That bai sau ' + MAX_ATTEMPTS + ' lan' });\nnode.warn('Gui lenh dieu khien that bai sau nhieu lan thu (co the do gioi han 15s/lan ghi cua ThingSpeak)');\nreturn [null, null];",
+    "outputs": 2,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "wires": [
+      [],
+      [
+        "n_delay_retry"
+      ]
+    ]
+  },
+  {
+    "id": "n_delay_retry",
+    "type": "delay",
+    "z": "buoi5_flow",
+    "name": "Doi 3s roi thu lai",
+    "pauseType": "delay",
+    "timeout": "3",
+    "timeoutUnits": "seconds",
+    "rate": "1",
+    "nbRateUnits": "1",
+    "rateUnits": "second",
+    "randomFirst": "1",
+    "randomLast": "5",
+    "randomUnits": "seconds",
+    "drop": false,
+    "allowrate": false,
+    "wires": [
+      [
+        "n_http_device_cmd"
+      ]
+    ]
+  }
+]
