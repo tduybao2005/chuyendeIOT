@@ -10,10 +10,9 @@
   width: 100% !important; max-width: 100% !important; left: 0 !important;
   position: relative !important; overflow: visible !important; height: auto !important;
 }
-#bk-root { box-sizing: border-box; font-family: -apple-system, Roboto, Arial, sans-serif; background:#F4F6F8; padding:12px; }
+#bk-root { box-sizing: border-box; font-family: -apple-system, Roboto, Arial, sans-serif; background:#F4F6F8; padding:12px 12px 32px; }
 #bk-root * { box-sizing: border-box; }
-#bk-root .title { font-size:20px; font-weight:700; text-align:center; margin-bottom:4px; color:#222; }
-#bk-root .subtitle { font-size:12px; text-align:center; color:#999; margin-bottom:12px; }
+#bk-root .title { font-size:20px; font-weight:700; text-align:center; margin-bottom:12px; color:#222; }
 #bk-root .grid { display:grid; grid-template-columns: 1fr; gap:12px; }
 @media (min-width: 700px) { #bk-root .grid { grid-template-columns: 1fr 1fr; } }
 #bk-root .card { background:#fff; border-radius:12px; padding:16px; }
@@ -42,11 +41,6 @@
 #bk-root .device-btn { flex:1; position:relative; background:#1783B0; color:#fff; border:none; border-radius:8px; padding:10px 8px; font-weight:600; font-size:13px; cursor:pointer; }
 #bk-root .device-btn.off-btn { background:#546E7A; }
 #bk-root .device-btn:disabled { background:#CCC; cursor:not-allowed; }
-#bk-root .proto-tag { position:absolute; top:-8px; right:-6px; font-size:9px; font-weight:800; letter-spacing:.5px; padding:1px 5px; border-radius:6px; color:#fff; }
-#bk-root .proto-tag.mqtt { background:#7B1FA2; }
-#bk-root .proto-tag.http { background:#EF6C00; }
-#bk-root .legend { display:flex; gap:14px; justify-content:center; margin-bottom:10px; font-size:11px; color:#666; }
-#bk-root .legend span.sw { display:inline-block; width:9px; height:9px; border-radius:5px; margin-right:4px; vertical-align:middle; }
 #bk-root .legend-dot { width:8px; height:8px; border-radius:4px; margin-right:4px; }
 #bk-root svg.chart { width:100%; height:200px; display:block; }
 #bk-root .chart-axis { display:flex; justify-content:space-between; font-size:11px; color:#999; margin-top:4px; }
@@ -56,11 +50,6 @@
 
 <div id="bk-root">
   <div class="title">Giám sát &amp; Điều khiển - Nhóm 3 (lớp thầy Kiến)</div>
-  <div class="subtitle">1 channel ThingSpeak duy nhất · 8 nút chia giao thức MQTT/HTTP</div>
-  <div class="legend">
-    <span><span class="sw" style="background:#7B1FA2"></span>Nút dùng MQTT</span>
-    <span><span class="sw" style="background:#EF6C00"></span>Nút dùng HTTP</span>
-  </div>
   <div class="grid">
 
     <div class="card">
@@ -69,8 +58,8 @@
         <span><span class="dot" ng-style="{background: modeUpdatedRecently() ? '#4CAF50' : '#BDBDBD'}"></span>Cập nhật lúc {{modeUpdatedAt || '--'}}</span>
       </div>
       <div class="switch-row">
-        <button ng-class="{active: mode==='auto'}" ng-click="doAuto()" style="position:relative">🤖 Auto<span class="proto-tag mqtt">MQTT</span></button>
-        <button ng-class="{active: mode==='manual'}" ng-click="doManual()" style="position:relative">✋ Manual<span class="proto-tag mqtt">MQTT</span></button>
+        <button ng-class="{active: mode==='auto'}" ng-click="doAuto()">🤖 Auto</button>
+        <button ng-class="{active: mode==='manual'}" ng-click="doManual()">✋ Manual</button>
       </div>
     </div>
 
@@ -81,7 +70,7 @@
     </div>
 
     <div class="card full">
-      <div class="card-title">Giá trị mới nhất từ Server (HTTP)</div>
+      <div class="card-title">Giá trị mới nhất từ Server</div>
       <div class="reading-row">
         <div class="reading-item">
           <div class="reading-value">{{ latest.temp !== null ? latest.temp.toFixed(1) + '°C' : '--' }}</div>
@@ -112,8 +101,8 @@
           <span class="badge" ng-class="device.led ? 'on' : 'off'">{{ device.led ? 'ON' : 'OFF' }}</span>
         </div>
         <div class="btn-row">
-          <button class="device-btn" ng-disabled="mode!=='manual'" ng-click="doLedOn()">Bật<span class="proto-tag mqtt">MQTT</span></button>
-          <button class="device-btn off-btn" ng-disabled="mode!=='manual'" ng-click="doLedOff()">Tắt<span class="proto-tag http">HTTP</span></button>
+          <button class="device-btn" ng-disabled="mode!=='manual'" ng-click="doLedOn()">Bật</button>
+          <button class="device-btn off-btn" ng-disabled="mode!=='manual'" ng-click="doLedOff()">Tắt</button>
         </div>
       </div>
 
@@ -123,8 +112,8 @@
           <span class="badge" ng-class="device.buzzer ? 'on' : 'off'">{{ device.buzzer ? 'ON' : 'OFF' }}</span>
         </div>
         <div class="btn-row">
-          <button class="device-btn" ng-disabled="mode!=='manual'" ng-click="doBuzzerOn()">Bật<span class="proto-tag mqtt">MQTT</span></button>
-          <button class="device-btn off-btn" ng-disabled="mode!=='manual'" ng-click="doBuzzerOff()">Tắt<span class="proto-tag http">HTTP</span></button>
+          <button class="device-btn" ng-disabled="mode!=='manual'" ng-click="doBuzzerOn()">Bật</button>
+          <button class="device-btn off-btn" ng-disabled="mode!=='manual'" ng-click="doBuzzerOff()">Tắt</button>
         </div>
       </div>
 
@@ -134,8 +123,8 @@
           <span class="badge" ng-class="device.relay ? 'on' : 'off'">{{ device.relay ? 'ON' : 'OFF' }}</span>
         </div>
         <div class="btn-row">
-          <button class="device-btn" ng-disabled="mode!=='manual'" ng-click="doRelayOn()">Bật<span class="proto-tag http">HTTP</span></button>
-          <button class="device-btn off-btn" ng-disabled="mode!=='manual'" ng-click="doRelayOff()">Tắt<span class="proto-tag http">HTTP</span></button>
+          <button class="device-btn" ng-disabled="mode!=='manual'" ng-click="doRelayOn()">Bật</button>
+          <button class="device-btn off-btn" ng-disabled="mode!=='manual'" ng-click="doRelayOff()">Tắt</button>
         </div>
       </div>
     </div>
@@ -283,7 +272,7 @@
   // tri ma khong can bam.
   function buildSeries(values, times) {
     var w = scope.chartWidth, h = 160;
-    var padTop = 14, padBottom = 14, padLeft = 36, padRight = 10;
+    var padTop = 14, padBottom = 30, padLeft = 36, padRight = 10;
     var plotW = w - padLeft - padRight, plotH = h - padTop - padBottom;
     var idxs = [], vals = [];
     for (var i = 0; i < values.length; i++) {
