@@ -1,0 +1,415 @@
+[
+  {
+    "id": "bk5_flow",
+    "type": "tab",
+    "label": "Buoi 5 (lop thay Kien) - Giam sat & Dieu khien",
+    "disabled": false,
+    "info": "Muc do 3, dung 1 CHANNEL ThingSpeak duy nhat. 8 nut dieu khien chia lam 4 nut MQTT (Auto, Manual, LED Bat, Buzzer Bat) va 4 nut HTTP (LED Tat, Buzzer Tat, Relay Bat, Relay Tat). Web doc du lieu 4 cam bien (Nhiet do/Do am/Khoang cach/Dien ap) qua HTTP.",
+    "env": []
+  },
+  {
+    "id": "bk5_ui_base",
+    "type": "ui_base",
+    "theme": {
+      "name": "theme-light",
+      "lightTheme": {
+        "default": "#0094CE",
+        "baseColor": "#0094CE",
+        "baseFont": "-apple-system,Helvetica Neue,Helvetica,Arial",
+        "edited": true,
+        "reset": false
+      },
+      "darkTheme": {
+        "default": "#097479",
+        "baseColor": "#097479",
+        "baseFont": "-apple-system,Helvetica Neue,Helvetica,Arial",
+        "edited": false
+      },
+      "customTheme": {
+        "name": "Untitled Theme 1",
+        "default": "#4B7930",
+        "baseColor": "#4B7930",
+        "baseFont": "-apple-system,Helvetica Neue,Helvetica,Arial"
+      },
+      "themeState": {
+        "base-color": {
+          "value": "#0094CE",
+          "edited": true
+        },
+        "page-titlebar-backgroundColor": {
+          "value": "#0094CE",
+          "edited": false
+        },
+        "page-backgroundColor": {
+          "value": "#F4F6F8",
+          "edited": false
+        },
+        "page-sidebar-backgroundColor": {
+          "value": "#ffffff",
+          "edited": false
+        },
+        "group-textColor": {
+          "value": "#1bbfff",
+          "edited": false
+        },
+        "group-borderColor": {
+          "value": "#ffffff",
+          "edited": false
+        },
+        "group-backgroundColor": {
+          "value": "#ffffff",
+          "edited": false
+        },
+        "widget-textColor": {
+          "value": "#111111",
+          "edited": false
+        },
+        "widget-backgroundColor": {
+          "value": "#0094CE",
+          "edited": false
+        },
+        "widget-borderColor": {
+          "value": "#ffffff",
+          "edited": false
+        },
+        "base-font": {
+          "value": "-apple-system,Helvetica Neue,Helvetica,Arial"
+        }
+      },
+      "angularTheme": {
+        "primary": "indigo",
+        "accents": "blue",
+        "warn": "red",
+        "background": "grey",
+        "palette": "light"
+      }
+    },
+    "site": {
+      "name": "Buoi 5 - Nhom 3 (lop thay Kien)",
+      "hideToolbar": "false",
+      "allowSwipe": "false",
+      "lockMenu": "false",
+      "allowTempTheme": "true",
+      "dateFormat": "DD/MM/YYYY",
+      "sizes": {
+        "sx": 48,
+        "sy": 48,
+        "gx": 6,
+        "gy": 6,
+        "cx": 6,
+        "cy": 6,
+        "px": 0,
+        "py": 0
+      }
+    }
+  },
+  {
+    "id": "bk5_ui_tab",
+    "type": "ui_tab",
+    "name": "Buoi 5",
+    "icon": "dashboard",
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "bk5_ui_group",
+    "type": "ui_group",
+    "name": "Giam sat & Dieu khien",
+    "tab": "bk5_ui_tab",
+    "order": 1,
+    "disp": true,
+    "width": "6",
+    "collapse": false
+  },
+  {
+    "id": "bk5_mqtt_broker",
+    "type": "mqtt-broker",
+    "name": "ThingSpeak MQTT (1 channel)",
+    "broker": "mqtt3.thingspeak.com",
+    "port": "1883",
+    "clientid": "DIEN_MQTT_CLIENT_ID_CUA_BAN",
+    "autoConnect": true,
+    "usetls": false,
+    "protocolVersion": "4",
+    "keepalive": "30",
+    "cleansession": true,
+    "birthTopic": "",
+    "closeTopic": "",
+    "willTopic": "",
+    "sessionExpiry": "",
+    "credentials": {
+      "user": "DIEN_MQTT_USERNAME_CUA_BAN",
+      "password": "DIEN_MQTT_PASSWORD_CUA_BAN"
+    }
+  },
+  {
+    "id": "n_inj_http",
+    "type": "inject",
+    "z": "bk5_flow",
+    "name": "Moi 15s: doc du lieu (HTTP)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "15",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "1",
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "wires": [
+      [
+        "n_fn_prep_http"
+      ]
+    ]
+  },
+  {
+    "id": "n_fn_prep_http",
+    "type": "function",
+    "z": "bk5_flow",
+    "name": "Chuan bi URL doc kenh (HTTP)",
+    "func": "// ================== CAU HINH - DIEN THAT TRUOC KHI DUNG ==================\nconst THINGSPEAK_CHANNEL_ID = \"DIEN_CHANNEL_ID_CUA_BAN\";\nconst THINGSPEAK_READ_API_KEY = \"DIEN_READ_API_KEY_CUA_BAN\";\nconst HISTORY_RESULTS = 30;\n// ===========================================================================\nmsg.url = `https://api.thingspeak.com/channels/${THINGSPEAK_CHANNEL_ID}/feeds.json?api_key=${THINGSPEAK_READ_API_KEY}&results=${HISTORY_RESULTS}`;\nmsg.method = 'GET';\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "wires": [
+      [
+        "n_http_http"
+      ]
+    ]
+  },
+  {
+    "id": "n_http_http",
+    "type": "http request",
+    "z": "bk5_flow",
+    "name": "GET feeds.json (1 channel)",
+    "method": "use",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "insecureHTTPParser": false,
+    "authType": "",
+    "senderr": false,
+    "headers": [],
+    "wires": [
+      [
+        "n_fn_parse_http"
+      ]
+    ]
+  },
+  {
+    "id": "n_fn_parse_http",
+    "type": "function",
+    "z": "bk5_flow",
+    "name": "Xu ly du lieu HTTP -> http_data",
+    "func": "// Thu tu field: Nhiet do, Do am, Khoang cach, Dien ap, LED, Che do, Relay, Buzzer\nconst FIELD = { temp:'field1', humi:'field2', distance:'field3', voltage:'field4',\n                led:'field5', mode:'field6', relay:'field7', buzzer:'field8' };\n\nfunction toNumber(v) { if (v === undefined || v === null || v === '') return null; const n = Number(v); return Number.isNaN(n) ? null : n; }\nfunction toBool(v) { return toNumber(v) === 1; }\n\nconst feeds = (msg.payload && msg.payload.feeds) || [];\n\n// Moi lan ghi rieng le 1 field se tao 1 dong moi (cac field con lai cua dong\n// do la null). Quet nguoc tu ban ghi moi nhat ve cu, lay gia tri KHONG null\n// dau tien cho TUNG field dieu khien rieng biet.\nconst deviceState = { led: false, buzzer: false, relay: false };\nlet mode = 'auto';\nconst found = { led: false, buzzer: false, relay: false, mode: false };\nfor (let i = feeds.length - 1; i >= 0 && !(found.led && found.buzzer && found.relay && found.mode); i--) {\n  const f = feeds[i];\n  if (!found.led && f[FIELD.led] != null && f[FIELD.led] !== '') { deviceState.led = toBool(f[FIELD.led]); found.led = true; }\n  if (!found.buzzer && f[FIELD.buzzer] != null && f[FIELD.buzzer] !== '') { deviceState.buzzer = toBool(f[FIELD.buzzer]); found.buzzer = true; }\n  if (!found.relay && f[FIELD.relay] != null && f[FIELD.relay] !== '') { deviceState.relay = toBool(f[FIELD.relay]); found.relay = true; }\n  if (!found.mode && f[FIELD.mode] != null && f[FIELD.mode] !== '') { mode = toBool(f[FIELD.mode]) ? 'manual' : 'auto'; found.mode = true; }\n}\n\nlet latest = { temp: null, humi: null, voltage: null, distance: null, updatedAt: null };\nfor (let i = feeds.length - 1; i >= 0; i--) {\n  const f = feeds[i];\n  const temp = toNumber(f[FIELD.temp]);\n  const humi = toNumber(f[FIELD.humi]);\n  const voltage = toNumber(f[FIELD.voltage]);\n  const distance = toNumber(f[FIELD.distance]);\n  if (temp !== null || humi !== null || voltage !== null || distance !== null) {\n    latest = { temp, humi, voltage, distance, updatedAt: f.created_at };\n    break;\n  }\n}\n\nconst history = feeds\n  .map(f => ({ createdAt: f.created_at, temp: toNumber(f[FIELD.temp]), humi: toNumber(f[FIELD.humi]) }))\n  .filter(p => p.temp !== null || p.humi !== null);\n\nnode.status({ fill: 'green', shape: 'dot', text: 'OK ' + new Date().toLocaleTimeString('vi-VN') });\nmsg.payload = { type: 'http_data', history, latest, deviceState, mode };\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "wires": [
+      [
+        "n_ui_template"
+      ]
+    ]
+  },
+  {
+    "id": "n_ui_template",
+    "type": "ui_template",
+    "z": "bk5_flow",
+    "group": "bk5_ui_group",
+    "name": "Dashboard Buoi 5 (HTML tuy chinh)",
+    "order": 1,
+    "width": "6",
+    "height": "0",
+    "format": "<style>\n.nr-dashboard-theme .card-panel { background: transparent !important; box-shadow: none !important; }\n/* node-red-dashboard (ban AngularJS cu) bo widget (ui_template) trong 1\n   the <md-card class=\"nr-dashboard-template\"> co width co dinh theo don vi\n   pixel cua ui_group (KHONG tu dong gian het chieu rong man hinh). Ep toan\n   bo chuoi container cha gian ra 100% de dashboard hien du tren moi kich\n   thuoc man hinh (may tinh / dien thoai / ipad). */\n.nr-dashboard-template.nr-dashboard-template,\n.nr-dashboard-cardcontainer, .nr-dashboard-cardpanel, ui-card-panel {\n  width: 100% !important; max-width: 100% !important; left: 0 !important;\n  position: relative !important; overflow: visible !important; height: auto !important;\n}\n#bk-root { box-sizing: border-box; font-family: -apple-system, Roboto, Arial, sans-serif; background:#F4F6F8; padding:12px; }\n#bk-root * { box-sizing: border-box; }\n#bk-root .title { font-size:20px; font-weight:700; text-align:center; margin-bottom:4px; color:#222; }\n#bk-root .subtitle { font-size:12px; text-align:center; color:#999; margin-bottom:12px; }\n#bk-root .grid { display:grid; grid-template-columns: 1fr; gap:12px; }\n@media (min-width: 700px) { #bk-root .grid { grid-template-columns: 1fr 1fr; } }\n#bk-root .card { background:#fff; border-radius:12px; padding:16px; }\n#bk-root .card.full { grid-column: 1 / -1; }\n#bk-root .card-title { font-size:13px; color:#777; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }\n#bk-root .dot { width:8px; height:8px; border-radius:4px; display:inline-block; margin-right:4px; }\n#bk-root .switch-row { display:flex; background:#F0F0F0; border-radius:10px; padding:4px; gap:4px; }\n#bk-root .switch-row button { flex:1; padding:10px 6px; border:none; border-radius:8px; background:transparent; font-size:15px; font-weight:600; color:#666; cursor:pointer; }\n#bk-root .switch-row button.active { background:#1783B0; color:#fff; }\n#bk-root .clock { font-size:28px; font-weight:700; color:#1783B0; text-align:center; }\n#bk-root .clock-date { font-size:13px; color:#999; text-align:center; margin-top:2px; }\n#bk-root .reading-row { display:flex; flex-wrap:wrap; justify-content:space-around; }\n#bk-root .reading-item { text-align:center; width:46%; margin-bottom:10px; }\n#bk-root .reading-value { font-size:22px; font-weight:700; color:#222; }\n#bk-root .reading-label { font-size:12px; color:#999; margin-top:2px; }\n#bk-root .updated-at { font-size:12px; color:#999; margin-top:6px; text-align:center; }\n#bk-root .device-row { padding:10px 0; border-bottom:1px solid #F0F0F0; }\n#bk-root .device-row:last-child { border-bottom:none; }\n#bk-root .device-head { display:flex; align-items:center; margin-bottom:8px; }\n#bk-root .device-head .icon { font-size:20px; margin-right:8px; }\n#bk-root .device-head .label { font-size:15px; font-weight:600; color:#333; flex:1; }\n#bk-root .badge { padding:3px 8px; border-radius:10px; color:#fff; font-size:11px; font-weight:700; }\n#bk-root .badge.on { background:#4CAF50; }\n#bk-root .badge.off { background:#BDBDBD; }\n#bk-root .btn-row { display:flex; gap:8px; }\n#bk-root .device-btn { flex:1; position:relative; background:#1783B0; color:#fff; border:none; border-radius:8px; padding:10px 8px; font-weight:600; font-size:13px; cursor:pointer; }\n#bk-root .device-btn.off-btn { background:#546E7A; }\n#bk-root .device-btn:disabled { background:#CCC; cursor:not-allowed; }\n#bk-root .proto-tag { position:absolute; top:-8px; right:-6px; font-size:9px; font-weight:800; letter-spacing:.5px; padding:1px 5px; border-radius:6px; color:#fff; }\n#bk-root .proto-tag.mqtt { background:#7B1FA2; }\n#bk-root .proto-tag.http { background:#EF6C00; }\n#bk-root .legend { display:flex; gap:14px; justify-content:center; margin-bottom:10px; font-size:11px; color:#666; }\n#bk-root .legend span.sw { display:inline-block; width:9px; height:9px; border-radius:5px; margin-right:4px; vertical-align:middle; }\n#bk-root .legend-dot { width:8px; height:8px; border-radius:4px; margin-right:4px; }\n#bk-root svg.chart { width:100%; height:200px; display:block; }\n#bk-root .chart-axis { display:flex; justify-content:space-between; font-size:11px; color:#999; margin-top:4px; }\n#bk-root .chart-tooltip { font-size:12px; color:#333; background:#F4F6F8; border-radius:6px; padding:4px 8px; margin-top:6px; display:inline-block; }\n#bk-root .card-title span:last-child { font-weight:600; color:#555; }\n</style>\n\n<div id=\"bk-root\">\n  <div class=\"title\">Giám sát &amp; Điều khiển - Nhóm 3 (lớp thầy Kiến)</div>\n  <div class=\"subtitle\">1 channel ThingSpeak duy nhất · 8 nút chia giao thức MQTT/HTTP</div>\n  <div class=\"legend\">\n    <span><span class=\"sw\" style=\"background:#7B1FA2\"></span>Nút dùng MQTT</span>\n    <span><span class=\"sw\" style=\"background:#EF6C00\"></span>Nút dùng HTTP</span>\n  </div>\n  <div class=\"grid\">\n\n    <div class=\"card\">\n      <div class=\"card-title\">\n        <span>Chế độ hoạt động</span>\n        <span><span class=\"dot\" ng-style=\"{background: modeUpdatedRecently() ? '#4CAF50' : '#BDBDBD'}\"></span>Cập nhật lúc {{modeUpdatedAt || '--'}}</span>\n      </div>\n      <div class=\"switch-row\">\n        <button ng-class=\"{active: mode==='auto'}\" ng-click=\"doAuto()\" style=\"position:relative\">🤖 Auto<span class=\"proto-tag mqtt\">MQTT</span></button>\n        <button ng-class=\"{active: mode==='manual'}\" ng-click=\"doManual()\" style=\"position:relative\">✋ Manual<span class=\"proto-tag mqtt\">MQTT</span></button>\n      </div>\n    </div>\n\n    <div class=\"card\">\n      <div class=\"card-title\">Thời gian hiện tại</div>\n      <div class=\"clock\">{{ clockStr }}</div>\n      <div class=\"clock-date\">{{ dateStr }}</div>\n    </div>\n\n    <div class=\"card full\">\n      <div class=\"card-title\">Giá trị mới nhất từ Server (HTTP)</div>\n      <div class=\"reading-row\">\n        <div class=\"reading-item\">\n          <div class=\"reading-value\">{{ latest.temp !== null ? latest.temp.toFixed(1) + '°C' : '--' }}</div>\n          <div class=\"reading-label\">Nhiệt độ</div>\n        </div>\n        <div class=\"reading-item\">\n          <div class=\"reading-value\">{{ latest.humi !== null ? latest.humi.toFixed(1) + '%' : '--' }}</div>\n          <div class=\"reading-label\">Độ ẩm</div>\n        </div>\n        <div class=\"reading-item\">\n          <div class=\"reading-value\">{{ latest.voltage !== null ? latest.voltage.toFixed(2) + 'V' : '--' }}</div>\n          <div class=\"reading-label\">Điện áp biến trở</div>\n        </div>\n        <div class=\"reading-item\">\n          <div class=\"reading-value\">{{ latest.distance !== null ? latest.distance.toFixed(1) + 'cm' : '--' }}</div>\n          <div class=\"reading-label\">Khoảng cách</div>\n        </div>\n      </div>\n      <div class=\"updated-at\">Cập nhật lúc: {{ latest.updatedAt || '--' }}</div>\n    </div>\n\n    <div class=\"card full\">\n      <div class=\"card-title\">Điều khiển thiết bị {{ mode !== 'manual' ? '(chỉ dùng được ở chế độ Manual)' : '' }}</div>\n\n      <div class=\"device-row\">\n        <div class=\"device-head\">\n          <span class=\"icon\">💡</span><span class=\"label\">LED</span>\n          <span class=\"badge\" ng-class=\"device.led ? 'on' : 'off'\">{{ device.led ? 'ON' : 'OFF' }}</span>\n        </div>\n        <div class=\"btn-row\">\n          <button class=\"device-btn\" ng-disabled=\"mode!=='manual'\" ng-click=\"doLedOn()\">Bật<span class=\"proto-tag mqtt\">MQTT</span></button>\n          <button class=\"device-btn off-btn\" ng-disabled=\"mode!=='manual'\" ng-click=\"doLedOff()\">Tắt<span class=\"proto-tag http\">HTTP</span></button>\n        </div>\n      </div>\n\n      <div class=\"device-row\">\n        <div class=\"device-head\">\n          <span class=\"icon\">🔊</span><span class=\"label\">Buzzer</span>\n          <span class=\"badge\" ng-class=\"device.buzzer ? 'on' : 'off'\">{{ device.buzzer ? 'ON' : 'OFF' }}</span>\n        </div>\n        <div class=\"btn-row\">\n          <button class=\"device-btn\" ng-disabled=\"mode!=='manual'\" ng-click=\"doBuzzerOn()\">Bật<span class=\"proto-tag mqtt\">MQTT</span></button>\n          <button class=\"device-btn off-btn\" ng-disabled=\"mode!=='manual'\" ng-click=\"doBuzzerOff()\">Tắt<span class=\"proto-tag http\">HTTP</span></button>\n        </div>\n      </div>\n\n      <div class=\"device-row\">\n        <div class=\"device-head\">\n          <span class=\"icon\">🔌</span><span class=\"label\">Relay</span>\n          <span class=\"badge\" ng-class=\"device.relay ? 'on' : 'off'\">{{ device.relay ? 'ON' : 'OFF' }}</span>\n        </div>\n        <div class=\"btn-row\">\n          <button class=\"device-btn\" ng-disabled=\"mode!=='manual'\" ng-click=\"doRelayOn()\">Bật<span class=\"proto-tag http\">HTTP</span></button>\n          <button class=\"device-btn off-btn\" ng-disabled=\"mode!=='manual'\" ng-click=\"doRelayOff()\">Tắt<span class=\"proto-tag http\">HTTP</span></button>\n        </div>\n      </div>\n    </div>\n\n    <div class=\"card full\">\n      <div class=\"card-title\">\n        <span><span class=\"legend-dot\" style=\"background:#E53935\"></span>Nhiệt độ (°C)</span>\n        <span ng-if=\"tempMin !== null\">Nhỏ nhất-lớn nhất: {{ tempMin.toFixed(1) }} - {{ tempMax.toFixed(1) }}</span>\n      </div>\n      <svg class=\"chart\" ng-attr-viewbox=\"0 0 {{chartWidth}} 160\">\n        <line ng-repeat=\"g in tempGrid\" ng-attr-x1=\"36\" ng-attr-y1=\"{{g.y}}\" ng-attr-x2=\"{{chartWidth-10}}\" ng-attr-y2=\"{{g.y}}\" stroke=\"#EEE\" stroke-width=\"1\"></line>\n        <text ng-repeat=\"g in tempGrid\" x=\"2\" ng-attr-y=\"{{g.textY}}\" font-size=\"10\" fill=\"#999\">{{ g.label }}</text>\n        <polyline ng-attr-points=\"{{ tempPolyline }}\" fill=\"none\" stroke=\"#E53935\" stroke-width=\"2\"></polyline>\n        <circle ng-repeat=\"p in tempPoints\" ng-attr-cx=\"{{p.x}}\" ng-attr-cy=\"{{p.y}}\" r=\"8\" fill=\"transparent\" style=\"cursor:pointer\" data-chart-key=\"temp\" ng-attr-data-chart-idx=\"{{$index}}\"></circle>\n        <circle ng-repeat=\"p in tempPoints\" ng-attr-cx=\"{{p.x}}\" ng-attr-cy=\"{{p.y}}\" r=\"2.5\" fill=\"#E53935\" style=\"pointer-events:none\"></circle>\n        <circle ng-if=\"selected.temp\" ng-attr-cx=\"{{selected.temp.x}}\" ng-attr-cy=\"{{selected.temp.y}}\" r=\"5.5\" fill=\"#E53935\" stroke=\"#fff\" stroke-width=\"2\" style=\"pointer-events:none\"></circle>\n      </svg>\n      <div class=\"chart-tooltip\" ng-if=\"selected.temp\">📍 {{ selected.temp.value.toFixed(1) }}°C lúc {{ selected.temp.time }}</div>\n      <div class=\"chart-axis\" ng-if=\"history.length>0\"><span>{{ chartFirstTime }}</span><span>{{ chartLastTime }}</span></div>\n      <div ng-if=\"history.length===0\" style=\"text-align:center;color:#999;padding:30px 0;\">Chưa có dữ liệu</div>\n    </div>\n\n    <div class=\"card full\">\n      <div class=\"card-title\">\n        <span><span class=\"legend-dot\" style=\"background:#1E88E5\"></span>Độ ẩm (%)</span>\n        <span ng-if=\"humiMin !== null\">Nhỏ nhất-lớn nhất: {{ humiMin.toFixed(1) }} - {{ humiMax.toFixed(1) }}</span>\n      </div>\n      <svg class=\"chart\" ng-attr-viewbox=\"0 0 {{chartWidth}} 160\">\n        <line ng-repeat=\"g in humiGrid\" ng-attr-x1=\"36\" ng-attr-y1=\"{{g.y}}\" ng-attr-x2=\"{{chartWidth-10}}\" ng-attr-y2=\"{{g.y}}\" stroke=\"#EEE\" stroke-width=\"1\"></line>\n        <text ng-repeat=\"g in humiGrid\" x=\"2\" ng-attr-y=\"{{g.textY}}\" font-size=\"10\" fill=\"#999\">{{ g.label }}</text>\n        <polyline ng-attr-points=\"{{ humiPolyline }}\" fill=\"none\" stroke=\"#1E88E5\" stroke-width=\"2\"></polyline>\n        <circle ng-repeat=\"p in humiPoints\" ng-attr-cx=\"{{p.x}}\" ng-attr-cy=\"{{p.y}}\" r=\"8\" fill=\"transparent\" style=\"cursor:pointer\" data-chart-key=\"humi\" ng-attr-data-chart-idx=\"{{$index}}\"></circle>\n        <circle ng-repeat=\"p in humiPoints\" ng-attr-cx=\"{{p.x}}\" ng-attr-cy=\"{{p.y}}\" r=\"2.5\" fill=\"#1E88E5\" style=\"pointer-events:none\"></circle>\n        <circle ng-if=\"selected.humi\" ng-attr-cx=\"{{selected.humi.x}}\" ng-attr-cy=\"{{selected.humi.y}}\" r=\"5.5\" fill=\"#1E88E5\" stroke=\"#fff\" stroke-width=\"2\" style=\"pointer-events:none\"></circle>\n      </svg>\n      <div class=\"chart-tooltip\" ng-if=\"selected.humi\">📍 {{ selected.humi.value.toFixed(1) }}% lúc {{ selected.humi.time }}</div>\n      <div class=\"chart-axis\" ng-if=\"history.length>0\"><span>{{ chartFirstTime }}</span><span>{{ chartLastTime }}</span></div>\n      <div ng-if=\"history.length===0\" style=\"text-align:center;color:#999;padding:30px 0;\">Chưa có dữ liệu</div>\n    </div>\n\n  </div>\n</div>\n\n<script>\n(function(scope) {\n  scope.mode = 'auto';\n  scope.modeUpdatedAt = null;\n  scope.device = { led: false, buzzer: false, relay: false };\n  scope.latest = { temp: null, humi: null, voltage: null, distance: null, updatedAt: null };\n  scope.history = [];\n  scope.chartWidth = 800;\n  scope.tempPolyline = ''; scope.humiPolyline = '';\n  scope.tempMin = null; scope.tempMax = null;\n  scope.humiMin = null; scope.humiMax = null;\n  scope.tempPoints = []; scope.humiPoints = [];\n  scope.tempGrid = []; scope.humiGrid = [];\n  scope.selected = { temp: null, humi: null };\n  scope.chartFirstTime = ''; scope.chartLastTime = '';\n  scope.clockStr = '';\n  scope.dateStr = '';\n\n  // ================== 8 nut dieu khien - moi nut mot topic rieng ==========\n  // Node-RED (switch node) doc msg.topic de quyet dinh dung MQTT hay HTTP\n  // theo dung bang phan chia giao thuc trong README - hien tren UI bang\n  // nhan MQTT/HTTP mau tim/cam tren tung nut cho de doi chieu.\n  scope.doAuto = function() {\n    scope.mode = 'auto'; // phan hoi lac quan, se duoc xac nhan lai qua http_data\n    scope.send({ topic: 'auto', payload: 0 });\n  };\n  scope.doManual = function() {\n    scope.mode = 'manual';\n    scope.send({ topic: 'manual', payload: 1 });\n  };\n  scope.doLedOn = function() {\n    if (scope.mode !== 'manual') return;\n    scope.device.led = true;\n    scope.send({ topic: 'led_on', payload: 1 });\n  };\n  scope.doLedOff = function() {\n    if (scope.mode !== 'manual') return;\n    scope.device.led = false;\n    scope.send({ topic: 'led_off', payload: 0 });\n  };\n  scope.doBuzzerOn = function() {\n    if (scope.mode !== 'manual') return;\n    scope.device.buzzer = true;\n    scope.send({ topic: 'buzzer_on', payload: 1 });\n  };\n  scope.doBuzzerOff = function() {\n    if (scope.mode !== 'manual') return;\n    scope.device.buzzer = false;\n    scope.send({ topic: 'buzzer_off', payload: 0 });\n  };\n  scope.doRelayOn = function() {\n    if (scope.mode !== 'manual') return;\n    scope.device.relay = true;\n    scope.send({ topic: 'relay_on', payload: 1 });\n  };\n  scope.doRelayOff = function() {\n    if (scope.mode !== 'manual') return;\n    scope.device.relay = false;\n    scope.send({ topic: 'relay_off', payload: 0 });\n  };\n\n  scope.selectPoint = function(key, p) {\n    scope.selected[key] = p;\n  };\n\n  // LUU Y: khong dung ng-click tren cac diem SVG vi AngularJS Material\n  // (dashboard nay dang dung) xung dot voi module ngTouch, khien ng-click\n  // tren phan tu SVG khong kich hoat duoc. Bat click bang addEventListener\n  // native + uy quyen (delegation) tren #bk-root - phan tu goc nay luon\n  // ton tai xuyen suot cac lan ve lai bieu do.\n  var root = document.getElementById('bk-root');\n  if (root) {\n    root.addEventListener('click', function(ev) {\n      var t = ev.target;\n      if (!t || t.tagName !== 'circle') return;\n      var key = t.getAttribute('data-chart-key');\n      if (!key) return;\n      var idx = parseInt(t.getAttribute('data-chart-idx'), 10);\n      var arr = key === 'temp' ? scope.tempPoints : scope.humiPoints;\n      var p = arr && arr[idx];\n      if (!p) return;\n      scope.$apply(function() { scope.selectPoint(key, p); });\n    });\n  }\n\n  var lastModeMsgTime = 0;\n  scope.modeUpdatedRecently = function() {\n    return (Date.now() - lastModeMsgTime) < 20000;\n  };\n\n  function tick() {\n    var now = new Date();\n    scope.clockStr = now.toLocaleTimeString('vi-VN', { hour12: false });\n    scope.dateStr = now.toLocaleDateString('vi-VN');\n  }\n  tick();\n  setInterval(function() { scope.$apply(tick); }, 1000);\n\n  // Moi duong (nhiet do / do am) co bieu do RIENG, tu chuan hoa theo\n  // min-max CUA CHINH NO. Tra ve them danh sach diem {x,y,value,time} de\n  // nguoi dung bam vao xem gia tri cu the, va 3 moc luoi de doc truc gia\n  // tri ma khong can bam.\n  function buildSeries(values, times) {\n    var w = scope.chartWidth, h = 160;\n    var padTop = 14, padBottom = 14, padLeft = 36, padRight = 10;\n    var plotW = w - padLeft - padRight, plotH = h - padTop - padBottom;\n    var idxs = [], vals = [];\n    for (var i = 0; i < values.length; i++) {\n      if (values[i] !== null && values[i] !== undefined) { idxs.push(i); vals.push(values[i]); }\n    }\n    if (vals.length === 0) return { points: '', min: null, max: null, pts: [], grid: [] };\n    var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);\n    if (min === max) { min -= 1; max += 1; } // tranh chia cho 0 khi chi co 1 gia tri / gia tri deu nhau\n    var range = max - min;\n    var n = values.length;\n    var pts = [];\n    var svgPts = [];\n    for (var k = 0; k < idxs.length; k++) {\n      var i2 = idxs[k], v = values[i2];\n      var x = padLeft + (n <= 1 ? 0 : (i2 / (n - 1)) * plotW);\n      var y = padTop + plotH - ((v - min) / range) * plotH;\n      pts.push({ x: x.toFixed(1), y: y.toFixed(1), value: v, time: formatChartTime(times[i2]) });\n      svgPts.push(x.toFixed(1) + ',' + y.toFixed(1));\n    }\n    var grid = [];\n    [min, (min + max) / 2, max].forEach(function(v) {\n      var y = padTop + plotH - ((v - min) / range) * plotH;\n      grid.push({ y: y.toFixed(1), textY: (y + 3.5).toFixed(1), label: v.toFixed(1) });\n    });\n    return { points: svgPts.join(' '), min: min, max: max, pts: pts, grid: grid };\n  }\n\n  function formatChartTime(iso) {\n    if (!iso) return '';\n    try { return new Date(iso).toLocaleTimeString('vi-VN', { hour12: false }); }\n    catch (e) { return ''; }\n  }\n\n  function redrawChart() {\n    var times = scope.history.map(function(p) { return p.createdAt; });\n    var t = buildSeries(scope.history.map(function(p) { return p.temp; }), times);\n    var h = buildSeries(scope.history.map(function(p) { return p.humi; }), times);\n    scope.tempPolyline = t.points; scope.tempMin = t.min; scope.tempMax = t.max;\n    scope.tempPoints = t.pts; scope.tempGrid = t.grid;\n    scope.humiPolyline = h.points; scope.humiMin = h.min; scope.humiMax = h.max;\n    scope.humiPoints = h.pts; scope.humiGrid = h.grid;\n    if (scope.history.length > 0) {\n      scope.chartFirstTime = formatChartTime(scope.history[0].createdAt);\n      scope.chartLastTime = formatChartTime(scope.history[scope.history.length - 1].createdAt);\n    }\n    // Bo lua chon cu vi toa do da tinh lai theo du lieu moi.\n    scope.selected.temp = null;\n    scope.selected.humi = null;\n  }\n\n  scope.$watch('msg', function(msg) {\n    if (!msg || !msg.payload) return;\n    var p = msg.payload;\n    if (p.type === 'http_data') {\n      scope.history = p.history || [];\n      scope.latest = p.latest || scope.latest;\n      scope.device = p.deviceState || scope.device;\n      scope.mode = p.mode || scope.mode;\n      redrawChart();\n    }\n  });\n})(scope);\n</script>\n",
+    "storeOutMessages": true,
+    "fwdInMessages": false,
+    "resendOnRefresh": true,
+    "templateScope": "local",
+    "className": "",
+    "wires": [
+      [
+        "n_switch_protocol"
+      ]
+    ]
+  },
+  {
+    "id": "n_switch_protocol",
+    "type": "switch",
+    "z": "bk5_flow",
+    "name": "Phan loai theo giao thuc (4 nut MQTT / 4 nut HTTP)",
+    "property": "topic",
+    "propertyType": "msg",
+    "rules": [
+      {
+        "t": "eq",
+        "v": "auto",
+        "vt": "str"
+      },
+      {
+        "t": "eq",
+        "v": "manual",
+        "vt": "str"
+      },
+      {
+        "t": "eq",
+        "v": "led_on",
+        "vt": "str"
+      },
+      {
+        "t": "eq",
+        "v": "buzzer_on",
+        "vt": "str"
+      },
+      {
+        "t": "else"
+      }
+    ],
+    "checkall": "true",
+    "repair": false,
+    "outputs": 5,
+    "wires": [
+      [
+        "n_fn_prep_mqtt_cmd"
+      ],
+      [
+        "n_fn_prep_mqtt_cmd"
+      ],
+      [
+        "n_fn_prep_mqtt_cmd"
+      ],
+      [
+        "n_fn_prep_mqtt_cmd"
+      ],
+      [
+        "n_fn_prep_http_cmd"
+      ]
+    ]
+  },
+  {
+    "id": "n_fn_prep_mqtt_cmd",
+    "type": "function",
+    "z": "bk5_flow",
+    "name": "Chuan bi lenh MQTT (Auto/Manual/LED Bat/Buzzer Bat)",
+    "func": "// ================== CAU HINH - DIEN THAT TRUOC KHI DUNG ==================\nconst THINGSPEAK_CHANNEL_ID = \"DIEN_CHANNEL_ID_CUA_BAN\";\n// field6 = Che do (0=Auto,1=Manual), field5 = LED, field8 = Buzzer\nconst TOPIC_MAP = {\n  auto:       { field: 'field6', value: '0' },\n  manual:     { field: 'field6', value: '1' },\n  led_on:     { field: 'field5', value: '1' },\n  buzzer_on:  { field: 'field8', value: '1' },\n};\n// ===========================================================================\nconst cfg = TOPIC_MAP[msg.topic];\nif (!cfg) { node.warn('Topic MQTT khong hop le: ' + msg.topic); return null; }\nmsg.topic = `channels/${THINGSPEAK_CHANNEL_ID}/publish/fields/${cfg.field}`;\nmsg.payload = cfg.value;\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "wires": [
+      [
+        "n_mqtt_out_cmd"
+      ]
+    ]
+  },
+  {
+    "id": "n_mqtt_out_cmd",
+    "type": "mqtt out",
+    "z": "bk5_flow",
+    "name": "MQTT publish (Auto/Manual/LED Bat/Buzzer Bat)",
+    "topic": "",
+    "qos": "1",
+    "retain": "true",
+    "respTopic": "",
+    "contentType": "",
+    "userProps": "",
+    "correl": "",
+    "expiry": "",
+    "broker": "bk5_mqtt_broker",
+    "wires": []
+  },
+  {
+    "id": "n_fn_prep_http_cmd",
+    "type": "function",
+    "z": "bk5_flow",
+    "name": "Chuan bi lenh HTTP (LED Tat/Buzzer Tat/Relay Bat/Tat)",
+    "func": "// ================== CAU HINH - DIEN THAT TRUOC KHI DUNG ==================\nconst THINGSPEAK_WRITE_API_KEY = \"DIEN_WRITE_API_KEY_CUA_BAN\";\n// field5 = LED, field7 = Relay, field8 = Buzzer\nconst TOPIC_MAP = {\n  led_off:    { field: 'field5', value: '0' },\n  buzzer_off: { field: 'field8', value: '0' },\n  relay_on:   { field: 'field7', value: '1' },\n  relay_off:  { field: 'field7', value: '0' },\n};\n// ===========================================================================\nconst cfg = TOPIC_MAP[msg.topic];\nif (!cfg) { node.warn('Topic HTTP khong hop le: ' + msg.topic); return null; }\n\nmsg.url = 'https://api.thingspeak.com/update.json';\nmsg.method = 'POST';\nmsg.headers = { 'Content-Type': 'application/json' };\nmsg.payload = { api_key: THINGSPEAK_WRITE_API_KEY, [cfg.field]: cfg.value };\nmsg.attempt = 1;\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "wires": [
+      [
+        "n_http_device_cmd"
+      ]
+    ]
+  },
+  {
+    "id": "n_http_device_cmd",
+    "type": "http request",
+    "z": "bk5_flow",
+    "name": "POST update.json (lenh HTTP)",
+    "method": "use",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "insecureHTTPParser": false,
+    "authType": "",
+    "senderr": false,
+    "headers": [],
+    "wires": [
+      [
+        "n_fn_check_device_cmd"
+      ]
+    ]
+  },
+  {
+    "id": "n_fn_check_device_cmd",
+    "type": "function",
+    "z": "bk5_flow",
+    "name": "Kiem tra ket qua, tu thu lai (toi da 3 lan / 3s)",
+    "func": "// ThingSpeak gioi han toi thieu 15s giua 2 lan ghi len CUNG 1 channel (channel\n// nay cung duoc Raspberry Pi ghi trung binh cam bien moi 20s, va cac nut MQTT\n// khac cung ghi len day, nen co the trung nhip) - khi bi tu choi, ThingSpeak\n// tra ve HTTP 200 kem noi dung \"0\" (khong phai loi HTTP), nen phai kiem tra\n// entry_id thay vi chi dua vao ma trang thai HTTP.\nconst MAX_ATTEMPTS = 3;\nconst ok = msg.payload && typeof msg.payload === 'object' && Number(msg.payload.entry_id) > 0;\n\nif (ok) {\n  node.status({ fill: 'green', shape: 'dot', text: 'OK ' + new Date().toLocaleTimeString('vi-VN') });\n  return [msg, null];\n}\nif (msg.attempt < MAX_ATTEMPTS) {\n  node.warn(`Gui lenh dieu khien loi (lan ${msg.attempt}), thu lai sau 3s...`);\n  node.status({ fill: 'yellow', shape: 'ring', text: 'Thu lai lan ' + (msg.attempt + 1) });\n  msg.attempt += 1;\n  return [null, msg];\n}\nnode.status({ fill: 'red', shape: 'ring', text: 'That bai sau ' + MAX_ATTEMPTS + ' lan' });\nnode.warn('Gui lenh dieu khien that bai sau nhieu lan thu (co the do gioi han 15s/lan ghi cua ThingSpeak)');\nreturn [null, null];",
+    "outputs": 2,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "wires": [
+      [],
+      [
+        "n_delay_retry"
+      ]
+    ]
+  },
+  {
+    "id": "n_delay_retry",
+    "type": "delay",
+    "z": "bk5_flow",
+    "name": "Doi 3s roi thu lai",
+    "pauseType": "delay",
+    "timeout": "3",
+    "timeoutUnits": "seconds",
+    "rate": "1",
+    "nbRateUnits": "1",
+    "rateUnits": "second",
+    "randomFirst": "1",
+    "randomLast": "5",
+    "randomUnits": "seconds",
+    "drop": false,
+    "allowrate": false,
+    "wires": [
+      [
+        "n_http_device_cmd"
+      ]
+    ]
+  }
+]

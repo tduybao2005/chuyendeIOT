@@ -1,0 +1,102 @@
+from urllib import request, parse
+from time import sleep
+import json
+from gpiozero import LED
+import smbus2
+
+a = [0, 0, 0, 0]
+led = LED(18)
+
+# Lớp điều khiển màn hình LCD JHD1802 tích hợp hiển thị (0x3E) và đèn nền (0x62)
+class JHD1802:
+    def __init__(self, text_addr=0x3E, rgb_addr=0x62):
+        self.bus = smbus2.SMBus(1)
+        self.text_addr = text_addr
+        self.rgb_addr = rgb_addr
+        
+        try:
+            self._set_rgb_backlight(255, 255, 255)
+            self.textCommand(0x38) # 2 lines, 5x8 matrix
+            self.textCommand(0x0C) # Display on, cursor off
+            self.textCommand(0x01) # Clear display
+            sleep(0.1)
+        except Exception as e:
+            print("Lỗi khởi tạo LCD/Đèn nền:", e)
+
+    def _set_rgb_backlight(self, r, g, b):
+        try:
+            self.bus.write_byte_data(self.rgb_addr, 0, 0)
+            self.bus.write_byte_data(self.rgb_addr, 1, 0)
+            self.bus.write_byte_data(self.rgb_addr, 0x08, 0xAA)
+            self.bus.write_byte_data(self.rgb_addr, 4, r)
+            self.bus.write_byte_data(self.rgb_addr, 3, g)
+            self.bus.write_byte_data(self.rgb_addr, 2, b)
+        except Exception:
+            pass
+
+    def textCommand(self, cmd):
+        try:
+            self.bus.write_byte_data(self.text_addr, 0x80, cmd)
+        except:
+            pass
+
+    def setCursor(self, row, column):
+        val = (0x40 * row) + (column % 0x10) + 0x80
+        self.textCommand(val)
+
+    def write(self, msg):
+        for c in msg:
+            try:
+                self.bus.write_byte_data(self.text_addr, 0x40, ord(c))
+            except:
+                pass
+
+lcd = JHD1802()
+
+def b():
+    try:
+        # Lấy các bản ghi mới nhất (ví dụ 20 bản ghi) để duyệt từ đầu tới cuối
+        req = request.Request("https://api.thingspeak.com/channels/3467228/feeds.json?api_key=174NUQR8NK572V5Y&results=20", method="GET")
+        r = request.urlopen(req)
+        response_data = r.read().decode()
+        response_data = json.loads(response_data)
+        data = response_data["feeds"]
+        
+        if data:
+            print(f"\n================ ĐANG DUYỆT {len(data)} BẢN GHI TỪ ĐẦU ĐẾN CUỐI ================")
+            
+            # Duyệt lần lượt từng bản ghi từ đầu (bản ghi cũ nhất trong batch) đến cuối (bản ghi mới nhất)
+            for index, feed in enumerate(data, start=1):
+                a[0] = float(feed.get("field1") or 0)
+                a[1] = float(feed.get("field2") or 0)
+                a[2] = float(feed.get("field3") or a[0])
+                a[3] = float(feed.get("field4") or a[1])
+
+                print('---------------------------------------------------')
+                print(f"Bản ghi [{index}/{len(data)}] -> Nhiệt độ: {a[0]}C | TB: {a[2]}C | Độ ẩm TB: {a[3]}%")
+
+                # Điều khiển LED theo nhiệt độ của bản ghi hiện tại
+                if int(a[0]) > 35:
+                    led.on()
+                elif int(a[0]) < 34:
+                    led.off()
+
+                # Hiển thị bản ghi hiện tại lên màn hình LCD
+                lcd.setCursor(0, 0)
+                lcd.write('Tb:{0}C      '.format(a[2]))
+                lcd.setCursor(1, 0)
+                lcd.write('Hb:{0}%      '.format(a[3]))
+
+                # Dừng 2 giây để mắt có thể đọc được từng bản ghi nhảy trên LCD
+                sleep(2)
+                
+    except Exception as e:
+        print("Lỗi kết nối ThingSpeak:", e)
+
+while(1):
+    try:
+        b()
+    except Exception as e:
+        print("Lỗi trong vòng lặp chính:", e)
+        
+    sleep(5)
