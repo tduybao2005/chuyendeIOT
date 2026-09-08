@@ -10,24 +10,36 @@ Chuc nang:
 - Nhan lenh dieu khien tu Web tren CUNG 1 channel (field5..field8), theo
   dung bang phan chia giao thuc nhom da chon cho 8 nut nhan (2 Auto/Manual +
   6 On/Off cua LED/Buzzer/Relay):
-    Auto        -> MQTT   (field5 = 0)
-    Manual      -> MQTT   (field5 = 1)
-    LED Bat     -> MQTT   (field6 = 1)
-    LED Tat     -> HTTP   (field6 = 0)
-    Buzzer Bat  -> MQTT   (field7 = 1)
-    Buzzer Tat  -> HTTP   (field7 = 0)
-    Relay Bat   -> HTTP   (field8 = 1)
-    Relay Tat   -> HTTP   (field8 = 0)
-  Vi ca 8 nut deu ghi len CUNG 1 channel (bat ke MQTT hay HTTP), gia tri moi
-  nhat luon doc lai duoc qua HTTP feeds.json - nen Pi dung CA HAI duong doc:
-    + MQTT subscribe (channels/<id>/subscribe): duong nhanh, chi nhan duoc
-      ngay cac gia tri ma Web ghi bang MQTT (Auto/Manual/LED Bat/Buzzer Bat).
-    + HTTP polling feeds.json moi 1 giay: duong chac chan, nhan duoc TAT CA
-      gia tri (ca 4 nut MQTT lan 4 nut HTTP) vi ThingSpeak luu chung vao 1
-      feed du ghi bang giao thuc nao -> dam bao yeu cau "trang thai LED doi
-      cham nhat 2s ke tu khi du lieu duoc gui thanh cong len ThingSpeak" cho
-      ca 8 nut, khong phu thuoc rieng vao MQTT (von co the mat goi vi Web va
-      Pi phai dung chung 1 client_id MQTT - xem ghi chu o phan cau hinh).
+    Auto        -> MQTT   (field6 = 0)
+    Manual      -> MQTT   (field6 = 1)
+    LED Bat     -> MQTT   (field5 = 1)
+    LED Tat     -> HTTP   (field5 = 0)
+    Buzzer Bat  -> MQTT   (field8 = 1)
+    Buzzer Tat  -> HTTP   (field8 = 0)
+    Relay Bat   -> HTTP   (field7 = 1)
+    Relay Tat   -> HTTP   (field7 = 0)
+  Ca 8 nut nay do WEB (Node-RED) ghi len - giao thuc MQTT/HTTP chi anh huong
+  ben phia Web, khong bat buoc Pi phai doc bang cung giao thuc do.
+
+- Pi CHI DOC LENH QUA HTTP POLLING MOI GIAY, KHONG SUBSCRIBE MQTT.
+  Ly do (phat hien khi test that voi phan cung): ThingSpeak yeu cau client_id
+  MQTT phai trung voi username, va nhom chi duoc cap 1 danh tinh MQTT duy
+  nhat -> neu CA Web (Node-RED publish) VA Pi (subscribe) cung giu ket noi
+  MQTT voi CHUNG 1 client_id, ThingSpeak se lien tuc ngat ket noi ben cu moi
+  khi ben kia (tu dong) ket noi lai, tao thanh vong lap "da nhau" ngat/ket
+  noi lai moi vai giay MOT CACH LIEN TUC (khong can ai bam nut) - khien hau
+  het lenh publish MQTT tu Web bi mat, kha nang cao hon nhieu so voi hinh
+  dung ban dau la "chi mat luc dang publish". Giai phap: Pi bo han duong
+  subscribe MQTT, CHI GIU 1 duong doc DUY NHAT la HTTP polling moi giay -
+  van nhan du CA 8 nut (ke ca 4 nut Web ghi bang MQTT) vi ThingSpeak luu
+  chung moi lan ghi (du giao thuc nao) vao CUNG 1 feed cua channel, doc lai
+  bang HTTP deu thay day du. Nho vay Node-RED (Web) la ben DUY NHAT giu ket
+  noi MQTT, khong con ai tranh client_id nua -> on dinh hon han.
+  Poll moi 1 giay van dam bao dung yeu cau de "trang thai LED doi cham nhat
+  2s ke tu khi du lieu gui thanh cong len ThingSpeak", vi day la thoi gian
+  tinh TU LUC DU LIEU DA CO TREN THINGSPEAK, khong tinh tu luc nguoi dung
+  bam nut.
+
 - Che do Auto:
     + LED: sang tu 18h-22h, tat ngoai khoang do.
     + Buzzer: keu khi nhiet do > 37C, tat khi nhiet do < 31C, con lai giu nguyen.
@@ -50,15 +62,15 @@ from grove.grove_ultrasonic_ranger import GroveUltrasonicRanger
 from gpiozero import LED, Buzzer, OutputDevice
 from time import sleep
 from datetime import datetime
-import json
+import threading
 import smbus2
 import requests
-import paho.mqtt.client as mqtt
 
 # ---------------------------------------------------------------------------
 # Cau hinh chung
 # ---------------------------------------------------------------------------
-SAMPLE_INTERVAL = 1        # doc cam bien + xu ly lenh dieu khien moi 1s
+SAMPLE_INTERVAL = 1        # doc cam bien moi 1s
+CONTROL_POLL_INTERVAL = 1  # doc lenh dieu khien moi 1s (chay o LUONG RIENG)
 SEND_INTERVAL = 20         # gui trung binh len ThingSpeak moi 20s
 MIN_RUN_SECONDS = 30 * 60  # chay lien tuc toi thieu 30 phut (chi de ghi chu/log)
 
@@ -73,35 +85,14 @@ DISTANCE_RANGE = (2, 350)   # cm, theo thong so pho bien cua Grove Ultrasonic Ra
 # LUU Y: ban nay CHI DUNG 1 CHANNEL DUY NHAT (khac ban lop thay Thanh dung 2
 # channel), vi channel duoc chia du 8 field: field1-4 la cam bien (Pi ghi
 # HTTP), field5-8 la lenh dieu khien (Web ghi MQTT hoac HTTP tuy nut - xem
-# bang phan chia giao thuc o dau file).
-#
-# LUU Y QUAN TRONG (phat hien khi test that voi phan cung o ban lop thay
-# Thanh, van dung cho ban nay): vi ThingSpeak yeu cau client_id MQTT phai
-# trung voi username, Web va Pi buoc phai dung CHUNG 1 danh tinh MQTT -> moi
-# lan Web publish (Auto/Manual/LED Bat/Buzzer Bat) co the lam Pi bi ngat ket
-# noi MQTT tam thoi, va broker cua ThingSpeak KHONG luu retained message
-# that su tren topic dang channel-feed nay, nen Pi co the MAT tin nhan MQTT
-# ngay ca khi da subscribe lai. Vi Web ghi CA 8 nut len CUNG 1 channel (du
-# MQTT hay HTTP) nen HTTP polling moi giay o duoi la nguon doc lenh CHINH
-# (chac chan), con MQTT chi la duong nhanh bo sung cho rieng 4 nut da chon
-# dung MQTT (Auto/Manual/LED Bat/Buzzer Bat).
+# bang phan chia giao thuc o dau file). Pi CHI CAN thong tin HTTP - khong can
+# thong tin MQTT vi khong con subscribe (xem giai thich o dau file).
 # ---------------------------------------------------------------------------
 THINGSPEAK_CHANNEL_ID = "DIEN_CHANNEL_ID_CUA_BAN"
 THINGSPEAK_READ_API_KEY = "DIEN_READ_API_KEY_CUA_BAN"
 THINGSPEAK_WRITE_API_KEY = "DIEN_WRITE_API_KEY_CUA_BAN"
 THINGSPEAK_UPDATE_URL = "https://api.thingspeak.com/update.json"
 THINGSPEAK_FEEDS_URL = f"https://api.thingspeak.com/channels/{THINGSPEAK_CHANNEL_ID}/feeds.json"
-
-MQTT_BROKER = "mqtt3.thingspeak.com"
-MQTT_PORT = 1883
-MQTT_CLIENT_ID = "DIEN_MQTT_CLIENT_ID_CUA_BAN"
-MQTT_USERNAME = "DIEN_MQTT_USERNAME_CUA_BAN"
-MQTT_PASSWORD = "DIEN_MQTT_PASSWORD_CUA_BAN"
-# Subscribe toan bo channel feed (tat ca field cung luc) - chi cac gia tri
-# duoc GHI BANG MQTT (field6 Auto/Manual, field5 khi LED Bat, field8 khi
-# Buzzer Bat) moi thuc su den qua duong nay; cac gia tri con lai (LED Tat,
-# Buzzer Tat, Relay Bat/Tat) van co trong feed nhung do Web ghi bang HTTP.
-MQTT_SUBSCRIBE_TOPIC = f"channels/{THINGSPEAK_CHANNEL_ID}/subscribe"
 
 # Thu tu field theo dung kenh ThingSpeak da tao: Nhiet do, Do am, Khoang
 # cach, Dien ap, LED, Che do, Relay, Buzzer.
@@ -113,7 +104,10 @@ FIELD_LED = "field5"       # Web ghi: MQTT khi Bat (1), HTTP khi Tat (0)
 FIELD_MODE = "field6"      # Web ghi MQTT: 0 = Auto, 1 = Manual
 FIELD_RELAY = "field7"     # Web ghi HTTP ca Bat lan Tat
 FIELD_BUZZER = "field8"    # Web ghi: MQTT khi Bat (1), HTTP khi Tat (0)
-CONTROL_POLL_RESULTS = 15  # so ban ghi gan nhat lay ve moi lan doc lenh dieu khien
+CONTROL_POLL_RESULTS = 30  # so ban ghi gan nhat lay ve moi lan doc lenh dieu khien
+                           # (~10 phut vi Pi ghi cam bien moi 20s) - du de bat
+                           # moi thay doi; con trang thai BAN DAU luc khoi dong
+                           # thi doc rieng bang sync_initial_state() ben duoi.
 
 
 def is_valid(value, min_val, max_val):
@@ -268,11 +262,6 @@ def apply_outputs():
         # con lai: giu nguyen trang thai
 
 
-# ---------------------------------------------------------------------------
-# MQTT: nhan lenh dieu khien duong nhanh (chi 4 nut da chon dung MQTT:
-# Auto/Manual/LED Bat/Buzzer Bat - cac gia tri con lai van duoc doc du qua
-# HTTP polling ben duoi)
-# ---------------------------------------------------------------------------
 def to_bool(value):
     try:
         return float(value) >= 1
@@ -280,59 +269,11 @@ def to_bool(value):
         return False
 
 
-def on_mqtt_connect(client, userdata, flags, reason_code, properties=None):
-    if reason_code == 0:
-        print(f"[MQTT] Ket noi thanh cong, dang subscribe: {MQTT_SUBSCRIBE_TOPIC}")
-        client.subscribe(MQTT_SUBSCRIBE_TOPIC)
-    else:
-        print(f"[MQTT] Ket noi/xac thuc that bai, reason_code={reason_code}")
-
-
-def on_mqtt_message(client, userdata, message):
-    try:
-        data = json.loads(message.payload.decode())
-    except (json.JSONDecodeError, UnicodeDecodeError) as e:
-        print("[MQTT] Payload khong hop le:", e)
-        return
-
-    changed = False
-    if data.get(FIELD_MODE) is not None:
-        new_mode = 'manual' if to_bool(data.get(FIELD_MODE)) else 'auto'
-        if new_mode != state['mode']:
-            state['mode'] = new_mode
-            changed = True
-    # field6 qua MQTT chi mang gia tri Bat (1) - nhung cu doc du ca 2 chieu
-    # cho chac, phong khi ThingSpeak lap lai ban ghi cu trong feed.
-    if data.get(FIELD_LED) is not None:
-        new_val = to_bool(data.get(FIELD_LED))
-        if new_val != state['led_cmd']:
-            state['led_cmd'] = new_val
-            changed = True
-    if data.get(FIELD_BUZZER) is not None:
-        new_val = to_bool(data.get(FIELD_BUZZER))
-        if new_val != state['buzzer_cmd']:
-            state['buzzer_cmd'] = new_val
-            changed = True
-
-    if changed:
-        print(f"[MQTT] Cap nhat: mode={state['mode']} led={state['led_cmd']} buzzer={state['buzzer_cmd']}")
-        apply_outputs()  # phan hoi ngay, khong doi den vong lap ke tiep
-
-
-def start_mqtt_subscriber():
-    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=MQTT_CLIENT_ID)
-    client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
-    client.on_connect = on_mqtt_connect
-    client.on_message = on_mqtt_message
-    client.connect(MQTT_BROKER, MQTT_PORT, keepalive=30)
-    client.loop_start()
-    return client
-
-
 # ---------------------------------------------------------------------------
 # HTTP polling: doc lai TOAN BO lenh dieu khien (field5-8) tren cung channel.
-# Day la nguon CHINH/chac chan cho ca 8 nut (ke ca 4 nut da chon dung MQTT o
-# tren), vi ThingSpeak luu chung vao 1 feed du ghi bang giao thuc nao.
+# Day la DUONG DOC DUY NHAT (khong con subscribe MQTT - xem giai thich o
+# dau file) cho ca 8 nut, vi ThingSpeak luu chung vao 1 feed du ghi bang
+# giao thuc nao.
 # ---------------------------------------------------------------------------
 def poll_http_commands():
     params = {"api_key": THINGSPEAK_READ_API_KEY, "results": CONTROL_POLL_RESULTS}
@@ -382,6 +323,59 @@ def poll_http_commands():
         apply_outputs()
 
 
+def sync_initial_state():
+    """Doc trang thai lenh HIEN TAI luc moi khoi dong.
+
+    Khong the dua vao poll_http_commands() cho viec nay: no chi quet
+    CONTROL_POLL_RESULTS ban ghi gan nhat, ma Pi ghi cam bien moi 20s nen
+    mot lenh cu (vd chon che do Manual tu 30 phut truoc) da troi ra ngoai
+    cua so do -> Pi se hieu nham la "chua co lenh nao" va quay ve mac dinh
+    Auto, khien cac nut Bat/Tat khong con tac dung (loi da gap khi test).
+    ThingSpeak co san API tra ve gia tri cuoi cung cua TUNG field bat ke
+    cu bao lau: /channels/<id>/fields/<n>/last.json
+    """
+    targets = [
+        (FIELD_MODE, 'mode'), (FIELD_LED, 'led_cmd'),
+        (FIELD_BUZZER, 'buzzer_cmd'), (FIELD_RELAY, 'relay_cmd'),
+    ]
+    for field, key in targets:
+        num = field.replace('field', '')
+        url = f"https://api.thingspeak.com/channels/{THINGSPEAK_CHANNEL_ID}/fields/{num}/last.json"
+        try:
+            response = requests.get(url, params={"api_key": THINGSPEAK_READ_API_KEY}, timeout=5)
+            response.raise_for_status()
+            value = response.json().get(field)
+        except (requests.RequestException, ValueError, AttributeError) as e:
+            print(f"[HTTP] Khong doc duoc gia tri cuoi cua {field}:", e)
+            continue
+        if value in (None, ""):
+            continue
+        if key == 'mode':
+            state['mode'] = 'manual' if to_bool(value) else 'auto'
+        else:
+            state[key] = to_bool(value)
+    print(f"[HTTP] Trang thai ban dau doc tu ThingSpeak: mode={state['mode']} "
+          f"led={state['led_cmd']} buzzer={state['buzzer_cmd']} relay={state['relay_cmd']}")
+    apply_outputs()
+
+
+def control_poll_loop(stop_event):
+    """Doc lenh dieu khien o LUONG RIENG, dung nhip 1 giay.
+
+    LY DO tach luong: neu de chung trong vong lap chinh, moi vong con phai
+    doc DHT (~1s, ham chan), cam bien sieu am, ghi LCD... nen chu ky thuc te
+    do duoc len toi ~2.2s -> lenh co the nam cho toi 2.2s moi duoc xu ly,
+    VUOT moc "cham nhat 2s" cua de bai. Tach ra luong rieng thi viec doc
+    lenh luon dung nhip 1s, khong bi cam bien cham lam nghen.
+    """
+    while not stop_event.is_set():
+        try:
+            poll_http_commands()
+        except Exception as e:
+            print("[HTTP] Loi trong luong doc lenh:", e)
+        stop_event.wait(CONTROL_POLL_INTERVAL)
+
+
 # ---------------------------------------------------------------------------
 # Gui du lieu trung binh len ThingSpeak (HTTP)
 # ---------------------------------------------------------------------------
@@ -391,7 +385,7 @@ def send_to_thingspeak(**fields):
     LUU Y: ThingSpeak gioi han toi thieu 15 giay giua 2 lan ghi len CUNG 1
     channel, bat ke ghi bang HTTP hay MQTT (cac nut dieu khien tu Web cung
     ghi len channel nay) - khi bi tu choi, ThingSpeak tra ve HTTP 200 kem
-    noi dung "0" (khong phai ma loi HTTP) nen phai kiem tra noi dung tra ve,
+    noi dung "0" (khong phai loi HTTP) nen phai kiem tra noi dung tra ve,
     khong the chi dua vao raise_for_status().
     """
     payload = {"api_key": THINGSPEAK_WRITE_API_KEY}
@@ -436,7 +430,16 @@ def send_window_average(window):
 # ---------------------------------------------------------------------------
 def main():
     lcd.clear() if hasattr(lcd, 'clear') else None
-    mqtt_client = start_mqtt_subscriber()
+
+    # Dong bo trang thai lenh hien tai truoc khi vao vong lap, de khoi dong
+    # lai giua chung khong bi mat che do Manual / trang thai thiet bi.
+    sync_initial_state()
+
+    # Doc lenh dieu khien o luong rieng, dung nhip 1s (khong bi cam bien
+    # cham lam nghen) -> dam bao "trang thai doi cham nhat 2s".
+    stop_event = threading.Event()
+    control_thread = threading.Thread(target=control_poll_loop, args=(stop_event,), daemon=True)
+    control_thread.start()
 
     window_start = None
     window = {'temp': [], 'humi': [], 'voltage': [], 'distance': []}
@@ -462,9 +465,9 @@ def main():
 
                 print(f"Nhiet do:{temp} Do am:{humi} Dien ap:{voltage} Khoang cach:{distance}")
 
-                # Doc lai toan bo lenh dieu khien (field5-8) qua HTTP moi giay
-                # - nguon chac chan cho ca 8 nut, ke ca 4 nut da chon MQTT.
-                poll_http_commands()
+                # (Viec doc lenh dieu khien field5-8 da duoc tach sang luong
+                # rieng control_poll_loop() chay dung nhip 1s - xem ghi chu o
+                # ham do; vong lap nay chi lo cam bien / LCD / gui trung binh.)
 
                 # Auto mode can duoc danh gia lai moi giay (vi dieu kien theo
                 # gio he thong / nhiet do / do am co the thay doi lien tuc)
@@ -488,6 +491,7 @@ def main():
     except KeyboardInterrupt:
         print("\nDa dung chuong trinh.")
     finally:
+        stop_event.set()
         # An toan: chu dong tat ca 3 thiet bi khi chuong trinh dung (ke ca do
         # loi), vi GPIO khong tu dong ve muc thap khi tien trinh ket thuc -
         # neu dang bat thi se giu nguyen trang thai vat ly cho den khi co
@@ -495,8 +499,6 @@ def main():
         led.off()
         buzzer.off()
         relay.off()
-        mqtt_client.loop_stop()
-        mqtt_client.disconnect()
 
 
 if __name__ == '__main__':

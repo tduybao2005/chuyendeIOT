@@ -47,6 +47,8 @@ md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; hei
   #bk-root .mini-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
 #bk-root .switch-row button.active { background:#1783B0; color:#fff; }
+#bk-root .switch-row button:disabled { color:#BBB; cursor:not-allowed; }
+#bk-root .switch-row button.active:disabled { background:#90CAF9; color:#fff; }
 
 #bk-root .clock { font-size: clamp(16px, 3vh, 26px); font-weight:700; color:#1783B0; text-align:center; line-height:1.1; }
 #bk-root .clock-date { font-size: clamp(9px, 1.3vh, 12px); color:#999; text-align:center; }
@@ -99,8 +101,8 @@ md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; hei
     <div class="card">
       <div class="mini-title">Chế độ hoạt động</div>
       <div class="switch-row">
-        <button ng-class="{active: mode==='auto'}" ng-click="doAuto()">🤖 Auto</button>
-        <button ng-class="{active: mode==='manual'}" ng-click="doManual()">✋ Manual</button>
+        <button ng-class="{active: mode==='auto'}" ng-disabled="cmdPending" ng-click="doAuto()">🤖 Auto</button>
+        <button ng-class="{active: mode==='manual'}" ng-disabled="cmdPending" ng-click="doManual()">✋ Manual</button>
       </div>
     </div>
     <div class="card">
@@ -125,24 +127,24 @@ md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; hei
       <span class="icon">💡</span><span class="label">LED</span>
       <span class="badge" ng-class="device.led ? 'on' : 'off'">{{ device.led ? 'ON' : 'OFF' }}</span>
       <div class="btn-row">
-        <button class="device-btn" ng-disabled="mode!=='manual'" ng-click="doLedOn()">Bật</button>
-        <button class="device-btn off-btn" ng-disabled="mode!=='manual'" ng-click="doLedOff()">Tắt</button>
+        <button class="device-btn" ng-disabled="mode!=='manual' || cmdPending" ng-click="doLedOn()">Bật</button>
+        <button class="device-btn off-btn" ng-disabled="mode!=='manual' || cmdPending" ng-click="doLedOff()">Tắt</button>
       </div>
     </div>
     <div class="device-line">
       <span class="icon">🔊</span><span class="label">Buzzer</span>
       <span class="badge" ng-class="device.buzzer ? 'on' : 'off'">{{ device.buzzer ? 'ON' : 'OFF' }}</span>
       <div class="btn-row">
-        <button class="device-btn" ng-disabled="mode!=='manual'" ng-click="doBuzzerOn()">Bật</button>
-        <button class="device-btn off-btn" ng-disabled="mode!=='manual'" ng-click="doBuzzerOff()">Tắt</button>
+        <button class="device-btn" ng-disabled="mode!=='manual' || cmdPending" ng-click="doBuzzerOn()">Bật</button>
+        <button class="device-btn off-btn" ng-disabled="mode!=='manual' || cmdPending" ng-click="doBuzzerOff()">Tắt</button>
       </div>
     </div>
     <div class="device-line">
       <span class="icon">🔌</span><span class="label">Relay</span>
       <span class="badge" ng-class="device.relay ? 'on' : 'off'">{{ device.relay ? 'ON' : 'OFF' }}</span>
       <div class="btn-row">
-        <button class="device-btn" ng-disabled="mode!=='manual'" ng-click="doRelayOn()">Bật</button>
-        <button class="device-btn off-btn" ng-disabled="mode!=='manual'" ng-click="doRelayOff()">Tắt</button>
+        <button class="device-btn" ng-disabled="mode!=='manual' || cmdPending" ng-click="doRelayOn()">Bật</button>
+        <button class="device-btn off-btn" ng-disabled="mode!=='manual' || cmdPending" ng-click="doRelayOff()">Tắt</button>
       </div>
     </div>
   </div>
@@ -238,43 +240,74 @@ md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; hei
   // theo dung bang phan chia giao thuc trong README (khong hien nhan tren
   // giao dien Web - minh chung giao thuc xem truc tiep tren cac khoi cua
   // flow Node-RED).
+  //
+  // CHONG BAM CHONG LENH: chi cho gui 1 lenh tai 1 thoi diem (scope.cmdPending
+  // != null thi TAT CA 8 nut deu bi khoa, giong kieu khoa cua che do Auto) -
+  // vi ca 8 nut cung ghi len 1 channel ThingSpeak (gioi han toi thieu 15s/lan
+  // ghi), bam nhieu lan lien tiep truoc khi lenh truoc xong se tao nhieu luong
+  // gui chong nhau, tranh chap gioi han 15s va lam nhau that bai day chuyen.
+  scope.cmdPending = null;
+  var pendingTimer = null;
+  var MQTT_TOPICS = { auto: 1, manual: 1, led_on: 1, buzzer_on: 1 };
+
+  function clearPending() {
+    scope.cmdPending = null;
+    clearTimeout(pendingTimer);
+  }
+
+  // QUAN TRONG: chi thuc su gui (va chi cap nhat giao dien lac quan) khi
+  // KHONG co lenh nao khac dang cho phan hoi - truoc day cap nhat giao dien
+  // (vd scope.device.relay = true) chay TRUOC ca khi kiem tra cmdPending,
+  // nen neu bam luc dang khoa thi giao dien van "sang den" ao trong khi
+  // lenh thuc te bi lang le bo qua (khong gui gi ca) - day chinh la nguyen
+  // nhan bao Relay hien ON tren web nhung phan cung khong bat.
+  function sendCmd(topic, payload, applyOptimistic) {
+    if (scope.cmdPending) {
+      showToast('⏳ Đang chờ lệnh trước xử lý xong, đợi rồi bấm lại.', 2000);
+      return false;
+    }
+    if (applyOptimistic) applyOptimistic();
+    scope.cmdPending = topic;
+    scope.send({ topic: topic, payload: payload });
+    // Nhanh MQTT (auto/manual/led_on/buzzer_on) khong co xac nhan gui thanh
+    // cong/that bai (mqtt out la fire-and-forget) -> tu mo khoa sau 3s.
+    // Nhanh HTTP se duoc mo khoa som hon qua cmd_ok/cmd_failed (xem $watch
+    // ben duoi); timeout o day chi la luoi an toan phong khi mat msg.
+    var timeoutMs = MQTT_TOPICS[topic] ? 3000 : 20000;
+    clearTimeout(pendingTimer);
+    pendingTimer = setTimeout(function() { scope.$apply(clearPending); }, timeoutMs);
+    return true;
+  }
+
   scope.doAuto = function() {
-    scope.mode = 'auto'; // phan hoi lac quan, se duoc xac nhan lai qua http_data
-    scope.send({ topic: 'auto', payload: 0 });
+    sendCmd('auto', 0, function() { scope.mode = 'auto'; });
   };
   scope.doManual = function() {
-    scope.mode = 'manual';
-    scope.send({ topic: 'manual', payload: 1 });
+    sendCmd('manual', 1, function() { scope.mode = 'manual'; });
   };
   scope.doLedOn = function() {
     if (scope.mode !== 'manual') return;
-    scope.device.led = true;
-    scope.send({ topic: 'led_on', payload: 1 });
+    sendCmd('led_on', 1, function() { scope.device.led = true; });
   };
   scope.doLedOff = function() {
     if (scope.mode !== 'manual') return;
-    scope.device.led = false;
-    scope.send({ topic: 'led_off', payload: 0 });
+    sendCmd('led_off', 0, function() { scope.device.led = false; });
   };
   scope.doBuzzerOn = function() {
     if (scope.mode !== 'manual') return;
-    scope.device.buzzer = true;
-    scope.send({ topic: 'buzzer_on', payload: 1 });
+    sendCmd('buzzer_on', 1, function() { scope.device.buzzer = true; });
   };
   scope.doBuzzerOff = function() {
     if (scope.mode !== 'manual') return;
-    scope.device.buzzer = false;
-    scope.send({ topic: 'buzzer_off', payload: 0 });
+    sendCmd('buzzer_off', 0, function() { scope.device.buzzer = false; });
   };
   scope.doRelayOn = function() {
     if (scope.mode !== 'manual') return;
-    scope.device.relay = true;
-    scope.send({ topic: 'relay_on', payload: 1 });
+    sendCmd('relay_on', 1, function() { scope.device.relay = true; });
   };
   scope.doRelayOff = function() {
     if (scope.mode !== 'manual') return;
-    scope.device.relay = false;
-    scope.send({ topic: 'relay_off', payload: 0 });
+    sendCmd('relay_off', 0, function() { scope.device.relay = false; });
   };
 
   scope.selectPoint = function(key, p) {
@@ -447,12 +480,15 @@ md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; hei
       scope.device = p.deviceState || scope.device;
       scope.mode = p.mode || scope.mode;
       redrawChart();
+    } else if (p.type === 'cmd_ok') {
+      if (p.topic === scope.cmdPending) clearPending();
     } else if (p.type === 'cmd_failed') {
       // ThingSpeak tu choi ghi (het so lan thu lai) - thuong do gioi han
       // 15s/lan ghi cua channel bi trung nhip voi lan ghi khac (Pi gui
       // trung binh cam bien, hoac nut khac vua bam). Bao ro cho nguoi
       // dung biet, thay vi de lan doc lai tiep theo (moi 15s) tu am tham
       // tra trang thai ve gia tri cu khien tuong nhu "tu nhien no doi lai".
+      if (p.topic === scope.cmdPending) clearPending();
       var label = TOPIC_LABEL[p.topic] || p.topic;
       showToast('⚠️ Gửi lệnh "' + label + '" thất bại (ThingSpeak giới hạn 15s/lần ghi) - thử lại sau vài giây.', 6000);
     }

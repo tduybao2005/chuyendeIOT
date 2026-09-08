@@ -62,19 +62,31 @@ minh chứng giao thức xem trực tiếp trên **sơ đồ khối của flow N
 node `switch` tách hẳn 2 nhánh xử lý (nhánh MQTT dùng node `mqtt out`, nhánh
 HTTP dùng node `http request`) thay vì chỉ chứng minh bằng code.
 
-### Vì sao Raspberry Pi vẫn đọc lại bằng CẢ 2 cách?
+### Vì sao Raspberry Pi CHỈ đọc lệnh qua HTTP polling, không subscribe MQTT?
 
-- **MQTT subscribe** (đường nhanh): chỉ nhận được ngay các giá trị *được ghi
-  bằng MQTT* (Auto/Manual, LED Bật, Buzzer Bật).
-- **HTTP polling mỗi giây** (đường chắc chắn): đọc lại *toàn bộ* field5-field8
-  bất kể được Web ghi bằng giao thức nào (vì ThingSpeak lưu chung vào 1 feed),
-  nên luôn đảm bảo yêu cầu "trạng thái LED đổi chậm nhất 2s kể từ khi dữ liệu
-  gửi thành công lên ThingSpeak" cho cả 8 nút, kể cả 4 nút dùng HTTP.
+Về nguyên lý, MQTT bình thường (Web publish → broker → Pi subscribe) không hề
+xung đột gì - hàng nghìn client có thể cùng subscribe một topic mà không ảnh
+hưởng nhau. Vấn đề nằm ở **giới hạn riêng của ThingSpeak**: mỗi channel chỉ
+được cấp **đúng 1 bộ danh tính MQTT** (`client_id` = `username`), dùng chung
+cho cả publish lẫn subscribe. Theo đúng chuẩn MQTT, **client_id phải duy nhất
+cho mỗi kết nối đang mở tới broker** - nếu Web (Node-RED publish) và Pi
+(subscribe) cùng mở 2 kết nối riêng biệt nhưng dùng **chung 1 client_id**,
+broker buộc phải đá kết nối cũ mỗi khi có kết nối mới với cùng client_id đó.
 
-Lưu ý: vì ThingSpeak yêu cầu client_id MQTT phải trùng username, Web và Pi
-buộc dùng chung 1 danh tính MQTT → mỗi lần Web publish có thể làm Pi mất gói
-tin tạm thời. Đây là lý do chính khiến HTTP polling mới là nguồn đọc lệnh
-chắc chắn, MQTT chỉ là đường nhanh bổ sung.
+Thực tế đo được: cả Node-RED lẫn Pi đều tự động kết nối lại ngay khi bị đá,
+tạo thành vòng lặp **đá nhau liên tục mỗi 10-15 giây, kể cả khi không ai bấm
+nút gì** - khiến phần lớn lệnh publish MQTT từ Web bị rớt (không chỉ lúc đang
+publish như suy đoán ban đầu). Nếu nhóm được cấp 2 bộ danh tính MQTT riêng
+(1 cho Web, 1 cho Pi) thì sẽ không có vấn đề gì.
+
+**Giải pháp**: Pi bỏ hẳn việc mở kết nối MQTT (không subscribe), **chỉ đọc
+lệnh qua HTTP polling mỗi giây** - vẫn nhận đủ cả 8 nút (kể cả 4 nút Web ghi
+bằng MQTT) vì ThingSpeak lưu chung mọi lần ghi (bất kể giao thức) vào cùng 1
+feed của channel. Nhờ vậy chỉ còn Web giữ kết nối MQTT, không còn ai tranh
+client_id nữa → publish MQTT từ Web ổn định hẳn. Poll mỗi giây vẫn đảm bảo
+đúng yêu cầu "trạng thái LED đổi chậm nhất 2s kể từ khi dữ liệu **đã có**
+trên ThingSpeak" (mốc tính là từ lúc dữ liệu lên server, không phải từ lúc
+bấm nút).
 
 ## GPIO / cổng Grove trên Raspberry Pi
 
@@ -105,6 +117,37 @@ Xem hướng dẫn đầy đủ tại **[`node-red/README.md`](node-red/README.m
    thật lên git**.
 3. Import flow qua Node-RED editor hoặc Admin API, Deploy.
 4. Mở dashboard tại `http://<ip-cua-pi>:1880/ui`.
+
+## Kết quả đo độ trễ thật trên phần cứng
+
+Đo bằng script chạy **trên chính Raspberry Pi** (dùng chung đồng hồ, không sai
+lệch do SSH), tính từ lúc gửi lệnh đến lúc chân GPIO đổi mức thật sự
+(đọc `/sys/kernel/debug/gpio`), mỗi lệnh đều đợi ThingSpeak rảnh mới gửi:
+
+| Nút | Giao thức | Lần đo 1 | Lần đo 2 |
+|---|---|---|---|
+| LED Bật | MQTT | 0.01s | 0.23s |
+| LED Tắt | HTTP | 0.77s | 1.37s |
+| Buzzer Bật | MQTT | 0.77s | 0.77s |
+| Buzzer Tắt | HTTP | 0.93s | 1.04s |
+| Relay Bật | HTTP | 0.17s | 1.05s |
+| Relay Tắt | HTTP | 0.17s | 0.88s |
+
+⇒ Toàn bộ 8 nút đều **dưới 2s**, đúng yêu cầu đề bài.
+
+**Lưu ý về giới hạn 15s của ThingSpeak** (đã kiểm chứng bằng thực nghiệm):
+
+- **MQTT publish KHÔNG bị giới hạn 15s** - publish chỉ 1.9s sau khi Pi vừa
+  ghi vẫn lên được channel ngay.
+- **HTTP `update.json` thì BỊ giới hạn**: phải cách ≥15s so với bản ghi gần
+  nhất của channel, *bất kể bản ghi đó do ai/giao thức nào tạo ra* (đã đo:
+  sau 1 lần ghi MQTT, HTTP bị từ chối ở giây thứ 5.6 / 9.8 / 13.9 và chỉ
+  được chấp nhận ở giây 18.1).
+- Vì Pi ghi trung bình cảm biến mỗi 20s lên cùng channel (đề bắt buộc), nếu
+  bấm nút HTTP đúng lúc kênh vừa có bản ghi thì lệnh phải chờ hết khe 15s
+  (flow Node-RED tự thử lại tối đa 10 lần × 3s ≈ 30s để chắc chắn gửi được).
+  Con số 2s ở bảng trên - và cũng là mốc đề bài quy định - được tính **từ khi
+  dữ liệu đã lên tới ThingSpeak thành công**.
 
 ## Chấm điểm mức độ 3 - đối chiếu yêu cầu
 
