@@ -41,10 +41,10 @@ biến ⇒ bấm nút ăn ngay (<2s).
 | | field2 Độ ẩm TB (20s) | Pi | HTTP | như trên |
 | | field3 Khoảng cách TB (20s) | Pi | HTTP | như trên |
 | | field4 Điện áp biến trở TB (20s) | Pi | HTTP | như trên |
-| **LỆNH** (channel cũ, có sẵn thiết bị MQTT) | field5 Lệnh LED (0/1) | Web | **MQTT khi Bật**, **HTTP khi Tắt** | Pi (HTTP poll 1s) |
-| | field6 Chế độ (0=Auto, 1=Manual) | Web | **MQTT** (cả 2 nút) | như trên |
-| | field7 Lệnh Relay (0/1) | Web | **HTTP** (cả 2 nút) | như trên |
-| | field8 Lệnh Buzzer (0/1) | Web | **MQTT khi Bật**, **HTTP khi Tắt** | như trên |
+| **LỆNH** (channel mới, thiết bị MQTT riêng) | field1 Lệnh LED (0/1) | Web | **MQTT khi Bật**, **HTTP khi Tắt** | Pi (HTTP poll 1s) |
+| | field2 Lệnh Buzzer (0/1) | Web | **MQTT khi Bật**, **HTTP khi Tắt** | như trên |
+| | field3 Lệnh Relay (0/1) | Web | **HTTP** (cả 2 nút) | như trên |
+| | field4 Chế độ (0=Auto, 1=Manual) | Web | **MQTT** (cả 2 nút) | như trên |
 
 ### Bảng chia giao thức cho đúng 8 nút nhấn (đề yêu cầu 4 nút MQTT / 4 nút HTTP)
 
@@ -125,18 +125,21 @@ Xem hướng dẫn đầy đủ tại **[`node-red/README.md`](node-red/README.m
 
 Đo bằng script chạy **trên chính Raspberry Pi** (dùng chung đồng hồ, không sai
 lệch do SSH), tính từ lúc gửi lệnh đến lúc chân GPIO đổi mức thật sự
-(đọc `/sys/kernel/debug/gpio`), mỗi lệnh đều đợi ThingSpeak rảnh mới gửi:
+(đọc `/sys/kernel/debug/gpio`), **sau khi đã tách 2 channel**:
 
-| Nút | Giao thức | Lần đo 1 | Lần đo 2 |
-|---|---|---|---|
-| LED Bật | MQTT | 0.01s | 0.23s |
-| LED Tắt | HTTP | 0.77s | 1.37s |
-| Buzzer Bật | MQTT | 0.77s | 0.77s |
-| Buzzer Tắt | HTTP | 0.93s | 1.04s |
-| Relay Bật | HTTP | 0.17s | 1.05s |
-| Relay Tắt | HTTP | 0.17s | 0.88s |
+| Nút | Giao thức | Độ trễ |
+|---|---|---|
+| LED Bật | MQTT | 0.01s |
+| LED Tắt | HTTP | 0.98s |
+| Buzzer Bật | MQTT | 0.00s |
+| Buzzer Tắt | HTTP | 0.17s |
+| Relay Bật | HTTP | 0.93s |
+| Relay Tắt | HTTP | 1.10s |
 
-⇒ Toàn bộ 8 nút đều **dưới 2s**, đúng yêu cầu đề bài.
+⇒ Toàn bộ 8 nút đều **dưới 2s**, đúng yêu cầu đề bài. Đặc biệt: sau khi tách
+channel LỆNH riêng (chỉ nhận lệnh nút, không còn bị cảm biến ghi đè lên),
+**các nút HTTP không còn phải chờ khoảng trống 15-17s như trước nữa** - bấm
+liên tiếp nhiều nút HTTP vẫn phản hồi ngay vì channel LỆNH luôn rảnh.
 
 **Lưu ý về giới hạn 15s của ThingSpeak** (đã kiểm chứng bằng thực nghiệm):
 

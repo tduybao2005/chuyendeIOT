@@ -19,14 +19,14 @@ Chuc nang:
 - Nhan lenh dieu khien tu Web tren CHANNEL LENH (field5..field8), theo
   dung bang phan chia giao thuc nhom da chon cho 8 nut nhan (2 Auto/Manual +
   6 On/Off cua LED/Buzzer/Relay):
-    Auto        -> MQTT   (field6 = 0)
-    Manual      -> MQTT   (field6 = 1)
-    LED Bat     -> MQTT   (field5 = 1)
-    LED Tat     -> HTTP   (field5 = 0)
-    Buzzer Bat  -> MQTT   (field8 = 1)
-    Buzzer Tat  -> HTTP   (field8 = 0)
-    Relay Bat   -> HTTP   (field7 = 1)
-    Relay Tat   -> HTTP   (field7 = 0)
+    Auto        -> MQTT   (field4 = 0)
+    Manual      -> MQTT   (field4 = 1)
+    LED Bat     -> MQTT   (field1 = 1)
+    LED Tat     -> HTTP   (field1 = 0)
+    Buzzer Bat  -> MQTT   (field2 = 1)
+    Buzzer Tat  -> HTTP   (field2 = 0)
+    Relay Bat   -> HTTP   (field3 = 1)
+    Relay Tat   -> HTTP   (field3 = 0)
   Ca 8 nut nay do WEB (Node-RED) ghi len CHANNEL LENH - giao thuc MQTT/HTTP
   chi anh huong ben phia Web, khong bat buoc Pi phai doc bang cung giao thuc.
 
@@ -112,11 +112,11 @@ FIELD_TEMP = "field1"      # Pi ghi (HTTP, trung binh 20s)
 FIELD_HUMI = "field2"      # Pi ghi (HTTP, trung binh 20s)
 FIELD_DISTANCE = "field3"  # Pi ghi (HTTP, trung binh 20s)
 FIELD_VOLTAGE = "field4"   # Pi ghi (HTTP, trung binh 20s)
-# Field tren channel LENH (giu nguyen so field da dat ten san tren channel cu)
-FIELD_LED = "field5"       # Web ghi: MQTT khi Bat (1), HTTP khi Tat (0)
-FIELD_MODE = "field6"      # Web ghi MQTT: 0 = Auto, 1 = Manual
-FIELD_RELAY = "field7"     # Web ghi HTTP ca Bat lan Tat
-FIELD_BUZZER = "field8"    # Web ghi: MQTT khi Bat (1), HTTP khi Tat (0)
+# Field tren channel LENH (channel rieng, danh so lai tu field1)
+FIELD_LED = "field1"       # Web ghi: MQTT khi Bat (1), HTTP khi Tat (0)
+FIELD_BUZZER = "field2"    # Web ghi: MQTT khi Bat (1), HTTP khi Tat (0)
+FIELD_RELAY = "field3"     # Web ghi HTTP ca Bat lan Tat
+FIELD_MODE = "field4"      # Web ghi MQTT: 0 = Auto, 1 = Manual
 CONTROL_POLL_RESULTS = 30  # so ban ghi gan nhat lay ve moi lan doc lenh dieu khien
                            # (~10 phut vi Pi ghi cam bien moi 20s) - du de bat
                            # moi thay doi; con trang thai BAN DAU luc khoi dong
@@ -357,11 +357,14 @@ def sync_initial_state():
         try:
             response = requests.get(url, params={"api_key": COMMAND_READ_API_KEY}, timeout=5)
             response.raise_for_status()
-            value = response.json().get(field)
-        except (requests.RequestException, ValueError, AttributeError) as e:
+            # API nay tra ve THANG GIA TRI (vd "1", "0") chu khong phai
+            # object {"fieldN": ...} - va tra ve -1 neu field chua bao gio
+            # co du lieu (quy uoc cua ThingSpeak).
+            value = response.json()
+        except (requests.RequestException, ValueError) as e:
             print(f"[HTTP] Khong doc duoc gia tri cuoi cua {field}:", e)
             continue
-        if value in (None, ""):
+        if value in (None, "", -1, "-1"):
             continue
         if key == 'mode':
             state['mode'] = 'manual' if to_bool(value) else 'auto'
