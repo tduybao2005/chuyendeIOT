@@ -21,10 +21,12 @@ commit giá trị thật lên git):
 
 | Placeholder | Giá trị | Xuất hiện ở node |
 |---|---|---|
-| `DIEN_CHANNEL_ID_CUA_BAN` | Channel ID (dùng chung 1 channel) | `n_fn_prep_http`, `n_fn_prep_mqtt_cmd` |
-| `DIEN_READ_API_KEY_CUA_BAN` | Read API Key | `n_fn_prep_http` |
-| `DIEN_WRITE_API_KEY_CUA_BAN` | Write API Key | `n_fn_prep_http_cmd` |
-| `DIEN_MQTT_CLIENT_ID_CUA_BAN` | MQTT Client ID | node cấu hình `bk5_mqtt_broker` |
+| `DIEN_CHANNEL_ID_CAM_BIEN_CUA_BAN` | Channel ID của channel **CẢM BIẾN** | `n_fn_prep_http` |
+| `DIEN_READ_API_KEY_CAM_BIEN_CUA_BAN` | Read API Key của channel **CẢM BIẾN** | `n_fn_prep_http` |
+| `DIEN_CHANNEL_ID_LENH_CUA_BAN` | Channel ID của channel **LỆNH** | `n_fn_prep_state`, `n_fn_prep_mqtt_cmd` |
+| `DIEN_READ_API_KEY_LENH_CUA_BAN` | Read API Key của channel **LỆNH** | `n_fn_prep_state` |
+| `DIEN_WRITE_API_KEY_LENH_CUA_BAN` | Write API Key của channel **LỆNH** | `n_fn_prep_http_cmd` |
+| `DIEN_MQTT_CLIENT_ID_CUA_BAN` | MQTT Client ID (của channel LỆNH) | node cấu hình `bk5_mqtt_broker` |
 | `DIEN_MQTT_USERNAME_CUA_BAN` | MQTT Username | node cấu hình `bk5_mqtt_broker` |
 | `DIEN_MQTT_PASSWORD_CUA_BAN` | MQTT Password | node cấu hình `bk5_mqtt_broker` |
 

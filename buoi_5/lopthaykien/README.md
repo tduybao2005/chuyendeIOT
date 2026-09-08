@@ -1,7 +1,7 @@
 # Buổi 5 (lớp thầy Kiến) - Nhóm 7 - Mức độ 3
 
-Hệ thống Raspberry Pi + Web giám sát & điều khiển qua **01 channel ThingSpeak
-duy nhất** (khác bản làm cho lớp thầy Thanh dùng 2 channel).
+Hệ thống Raspberry Pi + Web giám sát & điều khiển qua **2 channel ThingSpeak**:
+một channel cho dữ liệu cảm biến, một channel cho 8 nút điều khiển.
 
 - **Raspberry Pi** (`raspberry/chuong_trinh_pi.py`): đọc 4 cảm biến, hiển thị
   LCD 16x2, điều khiển LED/Buzzer/Relay (chế độ Auto hoặc Manual theo lệnh
@@ -23,26 +23,28 @@ buoi_5/lopthaykien/
     └── README.md                # Huong dan cai dat + import flow chi tiet
 ```
 
-## Vì sao chỉ cần 1 channel (khác bản 2 channel trước)?
+## Vì sao phải tách 2 channel?
 
-Ở bản trước (lớp thầy Thanh) phải tách 2 channel vì đổi Mode bắt buộc dùng
-MQTT còn lệnh thiết bị bắt buộc dùng HTTP, và **một thiết bị MQTT của
-ThingSpeak chỉ được cấp quyền subscribe/publish trên đúng 1 channel**. Ở bản
-này đề cho phép **tự chọn** trong 8 nút (2 Auto/Manual + 6 On/Off của
-LED/Buzzer/Relay) nút nào dùng MQTT, nút nào dùng HTTP — nên không cần tách
-channel: cả 8 nút cùng ghi vào **field5-field8 của cùng 1 channel**, chỉ khác
-giao thức ghi. Channel đã được cấp gồm đủ 8 field, dùng làm:
+ThingSpeak giới hạn tối thiểu **~17 giây giữa 2 lần ghi lên cùng 1 channel**
+(tài liệu ghi 15s nhưng đo thực tế chặt hơn), trong khi đề bài **bắt buộc Pi
+gửi trung bình cảm biến mỗi 20 giây**. Nếu để chung 1 channel thì mỗi chu kỳ
+21s chỉ còn **~4 giây trống** cho lệnh nút bấm ⇒ lệnh HTTP từ Web bị từ chối
+liên tục (đã gặp thực tế: 20 lần thử liên tiếp đều thất bại, đèn không đổi
+trạng thái dù đợi rất lâu).
 
-| Field | Ý nghĩa | Ai ghi | Giao thức |
-|---|---|---|---|
-| field1 | Nhiệt độ TB (20s) | Pi | HTTP |
-| field2 | Độ ẩm TB (20s) | Pi | HTTP |
-| field3 | Khoảng cách TB (20s) | Pi | HTTP |
-| field4 | Điện áp biến trở TB (20s) | Pi | HTTP |
-| field5 | Lệnh LED (0/1) | Web | **MQTT khi Bật (1)**, **HTTP khi Tắt (0)** |
-| field6 | Chế độ (0=Auto, 1=Manual) | Web | **MQTT** (cả 2 nút Auto/Manual) |
-| field7 | Lệnh Relay (0/1) | Web | **HTTP** (cả 2 nút Bật/Tắt) |
-| field8 | Lệnh Buzzer (0/1) | Web | **MQTT khi Bật (1)**, **HTTP khi Tắt (0)** |
+Tách 2 channel thì lệnh nút bấm không còn tranh khe ghi với dữ liệu cảm
+biến ⇒ bấm nút ăn ngay (<2s).
+
+| Channel | Field | Ai ghi | Giao thức | Ai đọc |
+|---|---|---|---|---|
+| **CẢM BIẾN** | field1 Nhiệt độ TB (20s) | Pi | HTTP | Web (HTTP, vẽ biểu đồ) |
+| | field2 Độ ẩm TB (20s) | Pi | HTTP | như trên |
+| | field3 Khoảng cách TB (20s) | Pi | HTTP | như trên |
+| | field4 Điện áp biến trở TB (20s) | Pi | HTTP | như trên |
+| **LỆNH** (channel cũ, có sẵn thiết bị MQTT) | field5 Lệnh LED (0/1) | Web | **MQTT khi Bật**, **HTTP khi Tắt** | Pi (HTTP poll 1s) |
+| | field6 Chế độ (0=Auto, 1=Manual) | Web | **MQTT** (cả 2 nút) | như trên |
+| | field7 Lệnh Relay (0/1) | Web | **HTTP** (cả 2 nút) | như trên |
+| | field8 Lệnh Buzzer (0/1) | Web | **MQTT khi Bật**, **HTTP khi Tắt** | như trên |
 
 ### Bảng chia giao thức cho đúng 8 nút nhấn (đề yêu cầu 4 nút MQTT / 4 nút HTTP)
 
@@ -103,8 +105,9 @@ bấm nút).
 ## Cách chạy Raspberry Pi
 
 1. Điền các giá trị `DIEN_..._CUA_BAN` thật vào đầu file
-   `raspberry/chuong_trinh_pi.py` (channel ID, read/write API key, MQTT
-   client ID/username/password).
+   `raspberry/chuong_trinh_pi.py`: Channel ID + Write API Key của channel
+   CẢM BIẾN, Channel ID + Read API Key của channel LỆNH. (Pi không cần
+   thông tin MQTT vì không subscribe - xem giải thích ở trên.)
 2. Chạy: `python3 chuong_trinh_pi.py`
 
 ## Cách chạy Web (Node-RED)
@@ -143,11 +146,16 @@ lệch do SSH), tính từ lúc gửi lệnh đến lúc chân GPIO đổi mức
   nhất của channel, *bất kể bản ghi đó do ai/giao thức nào tạo ra* (đã đo:
   sau 1 lần ghi MQTT, HTTP bị từ chối ở giây thứ 5.6 / 9.8 / 13.9 và chỉ
   được chấp nhận ở giây 18.1).
-- Vì Pi ghi trung bình cảm biến mỗi 20s lên cùng channel (đề bắt buộc), nếu
-  bấm nút HTTP đúng lúc kênh vừa có bản ghi thì lệnh phải chờ hết khe 15s
-  (flow Node-RED tự thử lại tối đa 10 lần × 3s ≈ 30s để chắc chắn gửi được).
-  Con số 2s ở bảng trên - và cũng là mốc đề bài quy định - được tính **từ khi
-  dữ liệu đã lên tới ThingSpeak thành công**.
+- Đo thực tế trên tài khoản này: khoảng cách tối thiểu là **~17 giây**, chứ
+  không đúng 15s như tài liệu.
+- **Đây chính là lý do phải tách 2 channel**: khi để chung, Pi ghi cảm biến
+  mỗi 20s làm khoá kênh gần như liên tục ⇒ nút HTTP hầu như không chen được.
+  Sau khi tách, channel LỆNH chỉ nhận lệnh nút bấm (rất thưa) nên gần như
+  luôn rảnh ⇒ bấm nút ăn ngay.
+- Hạn chế còn lại (không tránh được với tài khoản ThingSpeak miễn phí): nếu
+  bấm **2 nút HTTP cách nhau dưới ~17s** thì nút sau vẫn phải chờ; flow
+  Node-RED tự thử lại tối đa 10 lần × 3s ≈ 30s nên vẫn ăn, chỉ là chậm hơn.
+  Các nút MQTT thì không bao giờ bị vướng.
 
 ## Chấm điểm mức độ 3 - đối chiếu yêu cầu
 

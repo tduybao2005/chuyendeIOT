@@ -1,13 +1,22 @@
 """
 Buoi 5 - Chuong trinh Raspberry Pi (lop thay Kien)
-Muc do 3 - dung 01 CHANNEL ThingSpeak duy nhat (khac ban lop thay Thanh dung 2 channel).
+Muc do 3 - dung 2 CHANNEL ThingSpeak: 1 cho cam bien, 1 cho lenh dieu khien.
+
+VI SAO PHAI TACH 2 CHANNEL (do that tren phan cung):
+    ThingSpeak gioi han toi thieu ~17 GIAY giua 2 lan ghi len CUNG 1 channel
+    (tai lieu ghi 15s nhung do thuc te chat hon), va de bai bat buoc Pi gui
+    trung binh cam bien moi 20 GIAY. Neu de chung 1 channel thi moi chu ky
+    21s chi con ~4s trong cho lenh nut bam -> lenh HTTP tu Web bi tu choi
+    lien tuc (da gap: 20 lan thu lien tiep deu that bai). Tach ra 2 channel
+    thi lenh nut bam khong con tranh khe ghi voi du lieu cam bien nua ->
+    bam nut la an ngay (<2s).
 
 Chuc nang:
 - Doc nhiet do, do am (DHT), dien ap tren bien tro (ADC), khoang cach (sieu am)
-  moi 1 giay; tinh trung binh moi 20 giay va gui len ThingSpeak qua HTTP
-  (field1..field4), lien tuc toi thieu 30 phut.
+  moi 1 giay; tinh trung binh moi 20 giay va gui len CHANNEL CAM BIEN qua
+  HTTP (field1..field4), lien tuc toi thieu 30 phut.
 - Hien thi gia tri trung binh + thoi gian + trang thai len LCD 16x2.
-- Nhan lenh dieu khien tu Web tren CUNG 1 channel (field5..field8), theo
+- Nhan lenh dieu khien tu Web tren CHANNEL LENH (field5..field8), theo
   dung bang phan chia giao thuc nhom da chon cho 8 nut nhan (2 Auto/Manual +
   6 On/Off cua LED/Buzzer/Relay):
     Auto        -> MQTT   (field6 = 0)
@@ -18,8 +27,8 @@ Chuc nang:
     Buzzer Tat  -> HTTP   (field8 = 0)
     Relay Bat   -> HTTP   (field7 = 1)
     Relay Tat   -> HTTP   (field7 = 0)
-  Ca 8 nut nay do WEB (Node-RED) ghi len - giao thuc MQTT/HTTP chi anh huong
-  ben phia Web, khong bat buoc Pi phai doc bang cung giao thuc do.
+  Ca 8 nut nay do WEB (Node-RED) ghi len CHANNEL LENH - giao thuc MQTT/HTTP
+  chi anh huong ben phia Web, khong bat buoc Pi phai doc bang cung giao thuc.
 
 - Pi CHI DOC LENH QUA HTTP POLLING MOI GIAY, KHONG SUBSCRIBE MQTT.
   Ly do (phat hien khi test that voi phan cung): ThingSpeak yeu cau client_id
@@ -32,8 +41,8 @@ Chuc nang:
   dung ban dau la "chi mat luc dang publish". Giai phap: Pi bo han duong
   subscribe MQTT, CHI GIU 1 duong doc DUY NHAT la HTTP polling moi giay -
   van nhan du CA 8 nut (ke ca 4 nut Web ghi bang MQTT) vi ThingSpeak luu
-  chung moi lan ghi (du giao thuc nao) vao CUNG 1 feed cua channel, doc lai
-  bang HTTP deu thay day du. Nho vay Node-RED (Web) la ben DUY NHAT giu ket
+  chung moi lan ghi (du giao thuc nao) vao CUNG 1 feed cua channel LENH,
+  doc lai bang HTTP deu thay day du. Nho vay Node-RED (Web) la ben DUY NHAT giu ket
   noi MQTT, khong con ai tranh client_id nua -> on dinh hon han.
   Poll moi 1 giay van dam bao dung yeu cau de "trang thai LED doi cham nhat
   2s ke tu khi du lieu gui thanh cong len ThingSpeak", vi day la thoi gian
@@ -82,24 +91,28 @@ DISTANCE_RANGE = (2, 350)   # cm, theo thong so pho bien cua Grove Ultrasonic Ra
 # ---------------------------------------------------------------------------
 # Thong tin ThingSpeak - HAY DIEN THONG TIN THAT CUA BAN VAO DAY TRUOC KHI CHAY
 #
-# LUU Y: ban nay CHI DUNG 1 CHANNEL DUY NHAT (khac ban lop thay Thanh dung 2
-# channel), vi channel duoc chia du 8 field: field1-4 la cam bien (Pi ghi
-# HTTP), field5-8 la lenh dieu khien (Web ghi MQTT hoac HTTP tuy nut - xem
-# bang phan chia giao thuc o dau file). Pi CHI CAN thong tin HTTP - khong can
-# thong tin MQTT vi khong con subscribe (xem giai thich o dau file).
+# Pi CHI CAN thong tin HTTP cua 2 channel (khong can thong tin MQTT vi khong
+# con subscribe - xem giai thich o dau file):
+#   - Channel CAM BIEN: chi can WRITE key (Pi ghi field1-4 moi 20s).
+#   - Channel LENH:     chi can READ key  (Pi doc field5-8 moi 1s).
 # ---------------------------------------------------------------------------
-THINGSPEAK_CHANNEL_ID = "DIEN_CHANNEL_ID_CUA_BAN"
-THINGSPEAK_READ_API_KEY = "DIEN_READ_API_KEY_CUA_BAN"
-THINGSPEAK_WRITE_API_KEY = "DIEN_WRITE_API_KEY_CUA_BAN"
-THINGSPEAK_UPDATE_URL = "https://api.thingspeak.com/update.json"
-THINGSPEAK_FEEDS_URL = f"https://api.thingspeak.com/channels/{THINGSPEAK_CHANNEL_ID}/feeds.json"
+# --- Channel CAM BIEN: chi chua du lieu cam bien, Pi ghi moi 20s ---
+SENSOR_CHANNEL_ID = "DIEN_CHANNEL_ID_CAM_BIEN_CUA_BAN"
+SENSOR_WRITE_API_KEY = "DIEN_WRITE_API_KEY_CAM_BIEN_CUA_BAN"
 
-# Thu tu field theo dung kenh ThingSpeak da tao: Nhiet do, Do am, Khoang
-# cach, Dien ap, LED, Che do, Relay, Buzzer.
+# --- Channel LENH: chi chua 8 nut dieu khien, Web ghi (MQTT + HTTP) ---
+COMMAND_CHANNEL_ID = "DIEN_CHANNEL_ID_LENH_CUA_BAN"
+COMMAND_READ_API_KEY = "DIEN_READ_API_KEY_LENH_CUA_BAN"
+
+THINGSPEAK_UPDATE_URL = "https://api.thingspeak.com/update.json"
+COMMAND_FEEDS_URL = f"https://api.thingspeak.com/channels/{COMMAND_CHANNEL_ID}/feeds.json"
+
+# Field tren channel CAM BIEN
 FIELD_TEMP = "field1"      # Pi ghi (HTTP, trung binh 20s)
 FIELD_HUMI = "field2"      # Pi ghi (HTTP, trung binh 20s)
 FIELD_DISTANCE = "field3"  # Pi ghi (HTTP, trung binh 20s)
 FIELD_VOLTAGE = "field4"   # Pi ghi (HTTP, trung binh 20s)
+# Field tren channel LENH (giu nguyen so field da dat ten san tren channel cu)
 FIELD_LED = "field5"       # Web ghi: MQTT khi Bat (1), HTTP khi Tat (0)
 FIELD_MODE = "field6"      # Web ghi MQTT: 0 = Auto, 1 = Manual
 FIELD_RELAY = "field7"     # Web ghi HTTP ca Bat lan Tat
@@ -276,9 +289,9 @@ def to_bool(value):
 # giao thuc nao.
 # ---------------------------------------------------------------------------
 def poll_http_commands():
-    params = {"api_key": THINGSPEAK_READ_API_KEY, "results": CONTROL_POLL_RESULTS}
+    params = {"api_key": COMMAND_READ_API_KEY, "results": CONTROL_POLL_RESULTS}
     try:
-        response = requests.get(THINGSPEAK_FEEDS_URL, params=params, timeout=5)
+        response = requests.get(COMMAND_FEEDS_URL, params=params, timeout=5)
         response.raise_for_status()
         feeds = response.json().get("feeds") or []
     except (requests.RequestException, ValueError) as e:
@@ -340,9 +353,9 @@ def sync_initial_state():
     ]
     for field, key in targets:
         num = field.replace('field', '')
-        url = f"https://api.thingspeak.com/channels/{THINGSPEAK_CHANNEL_ID}/fields/{num}/last.json"
+        url = f"https://api.thingspeak.com/channels/{COMMAND_CHANNEL_ID}/fields/{num}/last.json"
         try:
-            response = requests.get(url, params={"api_key": THINGSPEAK_READ_API_KEY}, timeout=5)
+            response = requests.get(url, params={"api_key": COMMAND_READ_API_KEY}, timeout=5)
             response.raise_for_status()
             value = response.json().get(field)
         except (requests.RequestException, ValueError, AttributeError) as e:
@@ -388,7 +401,7 @@ def send_to_thingspeak(**fields):
     noi dung "0" (khong phai loi HTTP) nen phai kiem tra noi dung tra ve,
     khong the chi dua vao raise_for_status().
     """
-    payload = {"api_key": THINGSPEAK_WRITE_API_KEY}
+    payload = {"api_key": SENSOR_WRITE_API_KEY}
     payload.update(fields)
     for attempt in range(3):
         try:

@@ -475,11 +475,18 @@ md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; hei
     if (!msg || !msg.payload) return;
     var p = msg.payload;
     if (p.type === 'http_data') {
+      // Du lieu cam bien (channel CAM BIEN)
       scope.history = p.history || [];
       scope.latest = p.latest || scope.latest;
-      scope.device = p.deviceState || scope.device;
-      scope.mode = p.mode || scope.mode;
       redrawChart();
+    } else if (p.type === 'state_data') {
+      // Trang thai 8 nut (channel LENH) - doc rieng vi da tach 2 channel.
+      // Khong ghi de trong luc dang cho 1 lenh gui di, tranh nhap nhay:
+      // gia tri lac quan tren giao dien se duoc xac nhan o lan doc ke tiep.
+      if (!scope.cmdPending) {
+        scope.device = p.deviceState || scope.device;
+        scope.mode = p.mode || scope.mode;
+      }
     } else if (p.type === 'cmd_ok') {
       if (p.topic === scope.cmdPending) clearPending();
     } else if (p.type === 'cmd_failed') {
