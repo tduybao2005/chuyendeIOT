@@ -123,6 +123,18 @@ CONTROL_POLL_RESULTS = 30  # so ban ghi gan nhat lay ve moi lan doc lenh dieu kh
                            # thi doc rieng bang sync_initial_state() ben duoi.
 
 
+def log_event(message):
+    """In ra terminal kem moc thoi gian CO MILI GIAY (HH:MM:SS.mmm).
+
+    Dung de doi chieu voi moc thoi gian Node-RED da ghi lai luc gui lenh
+    thanh cong len ThingSpeak (xem console.log trong dashboard_template.html
+    va cac ham chuan bi lenh trong flows.json) - tu do tinh ra do tre thuc
+    te tu luc bam nut tren Web den luc Pi nhan & ap dung xong.
+    """
+    now_str = datetime.now().strftime('%H:%M:%S.%f')[:-3]
+    print(f"[{now_str}] {message}")
+
+
 def is_valid(value, min_val, max_val):
     return value is not None and min_val <= value <= max_val
 
@@ -302,6 +314,7 @@ def poll_http_commands():
     # cua dong do la null. Vi vay phai quet nguoc tu ban ghi moi nhat ve cu
     # va lay gia tri KHONG null dau tien cho TUNG field rieng biet.
     changed = False
+    changed_fields = []  # de in log doi chieu thoi gian voi Node-RED (xem log_event())
     found = {'mode': False, 'led': False, 'buzzer': False, 'relay': False}
     for feed in reversed(feeds):
         if not found['mode'] and feed.get(FIELD_MODE) not in (None, ""):
@@ -309,31 +322,40 @@ def poll_http_commands():
             if new_mode != state['mode']:
                 state['mode'] = new_mode
                 changed = True
+                changed_fields.append(f"Mode->{new_mode}")
             found['mode'] = True
         if not found['led'] and feed.get(FIELD_LED) not in (None, ""):
             new_val = to_bool(feed.get(FIELD_LED))
             if new_val != state['led_cmd']:
                 state['led_cmd'] = new_val
                 changed = True
+                changed_fields.append(f"LED->{'ON' if new_val else 'OFF'}")
             found['led'] = True
         if not found['buzzer'] and feed.get(FIELD_BUZZER) not in (None, ""):
             new_val = to_bool(feed.get(FIELD_BUZZER))
             if new_val != state['buzzer_cmd']:
                 state['buzzer_cmd'] = new_val
                 changed = True
+                changed_fields.append(f"Buzzer->{'ON' if new_val else 'OFF'}")
             found['buzzer'] = True
         if not found['relay'] and feed.get(FIELD_RELAY) not in (None, ""):
             new_val = to_bool(feed.get(FIELD_RELAY))
             if new_val != state['relay_cmd']:
                 state['relay_cmd'] = new_val
                 changed = True
+                changed_fields.append(f"Relay->{'ON' if new_val else 'OFF'}")
             found['relay'] = True
         if all(found.values()):
             break
     if changed:
-        print(f"[HTTP] Cap nhat lenh dieu khien: mode={state['mode']} "
-              f"led={state['led_cmd']} buzzer={state['buzzer_cmd']} relay={state['relay_cmd']}")
+        # Moc thoi gian co mili giay - de doi chieu voi moc "gui thanh cong
+        # len ThingSpeak" ma Node-RED da in ra, tinh ra do tre thuc te tu
+        # Web bam nut den khi Pi nhan & ap dung xong.
+        log_event(f"NHAN LENH: {', '.join(changed_fields)} "
+                  f"(mode={state['mode']} led={state['led_cmd']} "
+                  f"buzzer={state['buzzer_cmd']} relay={state['relay_cmd']})")
         apply_outputs()
+        log_event(f"DA AP DUNG XONG: {', '.join(changed_fields)}")
 
 
 def sync_initial_state():

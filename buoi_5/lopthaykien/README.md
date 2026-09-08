@@ -141,6 +141,26 @@ channel LỆNH riêng (chỉ nhận lệnh nút, không còn bị cảm biến g
 **các nút HTTP không còn phải chờ khoảng trống 15-17s như trước nữa** - bấm
 liên tiếp nhiều nút HTTP vẫn phản hồi ngay vì channel LỆNH luôn rảnh.
 
+### Log đối chiếu thời gian thực (có mili giây)
+
+Cả 2 phía đều in ra thời điểm chính xác (giờ:phút:giây.mili giây) để đối
+chiếu độ trễ thực tế khi quay video demo:
+
+- **Node-RED** (`sudo journalctl -u nodered.service -f`): in lúc **gửi** lệnh
+  MQTT (`GUI LENH MQTT`) hoặc lúc **xác nhận ghi thành công** lên ThingSpeak
+  qua HTTP (`GUI THANH CONG len ThingSpeak`).
+- **Raspberry Pi** (terminal chạy `chuong_trinh_pi.py`, hàm `log_event()`):
+  in lúc **nhận lệnh mới** (`NHAN LENH`) và lúc **áp dụng xong** GPIO
+  (`DA AP DUNG XONG`).
+
+Ví dụ đo thật:
+```
+Node-RED : [17:47:07.160] GUI LENH MQTT: led_on = 1
+Pi       : [17:47:07.623] NHAN LENH: LED->ON ...
+Pi       : [17:47:07.624] DA AP DUNG XONG: LED->ON
+```
+⇒ Độ trễ = 17:47:07.623 − 17:47:07.160 = **0.463 giây**.
+
 **Lưu ý về giới hạn 15s của ThingSpeak** (đã kiểm chứng bằng thực nghiệm):
 
 - **MQTT publish KHÔNG bị giới hạn 15s** - publish chỉ 1.9s sau khi Pi vừa
