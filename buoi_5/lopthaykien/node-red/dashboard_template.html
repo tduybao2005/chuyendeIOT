@@ -4,167 +4,174 @@
    the <md-card class="nr-dashboard-template"> co width co dinh theo don vi
    pixel cua ui_group (KHONG tu dong gian het chieu rong man hinh). Ep toan
    bo chuoi container cha gian ra 100% de dashboard hien du tren moi kich
-   thuoc man hinh (may tinh / dien thoai / ipad). */
+   thuoc man hinh (may tinh / dien thoai / ipad), va ep vung noi dung cuon
+   cua node-red-dashboard (md-content) khop dung 1 man hinh, khong cuon -
+   yeu cau de bai: "Giao dien tren ipad co thanh cuon se bi tru 2 Diem". */
 .nr-dashboard-template.nr-dashboard-template,
-.nr-dashboard-cardcontainer, .nr-dashboard-cardpanel, ui-card-panel {
+.nr-dashboard-cardcontainer, .nr-dashboard-cardpanel, ui-card-panel,
+.masonry-container {
   width: 100% !important; max-width: 100% !important; left: 0 !important;
-  position: relative !important; overflow: visible !important; height: auto !important;
+  position: relative !important; overflow: hidden !important; height: 100% !important;
+  padding: 0 !important; margin: 0 !important;
 }
-#bk-root { box-sizing: border-box; font-family: -apple-system, Roboto, Arial, sans-serif; background:#F4F6F8; padding:12px 12px 32px; }
-#bk-root * { box-sizing: border-box; }
-#bk-root .title { font-size:20px; font-weight:700; text-align:center; margin-bottom:12px; color:#222; }
-#bk-root .grid { display:grid; grid-template-columns: 1fr; gap:12px; }
-@media (min-width: 700px) { #bk-root .grid { grid-template-columns: 1fr 1fr; } }
-#bk-root .card { background:#fff; border-radius:12px; padding:16px; }
-#bk-root .card.full { grid-column: 1 / -1; }
-#bk-root .card-title { font-size:13px; color:#777; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
-#bk-root .dot { width:8px; height:8px; border-radius:4px; display:inline-block; margin-right:4px; }
-#bk-root .switch-row { display:flex; background:#F0F0F0; border-radius:10px; padding:4px; gap:4px; }
-#bk-root .switch-row button { flex:1; padding:10px 6px; border:none; border-radius:8px; background:transparent; font-size:15px; font-weight:600; color:#666; cursor:pointer; }
+md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; height: 100% !important; }
+/* Node-RED tu dong them 1 dong tieu de ten group ("Giam sat & Dieu khien")
+   phia tren widget - an di vi dashboard da co tieu de rieng, va de #bk-root
+   height:100% khop dung 1 man hinh (khong bi thua ra phan cao cua dong nay
+   gay tran/cuon). */
+.nr-dashboard-cardtitle { display: none !important; }
+/* Ban than khung ui_group/masonry cua node-red-dashboard tu tinh chieu cao
+   theo NOI DUNG (thu vien masonry dat height bang JS), khong the ep bang
+   100% CSS thong thuong (vong lap phu thuoc). Vi vay #bk-root dung
+   position:fixed neo ca 4 canh vao dung VIEWPORT that su, tach hoan toan
+   khoi cach masonry tinh kich thuoc - dam bao luon dung 1 man hinh du noi
+   dung cardpanel phia sau co cao hon. */
+#bk-root {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  box-sizing: border-box; font-family: -apple-system, Roboto, Arial, sans-serif;
+  background:#F4F6F8; padding: 1vh 1vw 2vh; z-index: 5;
+  display: flex; flex-direction: column; gap: 1vh; overflow: hidden;
+}
+#bk-root * { box-sizing: border-box; min-width: 0; min-height: 0; }
+#bk-root .title { font-size: clamp(12px, 2.2vh, 18px); font-weight:700; text-align:center; color:#222; flex: 0 0 auto; }
+#bk-root .card { background:#fff; border-radius:10px; padding: 1vh 1vw; }
+#bk-root .mini-title { font-size: clamp(9px, 1.3vh, 12px); color:#888; margin-bottom: 0.5vh; }
+
+#bk-root .top-row { display:flex; gap: 1vw; flex: 0 0 auto; }
+#bk-root .top-row .card { flex:1; }
+
+#bk-root .switch-row { display:flex; background:#F0F0F0; border-radius:8px; padding:3px; gap:3px; }
+#bk-root .switch-row button { flex:1; padding: 0.8vh 2px; border:none; border-radius:6px; background:transparent; font-size: clamp(10px, 1.6vh, 14px); font-weight:600; color:#666; cursor:pointer; white-space: nowrap; }
+@media (max-width: 480px) {
+  #bk-root .switch-row button { font-size: 11px; }
+  #bk-root .mini-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
 #bk-root .switch-row button.active { background:#1783B0; color:#fff; }
-#bk-root .clock { font-size:28px; font-weight:700; color:#1783B0; text-align:center; }
-#bk-root .clock-date { font-size:13px; color:#999; text-align:center; margin-top:2px; }
-#bk-root .reading-row { display:flex; flex-wrap:wrap; justify-content:space-around; }
-#bk-root .reading-item { text-align:center; width:46%; margin-bottom:10px; }
-#bk-root .reading-value { font-size:22px; font-weight:700; color:#222; }
-#bk-root .reading-label { font-size:12px; color:#999; margin-top:2px; }
-#bk-root .updated-at { font-size:12px; color:#999; margin-top:6px; text-align:center; }
-#bk-root .device-row { padding:10px 0; border-bottom:1px solid #F0F0F0; }
-#bk-root .device-row:last-child { border-bottom:none; }
-#bk-root .device-head { display:flex; align-items:center; margin-bottom:8px; }
-#bk-root .device-head .icon { font-size:20px; margin-right:8px; }
-#bk-root .device-head .label { font-size:15px; font-weight:600; color:#333; flex:1; }
-#bk-root .badge { padding:3px 8px; border-radius:10px; color:#fff; font-size:11px; font-weight:700; }
+
+#bk-root .clock { font-size: clamp(16px, 3vh, 26px); font-weight:700; color:#1783B0; text-align:center; line-height:1.1; }
+#bk-root .clock-date { font-size: clamp(9px, 1.3vh, 12px); color:#999; text-align:center; }
+
+#bk-root .sensor-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 0.3vh 6px; }
+#bk-root .sensor-grid .v { font-size: clamp(11px, 1.9vh, 15px); font-weight:700; color:#222; }
+#bk-root .sensor-grid .l { font-size: clamp(8px, 1.1vh, 10px); color:#999; }
+
+#bk-root .device-card { flex: 0 0 auto; }
+#bk-root .device-line { display:flex; align-items:center; gap: 0.8vw; padding: 0.5vh 0; }
+#bk-root .device-line .icon { font-size: clamp(12px, 2vh, 16px); width: 1.4em; text-align:center; }
+#bk-root .device-line .label { font-size: clamp(10px, 1.6vh, 13px); font-weight:600; color:#333; width: 4.5em; }
+#bk-root .badge { padding: 1px 6px; border-radius:8px; color:#fff; font-size: clamp(8px, 1.1vh, 10px); font-weight:700; }
 #bk-root .badge.on { background:#4CAF50; }
 #bk-root .badge.off { background:#BDBDBD; }
-#bk-root .btn-row { display:flex; gap:8px; }
-#bk-root .device-btn { flex:1; position:relative; background:#1783B0; color:#fff; border:none; border-radius:8px; padding:10px 8px; font-weight:600; font-size:13px; cursor:pointer; }
-#bk-root .device-btn.off-btn { background:#546E7A; }
-#bk-root .device-btn:disabled { background:#CCC; cursor:not-allowed; }
-#bk-root .legend-dot { width:8px; height:8px; border-radius:4px; margin-right:4px; }
-#bk-root svg.chart { width:100%; height:200px; display:block; }
-#bk-root .chart-axis { display:flex; justify-content:space-between; font-size:11px; color:#999; margin-top:4px; }
-#bk-root .chart-tooltip { font-size:12px; color:#333; background:#F4F6F8; border-radius:6px; padding:4px 8px; margin-top:6px; display:inline-block; }
-#bk-root .card-title span:last-child { font-weight:600; color:#555; }
+#bk-root .btn-row { flex: 0 0 auto; margin-left:auto; display:flex; gap: 0.5vw; }
+#bk-root .device-btn { width: clamp(52px, 8vw, 80px); background:#1783B0; color:#fff; border:none; border-radius:16px; padding: 0.6vh 4px; font-weight:600; font-size: clamp(9px, 1.4vh, 12px); cursor:pointer; }
+#bk-root .device-btn.off-btn { background:#E0E0E0; color:#666; }
+#bk-root .device-btn:disabled { background:#EEE; color:#BBB; cursor:not-allowed; }
+
+#bk-root .charts-row { flex: 1 1 auto; display:flex; gap: 1vw; overflow:hidden; }
+#bk-root .chart-card { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+#bk-root .chart-head { font-size: clamp(9px, 1.3vh, 12px); display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.3vh; flex: 0 0 auto; }
+#bk-root .legend-dot { width:7px; height:7px; border-radius:4px; display:inline-block; margin-right:3px; }
+#bk-root .chart-wrap { flex: 1 1 auto; position:relative; min-height:0; }
+#bk-root svg.chart { width:100%; height:100%; display:block; }
+#bk-root .chart-axis { display:flex; justify-content:space-between; font-size: clamp(8px, 1vh, 10px); color:#999; flex: 0 0 auto; }
+#bk-root .chart-tooltip { font-size: clamp(9px, 1.2vh, 11px); color:#333; background:#F4F6F8; border-radius:5px; padding:2px 6px; position:absolute; top:0; right:0; }
 </style>
 
 <div id="bk-root">
-  <div class="title">Giám sát &amp; Điều khiển - Nhóm 3 (lớp thầy Kiến)</div>
-  <div class="grid">
+  <div class="title">Giám sát &amp; Điều khiển - Nhóm 7 (lớp thầy Kiến)</div>
 
+  <div class="top-row">
     <div class="card">
-      <div class="card-title">
-        <span>Chế độ hoạt động</span>
-        <span><span class="dot" ng-style="{background: modeUpdatedRecently() ? '#4CAF50' : '#BDBDBD'}"></span>Cập nhật lúc {{modeUpdatedAt || '--'}}</span>
-      </div>
+      <div class="mini-title">Chế độ hoạt động</div>
       <div class="switch-row">
         <button ng-class="{active: mode==='auto'}" ng-click="doAuto()">🤖 Auto</button>
         <button ng-class="{active: mode==='manual'}" ng-click="doManual()">✋ Manual</button>
       </div>
     </div>
-
     <div class="card">
-      <div class="card-title">Thời gian hiện tại</div>
+      <div class="mini-title">Thời gian hiện tại</div>
       <div class="clock">{{ clockStr }}</div>
       <div class="clock-date">{{ dateStr }}</div>
     </div>
-
-    <div class="card full">
-      <div class="card-title">Giá trị mới nhất từ Server</div>
-      <div class="reading-row">
-        <div class="reading-item">
-          <div class="reading-value">{{ latest.temp !== null ? latest.temp.toFixed(1) + '°C' : '--' }}</div>
-          <div class="reading-label">Nhiệt độ</div>
-        </div>
-        <div class="reading-item">
-          <div class="reading-value">{{ latest.humi !== null ? latest.humi.toFixed(1) + '%' : '--' }}</div>
-          <div class="reading-label">Độ ẩm</div>
-        </div>
-        <div class="reading-item">
-          <div class="reading-value">{{ latest.voltage !== null ? latest.voltage.toFixed(2) + 'V' : '--' }}</div>
-          <div class="reading-label">Điện áp biến trở</div>
-        </div>
-        <div class="reading-item">
-          <div class="reading-value">{{ latest.distance !== null ? latest.distance.toFixed(1) + 'cm' : '--' }}</div>
-          <div class="reading-label">Khoảng cách</div>
-        </div>
-      </div>
-      <div class="updated-at">Cập nhật lúc: {{ latest.updatedAt || '--' }}</div>
-    </div>
-
-    <div class="card full">
-      <div class="card-title">Điều khiển thiết bị {{ mode !== 'manual' ? '(chỉ dùng được ở chế độ Manual)' : '' }}</div>
-
-      <div class="device-row">
-        <div class="device-head">
-          <span class="icon">💡</span><span class="label">LED</span>
-          <span class="badge" ng-class="device.led ? 'on' : 'off'">{{ device.led ? 'ON' : 'OFF' }}</span>
-        </div>
-        <div class="btn-row">
-          <button class="device-btn" ng-disabled="mode!=='manual'" ng-click="doLedOn()">Bật</button>
-          <button class="device-btn off-btn" ng-disabled="mode!=='manual'" ng-click="doLedOff()">Tắt</button>
-        </div>
-      </div>
-
-      <div class="device-row">
-        <div class="device-head">
-          <span class="icon">🔊</span><span class="label">Buzzer</span>
-          <span class="badge" ng-class="device.buzzer ? 'on' : 'off'">{{ device.buzzer ? 'ON' : 'OFF' }}</span>
-        </div>
-        <div class="btn-row">
-          <button class="device-btn" ng-disabled="mode!=='manual'" ng-click="doBuzzerOn()">Bật</button>
-          <button class="device-btn off-btn" ng-disabled="mode!=='manual'" ng-click="doBuzzerOff()">Tắt</button>
-        </div>
-      </div>
-
-      <div class="device-row">
-        <div class="device-head">
-          <span class="icon">🔌</span><span class="label">Relay</span>
-          <span class="badge" ng-class="device.relay ? 'on' : 'off'">{{ device.relay ? 'ON' : 'OFF' }}</span>
-        </div>
-        <div class="btn-row">
-          <button class="device-btn" ng-disabled="mode!=='manual'" ng-click="doRelayOn()">Bật</button>
-          <button class="device-btn off-btn" ng-disabled="mode!=='manual'" ng-click="doRelayOff()">Tắt</button>
-        </div>
+    <div class="card">
+      <div class="mini-title">Giá trị mới nhất từ Server</div>
+      <div class="sensor-grid">
+        <div><div class="v">{{ latest.temp !== null ? latest.temp.toFixed(1) + '°C' : '--' }}</div><div class="l">Nhiệt độ</div></div>
+        <div><div class="v">{{ latest.humi !== null ? latest.humi.toFixed(1) + '%' : '--' }}</div><div class="l">Độ ẩm</div></div>
+        <div><div class="v">{{ latest.voltage !== null ? latest.voltage.toFixed(2) + 'V' : '--' }}</div><div class="l">Điện áp</div></div>
+        <div><div class="v">{{ latest.distance !== null ? latest.distance.toFixed(1) + 'cm' : '--' }}</div><div class="l">Khoảng cách</div></div>
       </div>
     </div>
+  </div>
 
-    <div class="card full">
-      <div class="card-title">
+  <div class="card device-card">
+    <div class="mini-title">Điều khiển thiết bị {{ mode !== 'manual' ? '(chỉ dùng được ở chế độ Manual)' : '' }}</div>
+    <div class="device-line">
+      <span class="icon">💡</span><span class="label">LED</span>
+      <span class="badge" ng-class="device.led ? 'on' : 'off'">{{ device.led ? 'ON' : 'OFF' }}</span>
+      <div class="btn-row">
+        <button class="device-btn" ng-disabled="mode!=='manual'" ng-click="doLedOn()">Bật</button>
+        <button class="device-btn off-btn" ng-disabled="mode!=='manual'" ng-click="doLedOff()">Tắt</button>
+      </div>
+    </div>
+    <div class="device-line">
+      <span class="icon">🔊</span><span class="label">Buzzer</span>
+      <span class="badge" ng-class="device.buzzer ? 'on' : 'off'">{{ device.buzzer ? 'ON' : 'OFF' }}</span>
+      <div class="btn-row">
+        <button class="device-btn" ng-disabled="mode!=='manual'" ng-click="doBuzzerOn()">Bật</button>
+        <button class="device-btn off-btn" ng-disabled="mode!=='manual'" ng-click="doBuzzerOff()">Tắt</button>
+      </div>
+    </div>
+    <div class="device-line">
+      <span class="icon">🔌</span><span class="label">Relay</span>
+      <span class="badge" ng-class="device.relay ? 'on' : 'off'">{{ device.relay ? 'ON' : 'OFF' }}</span>
+      <div class="btn-row">
+        <button class="device-btn" ng-disabled="mode!=='manual'" ng-click="doRelayOn()">Bật</button>
+        <button class="device-btn off-btn" ng-disabled="mode!=='manual'" ng-click="doRelayOff()">Tắt</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="card chart-card">
+      <div class="chart-head">
         <span><span class="legend-dot" style="background:#E53935"></span>Nhiệt độ (°C)</span>
-        <span ng-if="tempMin !== null">Nhỏ nhất-lớn nhất: {{ tempMin.toFixed(1) }} - {{ tempMax.toFixed(1) }}</span>
+        <span ng-if="tempMin !== null">{{ tempMin.toFixed(1) }} - {{ tempMax.toFixed(1) }}</span>
       </div>
-      <svg class="chart" ng-attr-viewbox="0 0 {{chartWidth}} 160">
-        <line ng-repeat="g in tempGrid" ng-attr-x1="36" ng-attr-y1="{{g.y}}" ng-attr-x2="{{chartWidth-10}}" ng-attr-y2="{{g.y}}" stroke="#EEE" stroke-width="1"></line>
-        <text ng-repeat="g in tempGrid" x="2" ng-attr-y="{{g.textY}}" font-size="10" fill="#999">{{ g.label }}</text>
-        <polyline ng-attr-points="{{ tempPolyline }}" fill="none" stroke="#E53935" stroke-width="2"></polyline>
-        <circle ng-repeat="p in tempPoints" ng-attr-cx="{{p.x}}" ng-attr-cy="{{p.y}}" r="8" fill="transparent" style="cursor:pointer" data-chart-key="temp" ng-attr-data-chart-idx="{{$index}}"></circle>
-        <circle ng-repeat="p in tempPoints" ng-attr-cx="{{p.x}}" ng-attr-cy="{{p.y}}" r="2.5" fill="#E53935" style="pointer-events:none"></circle>
-        <circle ng-if="selected.temp" ng-attr-cx="{{selected.temp.x}}" ng-attr-cy="{{selected.temp.y}}" r="5.5" fill="#E53935" stroke="#fff" stroke-width="2" style="pointer-events:none"></circle>
-      </svg>
-      <div class="chart-tooltip" ng-if="selected.temp">📍 {{ selected.temp.value.toFixed(1) }}°C lúc {{ selected.temp.time }}</div>
+      <div class="chart-wrap">
+        <svg class="chart">
+          <line ng-repeat="g in tempGrid" ng-attr-x1="36" ng-attr-y1="{{g.y}}" ng-attr-x2="{{chartWidth-10}}" ng-attr-y2="{{g.y}}" stroke="#EEE" stroke-width="1"></line>
+          <text ng-repeat="g in tempGrid" x="2" ng-attr-y="{{g.textY}}" font-size="10" fill="#999">{{ g.label }}</text>
+          <polyline ng-attr-points="{{ tempPolyline }}" fill="none" stroke="#E53935" stroke-width="2"></polyline>
+          <circle ng-repeat="p in tempPoints" ng-attr-cx="{{p.x}}" ng-attr-cy="{{p.y}}" r="8" fill="transparent" style="cursor:pointer" data-chart-key="temp" ng-attr-data-chart-idx="{{$index}}"></circle>
+          <circle ng-repeat="p in tempPoints" ng-attr-cx="{{p.x}}" ng-attr-cy="{{p.y}}" r="2.5" fill="#E53935" style="pointer-events:none"></circle>
+          <circle ng-if="selected.temp" ng-attr-cx="{{selected.temp.x}}" ng-attr-cy="{{selected.temp.y}}" r="5.5" fill="#E53935" stroke="#fff" stroke-width="2" style="pointer-events:none"></circle>
+        </svg>
+        <div class="chart-tooltip" ng-if="selected.temp">📍 {{ selected.temp.value.toFixed(1) }}°C lúc {{ selected.temp.time }}</div>
+        <div ng-if="history.length===0" style="text-align:center;color:#999;">Chưa có dữ liệu</div>
+      </div>
       <div class="chart-axis" ng-if="history.length>0"><span>{{ chartFirstTime }}</span><span>{{ chartLastTime }}</span></div>
-      <div ng-if="history.length===0" style="text-align:center;color:#999;padding:30px 0;">Chưa có dữ liệu</div>
     </div>
 
-    <div class="card full">
-      <div class="card-title">
+    <div class="card chart-card">
+      <div class="chart-head">
         <span><span class="legend-dot" style="background:#1E88E5"></span>Độ ẩm (%)</span>
-        <span ng-if="humiMin !== null">Nhỏ nhất-lớn nhất: {{ humiMin.toFixed(1) }} - {{ humiMax.toFixed(1) }}</span>
+        <span ng-if="humiMin !== null">{{ humiMin.toFixed(1) }} - {{ humiMax.toFixed(1) }}</span>
       </div>
-      <svg class="chart" ng-attr-viewbox="0 0 {{chartWidth}} 160">
-        <line ng-repeat="g in humiGrid" ng-attr-x1="36" ng-attr-y1="{{g.y}}" ng-attr-x2="{{chartWidth-10}}" ng-attr-y2="{{g.y}}" stroke="#EEE" stroke-width="1"></line>
-        <text ng-repeat="g in humiGrid" x="2" ng-attr-y="{{g.textY}}" font-size="10" fill="#999">{{ g.label }}</text>
-        <polyline ng-attr-points="{{ humiPolyline }}" fill="none" stroke="#1E88E5" stroke-width="2"></polyline>
-        <circle ng-repeat="p in humiPoints" ng-attr-cx="{{p.x}}" ng-attr-cy="{{p.y}}" r="8" fill="transparent" style="cursor:pointer" data-chart-key="humi" ng-attr-data-chart-idx="{{$index}}"></circle>
-        <circle ng-repeat="p in humiPoints" ng-attr-cx="{{p.x}}" ng-attr-cy="{{p.y}}" r="2.5" fill="#1E88E5" style="pointer-events:none"></circle>
-        <circle ng-if="selected.humi" ng-attr-cx="{{selected.humi.x}}" ng-attr-cy="{{selected.humi.y}}" r="5.5" fill="#1E88E5" stroke="#fff" stroke-width="2" style="pointer-events:none"></circle>
-      </svg>
-      <div class="chart-tooltip" ng-if="selected.humi">📍 {{ selected.humi.value.toFixed(1) }}% lúc {{ selected.humi.time }}</div>
+      <div class="chart-wrap">
+        <svg class="chart">
+          <line ng-repeat="g in humiGrid" ng-attr-x1="36" ng-attr-y1="{{g.y}}" ng-attr-x2="{{chartWidth-10}}" ng-attr-y2="{{g.y}}" stroke="#EEE" stroke-width="1"></line>
+          <text ng-repeat="g in humiGrid" x="2" ng-attr-y="{{g.textY}}" font-size="10" fill="#999">{{ g.label }}</text>
+          <polyline ng-attr-points="{{ humiPolyline }}" fill="none" stroke="#1E88E5" stroke-width="2"></polyline>
+          <circle ng-repeat="p in humiPoints" ng-attr-cx="{{p.x}}" ng-attr-cy="{{p.y}}" r="8" fill="transparent" style="cursor:pointer" data-chart-key="humi" ng-attr-data-chart-idx="{{$index}}"></circle>
+          <circle ng-repeat="p in humiPoints" ng-attr-cx="{{p.x}}" ng-attr-cy="{{p.y}}" r="2.5" fill="#1E88E5" style="pointer-events:none"></circle>
+          <circle ng-if="selected.humi" ng-attr-cx="{{selected.humi.x}}" ng-attr-cy="{{selected.humi.y}}" r="5.5" fill="#1E88E5" stroke="#fff" stroke-width="2" style="pointer-events:none"></circle>
+        </svg>
+        <div class="chart-tooltip" ng-if="selected.humi">📍 {{ selected.humi.value.toFixed(1) }}% lúc {{ selected.humi.time }}</div>
+        <div ng-if="history.length===0" style="text-align:center;color:#999;">Chưa có dữ liệu</div>
+      </div>
       <div class="chart-axis" ng-if="history.length>0"><span>{{ chartFirstTime }}</span><span>{{ chartLastTime }}</span></div>
-      <div ng-if="history.length===0" style="text-align:center;color:#999;padding:30px 0;">Chưa có dữ liệu</div>
     </div>
-
   </div>
 </div>
 
@@ -175,7 +182,9 @@
   scope.device = { led: false, buzzer: false, relay: false };
   scope.latest = { temp: null, humi: null, voltage: null, distance: null, updatedAt: null };
   scope.history = [];
+  // Kich thuoc thuc te (pixel) cua khung ve - do lai tu DOM, xem measureChart()
   scope.chartWidth = 800;
+  scope.chartHeight = 160;
   scope.tempPolyline = ''; scope.humiPolyline = '';
   scope.tempMin = null; scope.tempMax = null;
   scope.humiMin = null; scope.humiMax = null;
@@ -188,8 +197,9 @@
 
   // ================== 8 nut dieu khien - moi nut mot topic rieng ==========
   // Node-RED (switch node) doc msg.topic de quyet dinh dung MQTT hay HTTP
-  // theo dung bang phan chia giao thuc trong README - hien tren UI bang
-  // nhan MQTT/HTTP mau tim/cam tren tung nut cho de doi chieu.
+  // theo dung bang phan chia giao thuc trong README (khong hien nhan tren
+  // giao dien Web - minh chung giao thuc xem truc tiep tren cac khoi cua
+  // flow Node-RED).
   scope.doAuto = function() {
     scope.mode = 'auto'; // phan hoi lac quan, se duoc xac nhan lai qua http_data
     scope.send({ topic: 'auto', payload: 0 });
@@ -266,13 +276,29 @@
   tick();
   setInterval(function() { scope.$apply(tick); }, 1000);
 
+  // SVG CO Y KHONG dat viewBox: he toa do cua no chinh la pixel that cua
+  // khung chua, nen chu tren truc Y khong bao gio bi keo gian/meo (truoc day
+  // dung viewBox co dinh 800x160 + preserveAspectRatio="none" khien chu bi
+  // phong to theo chieu doc khi khung cao len). Doi lai phai tu do kich
+  // thuoc khung va ve lai moi khi kich thuoc thay doi.
+  function measureChart() {
+    var wrap = document.querySelector('#bk-root .chart-wrap');
+    if (!wrap) return false;
+    var w = Math.round(wrap.clientWidth), h = Math.round(wrap.clientHeight);
+    if (!w || !h) return false;
+    if (w === scope.chartWidth && h === scope.chartHeight) return false;
+    scope.chartWidth = w;
+    scope.chartHeight = h;
+    return true;
+  }
+
   // Moi duong (nhiet do / do am) co bieu do RIENG, tu chuan hoa theo
   // min-max CUA CHINH NO. Tra ve them danh sach diem {x,y,value,time} de
   // nguoi dung bam vao xem gia tri cu the, va 3 moc luoi de doc truc gia
   // tri ma khong can bam.
   function buildSeries(values, times) {
-    var w = scope.chartWidth, h = 160;
-    var padTop = 14, padBottom = 30, padLeft = 36, padRight = 10;
+    var w = scope.chartWidth, h = scope.chartHeight;
+    var padTop = 12, padBottom = 12, padLeft = 36, padRight = 10;
     var plotW = w - padLeft - padRight, plotH = h - padTop - padBottom;
     var idxs = [], vals = [];
     for (var i = 0; i < values.length; i++) {
@@ -307,6 +333,7 @@
   }
 
   function redrawChart() {
+    measureChart();
     var times = scope.history.map(function(p) { return p.createdAt; });
     var t = buildSeries(scope.history.map(function(p) { return p.temp; }), times);
     var h = buildSeries(scope.history.map(function(p) { return p.humi; }), times);
@@ -322,6 +349,24 @@
     scope.selected.temp = null;
     scope.selected.humi = null;
   }
+
+  // Do kich thuoc khung ve ngay khi layout on dinh (vai nhip dau tien khung
+  // co the con bang 0 vi Angular chua render xong), va do lai moi khi doi
+  // kich thuoc man hinh / xoay ngang-doc dien thoai.
+  var settleTries = 0;
+  var settleTimer = setInterval(function() {
+    settleTries++;
+    if (measureChart()) scope.$apply(redrawChart);
+    if (settleTries >= 10) clearInterval(settleTimer);
+  }, 200);
+
+  var resizeTimer = null;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function() {
+      if (measureChart()) scope.$apply(redrawChart);
+    }, 150);
+  });
 
   scope.$watch('msg', function(msg) {
     if (!msg || !msg.payload) return;

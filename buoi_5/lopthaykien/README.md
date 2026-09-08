@@ -1,4 +1,4 @@
-# Buổi 5 (lớp thầy Kiến) - Nhóm 3 - Mức độ 3
+# Buổi 5 (lớp thầy Kiến) - Nhóm 7 - Mức độ 3
 
 Hệ thống Raspberry Pi + Web giám sát & điều khiển qua **01 channel ThingSpeak
 duy nhất** (khác bản làm cho lớp thầy Thanh dùng 2 channel).
@@ -57,10 +57,10 @@ giao thức ghi. Channel đã được cấp gồm đủ 8 field, dùng làm:
 | Relay Bật | HTTP |
 | Relay Tắt | HTTP |
 
-Trên giao diện Web, mỗi nút có nhãn màu **MQTT** (tím) hoặc **HTTP** (cam) để
-minh chứng trực quan; trên flow Node-RED, một node `switch` tách hẳn 2 nhánh
-xử lý (nhánh MQTT dùng node `mqtt out`, nhánh HTTP dùng node `http request`)
-để minh chứng bằng chính sơ đồ khối thay vì chỉ bằng code.
+Giao diện Web không hiện nhãn MQTT/HTTP trên nút (theo yêu cầu gọn giao diện);
+minh chứng giao thức xem trực tiếp trên **sơ đồ khối của flow Node-RED**: một
+node `switch` tách hẳn 2 nhánh xử lý (nhánh MQTT dùng node `mqtt out`, nhánh
+HTTP dùng node `http request`) thay vì chỉ chứng minh bằng code.
 
 ### Vì sao Raspberry Pi vẫn đọc lại bằng CẢ 2 cách?
 

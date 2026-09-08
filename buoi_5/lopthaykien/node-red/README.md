@@ -69,12 +69,20 @@ Node `switch` (`n_switch_protocol`) là bằng chứng trực quan nhất: 4 rul
 
 ## Bố cục dashboard
 
-- Card "Chế độ hoạt động": 2 nút Auto/Manual (nhãn MQTT).
+Toàn bộ giao diện gói gọn trong **đúng 1 màn hình, không có thanh cuộn** (kể
+cả trên iPad) - dùng đơn vị `vh`/`vw`/`clamp()` để co giãn cỡ chữ/khoảng cách
+theo chiều cao màn hình, và `#bk-root` neo `position:fixed` phủ kín viewport
+(bỏ qua cách tự tính chiều cao theo nội dung của thư viện masonry trong
+node-red-dashboard).
+
+- Card "Chế độ hoạt động": 2 nút Auto/Manual.
 - Card "Thời gian hiện tại": đồng hồ + ngày (cập nhật mỗi giây, phía client).
 - Card "Giá trị mới nhất từ Server": nhiệt độ, độ ẩm, điện áp, khoảng cách -
   giá trị lần cập nhật cuối cùng (đọc qua HTTP).
-- Card "Điều khiển thiết bị": 3 hàng LED/Buzzer/Relay, mỗi hàng 2 nút Bật/Tắt,
-  mỗi nút có nhãn MQTT/HTTP riêng theo đúng bảng chia giao thức.
+- Card "Điều khiển thiết bị": 3 hàng LED/Buzzer/Relay, mỗi hàng có badge
+  ON/OFF + 2 nút Bật/Tắt gọn (giao thức MQTT/HTTP theo đúng bảng ở trên -
+  không hiện nhãn trên giao diện, minh chứng xem trực tiếp trên sơ đồ khối
+  Node-RED).
 - 2 card đồ thị Nhiệt độ, Độ ẩm: có lưới giá trị min/giữa/max và bấm vào
   điểm để xem giá trị cụ thể (tự vẽ SVG, không dùng thư viện chart mặc định).
 
