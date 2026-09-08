@@ -74,7 +74,15 @@ md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; hei
 #bk-root .chart-wrap { flex: 1 1 auto; position:relative; min-height:0; }
 #bk-root svg.chart { width:100%; height:100%; display:block; }
 #bk-root .chart-axis { display:flex; justify-content:space-between; font-size: clamp(8px, 1vh, 10px); color:#999; flex: 0 0 auto; }
-#bk-root .chart-tooltip { font-size: clamp(9px, 1.2vh, 11px); color:#333; background:#F4F6F8; border-radius:5px; padding:2px 6px; position:absolute; top:0; right:0; }
+/* Tooltip hien ngay canh diem vua bam (toa do tinh theo pixel that cua
+   khung ve) de de doi chieu, thay vi nam co dinh o goc. */
+#bk-root .chart-tooltip {
+  position:absolute; width:118px; text-align:center; pointer-events:none;
+  font-size: clamp(9px, 1.2vh, 11px); font-weight:600; color:#fff;
+  background:rgba(38,50,56,.92); border-radius:6px; padding:3px 4px;
+  box-shadow:0 1px 4px rgba(0,0,0,.25);
+}
+#bk-root .chart-hint { position:absolute; left:38px; bottom:2px; font-size: clamp(8px, 1vh, 10px); color:#BBB; pointer-events:none; }
 </style>
 
 <div id="bk-root">
@@ -145,9 +153,14 @@ md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; hei
           <polyline ng-attr-points="{{ tempPolyline }}" fill="none" stroke="#E53935" stroke-width="2"></polyline>
           <circle ng-repeat="p in tempPoints" ng-attr-cx="{{p.x}}" ng-attr-cy="{{p.y}}" r="8" fill="transparent" style="cursor:pointer" data-chart-key="temp" ng-attr-data-chart-idx="{{$index}}"></circle>
           <circle ng-repeat="p in tempPoints" ng-attr-cx="{{p.x}}" ng-attr-cy="{{p.y}}" r="2.5" fill="#E53935" style="pointer-events:none"></circle>
+          <line ng-if="selected.temp" ng-attr-x1="{{selected.temp.x}}" ng-attr-y1="{{selected.temp.y}}" ng-attr-x2="{{selected.temp.x}}" ng-attr-y2="{{chartHeight-12}}" stroke="#E53935" stroke-width="1" stroke-dasharray="3,3" style="pointer-events:none"></line>
           <circle ng-if="selected.temp" ng-attr-cx="{{selected.temp.x}}" ng-attr-cy="{{selected.temp.y}}" r="5.5" fill="#E53935" stroke="#fff" stroke-width="2" style="pointer-events:none"></circle>
         </svg>
-        <div class="chart-tooltip" ng-if="selected.temp">📍 {{ selected.temp.value.toFixed(1) }}°C lúc {{ selected.temp.time }}</div>
+        <div class="chart-tooltip" ng-if="selected.temp"
+             ng-style="{left: tooltipLeft(selected.temp) + 'px', top: tooltipTop(selected.temp) + 'px'}">
+          {{ selected.temp.value.toFixed(1) }}°C · {{ selected.temp.time }}
+        </div>
+        <div class="chart-hint" ng-if="history.length>0 && !selected.temp">Bấm vào 1 điểm để xem giá trị</div>
         <div ng-if="history.length===0" style="text-align:center;color:#999;">Chưa có dữ liệu</div>
       </div>
       <div class="chart-axis" ng-if="history.length>0"><span>{{ chartFirstTime }}</span><span>{{ chartLastTime }}</span></div>
@@ -165,9 +178,14 @@ md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; hei
           <polyline ng-attr-points="{{ humiPolyline }}" fill="none" stroke="#1E88E5" stroke-width="2"></polyline>
           <circle ng-repeat="p in humiPoints" ng-attr-cx="{{p.x}}" ng-attr-cy="{{p.y}}" r="8" fill="transparent" style="cursor:pointer" data-chart-key="humi" ng-attr-data-chart-idx="{{$index}}"></circle>
           <circle ng-repeat="p in humiPoints" ng-attr-cx="{{p.x}}" ng-attr-cy="{{p.y}}" r="2.5" fill="#1E88E5" style="pointer-events:none"></circle>
+          <line ng-if="selected.humi" ng-attr-x1="{{selected.humi.x}}" ng-attr-y1="{{selected.humi.y}}" ng-attr-x2="{{selected.humi.x}}" ng-attr-y2="{{chartHeight-12}}" stroke="#1E88E5" stroke-width="1" stroke-dasharray="3,3" style="pointer-events:none"></line>
           <circle ng-if="selected.humi" ng-attr-cx="{{selected.humi.x}}" ng-attr-cy="{{selected.humi.y}}" r="5.5" fill="#1E88E5" stroke="#fff" stroke-width="2" style="pointer-events:none"></circle>
         </svg>
-        <div class="chart-tooltip" ng-if="selected.humi">📍 {{ selected.humi.value.toFixed(1) }}% lúc {{ selected.humi.time }}</div>
+        <div class="chart-tooltip" ng-if="selected.humi"
+             ng-style="{left: tooltipLeft(selected.humi) + 'px', top: tooltipTop(selected.humi) + 'px'}">
+          {{ selected.humi.value.toFixed(1) }}% · {{ selected.humi.time }}
+        </div>
+        <div class="chart-hint" ng-if="history.length>0 && !selected.humi">Bấm vào 1 điểm để xem giá trị</div>
         <div ng-if="history.length===0" style="text-align:center;color:#999;">Chưa có dữ liệu</div>
       </div>
       <div class="chart-axis" ng-if="history.length>0"><span>{{ chartFirstTime }}</span><span>{{ chartLastTime }}</span></div>
@@ -240,7 +258,25 @@ md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; hei
   };
 
   scope.selectPoint = function(key, p) {
-    scope.selected[key] = p;
+    // Bam lai dung diem dang chon thi bo chon (an tooltip di)
+    var cur = scope.selected[key];
+    scope.selected[key] = (cur && cur.x === p.x && cur.y === p.y) ? null : p;
+  };
+
+  // Dat tooltip ngay canh diem vua bam, tu day sang trai/phai/xuong duoi
+  // neu diem nam sat mep khung ve.
+  var TOOLTIP_W = 118;
+  scope.tooltipLeft = function(p) {
+    var left = parseFloat(p.x) - TOOLTIP_W / 2;
+    if (left < 0) left = 0;
+    if (left + TOOLTIP_W > scope.chartWidth) left = scope.chartWidth - TOOLTIP_W;
+    return Math.round(left);
+  };
+  scope.tooltipTop = function(p) {
+    var y = parseFloat(p.y);
+    var top = y - 26;              // mac dinh dat phia tren diem
+    if (top < 0) top = y + 12;     // diem sat mep tren -> dat xuong duoi
+    return Math.round(top);
   };
 
   // LUU Y: khong dung ng-click tren cac diem SVG vi AngularJS Material
@@ -345,9 +381,23 @@ md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; hei
       scope.chartFirstTime = formatChartTime(scope.history[0].createdAt);
       scope.chartLastTime = formatChartTime(scope.history[scope.history.length - 1].createdAt);
     }
-    // Bo lua chon cu vi toa do da tinh lai theo du lieu moi.
-    scope.selected.temp = null;
-    scope.selected.humi = null;
+    // Sau khi ve lai, toa do cu khong con dung nua -> tim lai dung diem da
+    // chon theo moc thoi gian de tooltip khong bi mat moi 15s (neu diem do
+    // da troi ra khoi khung du lieu thi moi bo chon).
+    reselectByTime('temp', t.pts);
+    reselectByTime('humi', h.pts);
+  }
+
+  function reselectByTime(key, pts) {
+    var prev = scope.selected[key];
+    if (!prev) return;
+    for (var i = 0; i < pts.length; i++) {
+      if (pts[i].time === prev.time && pts[i].value === prev.value) {
+        scope.selected[key] = pts[i];
+        return;
+      }
+    }
+    scope.selected[key] = null;
   }
 
   // Do kich thuoc khung ve ngay khi layout on dinh (vai nhip dau tien khung
