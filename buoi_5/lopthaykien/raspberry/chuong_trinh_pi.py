@@ -89,7 +89,8 @@ VOLTAGE_RANGE = (0, 3.3)
 DISTANCE_RANGE = (2, 350)   # cm, theo thong so pho bien cua Grove Ultrasonic Ranger
 
 # ---------------------------------------------------------------------------
-# Thong tin ThingSpeak - HAY DIEN THONG TIN THAT CUA BAN VAO DAY TRUOC KHI CHAY
+# Thong tin ThingSpeak (khoa that cua Nhom 7 - lop thay Kien, de nop bai chay
+# duoc ngay khong can chinh sua):
 #
 # Pi CHI CAN thong tin HTTP cua 2 channel (khong can thong tin MQTT vi khong
 # con subscribe - xem giai thich o dau file):
@@ -97,12 +98,12 @@ DISTANCE_RANGE = (2, 350)   # cm, theo thong so pho bien cua Grove Ultrasonic Ra
 #   - Channel LENH:     chi can READ key  (Pi doc field5-8 moi 1s).
 # ---------------------------------------------------------------------------
 # --- Channel CAM BIEN: chi chua du lieu cam bien, Pi ghi moi 20s ---
-SENSOR_CHANNEL_ID = "DIEN_CHANNEL_ID_CAM_BIEN_CUA_BAN"
-SENSOR_WRITE_API_KEY = "DIEN_WRITE_API_KEY_CAM_BIEN_CUA_BAN"
+SENSOR_CHANNEL_ID = "3484407"
+SENSOR_WRITE_API_KEY = "N73SVAS2MEDLUESL"
 
 # --- Channel LENH: chi chua 8 nut dieu khien, Web ghi (MQTT + HTTP) ---
-COMMAND_CHANNEL_ID = "DIEN_CHANNEL_ID_LENH_CUA_BAN"
-COMMAND_READ_API_KEY = "DIEN_READ_API_KEY_LENH_CUA_BAN"
+COMMAND_CHANNEL_ID = "3484393"
+COMMAND_READ_API_KEY = "95WYH34HA3U7KLMO"
 
 THINGSPEAK_UPDATE_URL = "https://api.thingspeak.com/update.json"
 COMMAND_FEEDS_URL = f"https://api.thingspeak.com/channels/{COMMAND_CHANNEL_ID}/feeds.json"

@@ -14,21 +14,23 @@ sudo systemctl enable nodered.service
 sudo systemctl start nodered.service
 ```
 
-## Điền placeholder trước khi import
+## ⚠️ File này chứa khóa thật
 
-Mở `flows.json`, tìm và thay các placeholder sau bằng giá trị thật (không
-commit giá trị thật lên git):
+`flows.json` trong thư mục này đã điền sẵn **Channel ID / API Key / MQTT
+credentials thật** của Nhóm 7 (quyết định của nhóm để nộp bài import được
+ngay, không cần chỉnh sửa gì thêm) - **không phải placeholder**. Import
+thẳng vào Node-RED là chạy được luôn.
 
-| Placeholder | Giá trị | Xuất hiện ở node |
-|---|---|---|
-| `DIEN_CHANNEL_ID_CAM_BIEN_CUA_BAN` | Channel ID của channel **CẢM BIẾN** | `n_fn_prep_http` |
-| `DIEN_READ_API_KEY_CAM_BIEN_CUA_BAN` | Read API Key của channel **CẢM BIẾN** | `n_fn_prep_http` |
-| `DIEN_CHANNEL_ID_LENH_CUA_BAN` | Channel ID của channel **LỆNH** | `n_fn_prep_state`, `n_fn_prep_mqtt_cmd` |
-| `DIEN_READ_API_KEY_LENH_CUA_BAN` | Read API Key của channel **LỆNH** | `n_fn_prep_state` |
-| `DIEN_WRITE_API_KEY_LENH_CUA_BAN` | Write API Key của channel **LỆNH** | `n_fn_prep_http_cmd` |
-| `DIEN_MQTT_CLIENT_ID_CUA_BAN` | MQTT Client ID (của channel LỆNH) | node cấu hình `bk5_mqtt_broker` |
-| `DIEN_MQTT_USERNAME_CUA_BAN` | MQTT Username | node cấu hình `bk5_mqtt_broker` |
-| `DIEN_MQTT_PASSWORD_CUA_BAN` | MQTT Password | node cấu hình `bk5_mqtt_broker` |
+Danh sách giá trị đang dùng (để tiện đối chiếu/thay đổi nếu cần):
+
+| Giá trị | Xuất hiện ở node |
+|---|---|
+| Channel ID **CẢM BIẾN** (`3484407`) | `n_fn_prep_http` |
+| Read API Key channel **CẢM BIẾN** | `n_fn_prep_http` |
+| Channel ID **LỆNH** (`3484393`) | `n_fn_prep_state`, `n_fn_prep_mqtt_cmd` |
+| Read API Key channel **LỆNH** | `n_fn_prep_state` |
+| Write API Key channel **LỆNH** | `n_fn_prep_http_cmd` |
+| MQTT Client ID / Username / Password (channel LỆNH) | node cấu hình `bk5_mqtt_broker` |
 
 ## Import flow
 
