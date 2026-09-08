@@ -83,9 +83,16 @@ md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; hei
   box-shadow:0 1px 4px rgba(0,0,0,.25);
 }
 #bk-root .chart-hint { position:absolute; left:38px; bottom:2px; font-size: clamp(8px, 1vh, 10px); color:#BBB; pointer-events:none; }
+#bk-root .toast {
+  position:fixed; left:50%; bottom:16px; transform:translateX(-50%);
+  background:#C62828; color:#fff; padding:8px 16px; border-radius:8px;
+  font-size: clamp(11px, 1.6vh, 13px); font-weight:600; z-index:20;
+  box-shadow:0 2px 10px rgba(0,0,0,.3); max-width:90%; text-align:center;
+}
 </style>
 
 <div id="bk-root">
+  <div class="toast" ng-if="toastMsg">{{ toastMsg }}</div>
   <div class="title">Giám sát &amp; Điều khiển - Nhóm 7</div>
 
   <div class="top-row">
@@ -212,6 +219,19 @@ md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; hei
   scope.chartFirstTime = ''; scope.chartLastTime = '';
   scope.clockStr = '';
   scope.dateStr = '';
+  scope.toastMsg = '';
+  var toastTimer = null;
+  var TOPIC_LABEL = {
+    auto: 'Auto', manual: 'Manual',
+    led_on: 'Bật LED', led_off: 'Tắt LED',
+    buzzer_on: 'Bật Buzzer', buzzer_off: 'Tắt Buzzer',
+    relay_on: 'Bật Relay', relay_off: 'Tắt Relay'
+  };
+  function showToast(text, ms) {
+    scope.toastMsg = text;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() { scope.$apply(function() { scope.toastMsg = ''; }); }, ms || 5000);
+  }
 
   // ================== 8 nut dieu khien - moi nut mot topic rieng ==========
   // Node-RED (switch node) doc msg.topic de quyet dinh dung MQTT hay HTTP
@@ -427,6 +447,14 @@ md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; hei
       scope.device = p.deviceState || scope.device;
       scope.mode = p.mode || scope.mode;
       redrawChart();
+    } else if (p.type === 'cmd_failed') {
+      // ThingSpeak tu choi ghi (het so lan thu lai) - thuong do gioi han
+      // 15s/lan ghi cua channel bi trung nhip voi lan ghi khac (Pi gui
+      // trung binh cam bien, hoac nut khac vua bam). Bao ro cho nguoi
+      // dung biet, thay vi de lan doc lai tiep theo (moi 15s) tu am tham
+      // tra trang thai ve gia tri cu khien tuong nhu "tu nhien no doi lai".
+      var label = TOPIC_LABEL[p.topic] || p.topic;
+      showToast('⚠️ Gửi lệnh "' + label + '" thất bại (ThingSpeak giới hạn 15s/lần ghi) - thử lại sau vài giây.', 6000);
     }
   });
 })(scope);
