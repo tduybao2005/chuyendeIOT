@@ -483,9 +483,20 @@ md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; hei
       // Trang thai 8 nut (channel LENH) - doc rieng vi da tach 2 channel.
       // Khong ghi de trong luc dang cho 1 lenh gui di, tranh nhap nhay:
       // gia tri lac quan tren giao dien se duoc xac nhan o lan doc ke tiep.
-      if (!scope.cmdPending) {
-        scope.device = p.deviceState || scope.device;
-        scope.mode = p.mode || scope.mode;
+      //
+      // QUAN TRONG: node-red tra ve null cho field nao KHONG tim thay trong
+      // cua so quet (vd channel vua bi xoa lich su do sua ten field, hoac
+      // gia tri qua cu da troi ra ngoai cua so 30 ban ghi) - phai GHEP TUNG
+      // FIELD (chi ghi de field khac null), TUYET DOI KHONG thay nguyen
+      // object/bien mode, neu khong 1 field null se xoa mat ca cac field
+      // con lai dang dung (day chinh la bug da gap: bam Bat Buzzer xong 1
+      // luc thi Mode tu nhien nhay ve Auto, khoa het nut, dù Pi van dang o
+      // dung Manual).
+      if (!scope.cmdPending && p.deviceState) {
+        if (p.deviceState.led !== null) scope.device.led = p.deviceState.led;
+        if (p.deviceState.buzzer !== null) scope.device.buzzer = p.deviceState.buzzer;
+        if (p.deviceState.relay !== null) scope.device.relay = p.deviceState.relay;
+        if (p.mode !== null && p.mode !== undefined) scope.mode = p.mode;
       }
     } else if (p.type === 'cmd_ok') {
       if (p.topic === scope.cmdPending) clearPending();
