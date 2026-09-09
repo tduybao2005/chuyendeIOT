@@ -229,6 +229,23 @@ md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; hei
   #bk-root .chart-card { flex: 1 1 0; min-height: 0; }
   #bk-root .brand-sub { display:none; }
 }
+/* Rieng TABLET DOC (iPad Gen 8 la 810px): o bo cuc xep doc, 2 bieu do an het
+   ~60% chieu cao trang. Ep xuong 50% cho no nho lai mot chut.
+   QUAN TRONG - phan du KHONG dua vao cac dong thiet bi: cho .dev gian ra se
+   bien 3 dong mong thanh 3 o rong cao gap doi va day bieu do tut han xuong
+   day trang. Giu dong thiet bi gon theo noi dung, don phan du cho luoi 4 o
+   cam bien (so to ra, nhin ro hon - dung cho vao viec).
+   Khong ap dung cho dien thoai (<600px) vi o do noi dung von da chat. */
+@media (max-width: 820px) and (min-width: 600px) {
+  #bk-root .col-right { flex: 0 0 50%; }
+  #bk-root .col-left  { flex: 1 1 auto; }
+  #bk-root .dev-panel { flex: 0 0 auto; }   /* cao theo noi dung, khong phinh */
+  #bk-root .dev-list  { flex: 0 0 auto; }
+  #bk-root .dev       { flex: 0 0 auto; }
+  #bk-root .tiles     { flex: 1 1 auto; }   /* o cam bien an phan du */
+  #bk-root .tile      { justify-content: center; }
+  #bk-root .tile .tv  { font-size: clamp(15px, 3.2vh, 28px); }
+}
 @media (max-width: 560px) {
   #bk-root .tiles { grid-template-columns: repeat(2, 1fr); }
   #bk-root .dev .nm { width:3.6em; }
@@ -688,13 +705,46 @@ md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; hei
     if (settleTries >= 10) clearInterval(settleTimer);
   }, 200);
 
+  // ============ EP CHIEU CAO TRANG BANG DUNG VUNG NHIN THAY ============
+  // iOS Safari tinh `position:fixed; bottom:0` theo LAYOUT viewport, tuc coi
+  // nhu thanh dia chi va thanh cong cu da an. Thuc te chung van chiem cho, nen
+  // phan duoi cung cua trang bi khuat sau chung - tren iPad bi mat mot doan
+  // bieu do cuoi.
+  //
+  // CSS `100svh` xu ly duoc viec nay nhung chi co tu Safari 15.4 tro len.
+  // iPad Gen 8 xuat xuong voi iPadOS 14, neu chua cap nhat thi khong co svh.
+  // Vi vay do thang chieu cao vung nhin thay bang JavaScript (chay tren MOI
+  // phien ban) va gan cung vao style - cach nay khong phu thuoc svh.
+  //
+  // window.visualViewport.height la vung THUC SU nhin thay (da tru thanh cong
+  // cu); window.innerHeight la phuong an du phong cho trinh duyet rat cu.
+  var rootEl = document.getElementById('bk-root');
+  function fitViewport() {
+    if (!rootEl) return false;
+    var vv = window.visualViewport;
+    var h = Math.round((vv && vv.height) || window.innerHeight || 0);
+    if (!h) return false;
+    if (rootEl.style.height === h + 'px') return false;
+    rootEl.style.height = h + 'px';
+    // De CSS dung lam moc tinh ti le (vd chieu cao vung bieu do)
+    rootEl.style.setProperty('--appH', h + 'px');
+    return true;
+  }
+  fitViewport();
+
   var resizeTimer = null;
-  window.addEventListener('resize', function() {
+  function onViewportChange() {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(function() {
+      fitViewport();
       if (measureChart()) scope.$apply(redrawChart);
     }, 150);
-  });
+  }
+  window.addEventListener('resize', onViewportChange);
+  window.addEventListener('orientationchange', onViewportChange);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', onViewportChange);
+  }
 
   scope.$watch('msg', function(msg) {
     if (!msg || !msg.payload) return;
