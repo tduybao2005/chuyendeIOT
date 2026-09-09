@@ -8,3 +8,7 @@ web-build/
 mqtt_credentials*.txt
 *.env
 .env*
+
+# Thu muc lam viec cua Claude Code / Playwright (khong thuoc bai lam)
+.claude/
+.playwright-mcp/

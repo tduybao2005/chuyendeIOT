@@ -1,0 +1,35 @@
+[Unit]
+Description=IoT buoi 6 - doc cam bien va dieu khien qua ThingSpeak
+Documentation=https://github.com/tduybao2005/chuyendeIOT
+# Doi co mang thuc su moi chay: luc moi bat nguon, Wi-Fi len cham hon systemd
+# nen neu khong cho thi lan chay dau se rot mang ngay lap tuc.
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/buoi6
+# -u de log ra journal ngay lap tuc, khong bi dem trong buffer cua Python.
+ExecStart=/usr/bin/python3 -u /home/pi/buoi6/chuong_trinh_pi.py
+
+# TU KHOI DONG LAI: chuong trinh tu thoat voi ma loi 1 khi cam bien hong hoac
+# rot mang lien tiep qua nguong (xem fail_exit() trong chuong_trinh_pi.py).
+Restart=always
+RestartSec=10
+# Mac dinh systemd bo cuoc sau 5 lan restart trong 10s. Dat 0 de KHONG BAO GIO
+# bo cuoc - thiet bi phai tu song lai du mat mang bao lau.
+StartLimitIntervalSec=0
+
+# Dung bang SIGINT de chuong trinh chay khoi finally (tat LED/Buzzer/Relay)
+# thay vi bi giet ngang.
+KillSignal=SIGINT
+TimeoutStopSec=15
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=iot-buoi6
+
+[Install]
+WantedBy=multi-user.target
