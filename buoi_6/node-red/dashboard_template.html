@@ -130,6 +130,10 @@ md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; hei
 #bk-root .dev .b-off { background:#f8717122; color:#fca5a5; border-color:#f8717155; }
 #bk-root .dev button:disabled { background:#16223a; color:#4a5f85; border-color:#27395c; cursor:not-allowed; }
 #bk-root .lock-note { font-size: clamp(7px,1vh,9px); color:#f59e0b; margin-top:0.4vh; flex:0 0 auto; }
+/* Dang cho lenh xu ly xong: mau khac + nhap nhay de thay ro la HE THONG DANG
+   LAM VIEC chu khong phai giao dien bi treo. */
+#bk-root .lock-note.sending { color:#2dd4bf; animation: bkblink 1.2s ease-in-out infinite; }
+@keyframes bkblink { 50% { opacity: .35; } }
 
 /* ---------- 4 o cam bien (luoi 2x2, gian ra lap day cot trai) ---------- */
 /* Panel thiet bi va luoi 4 o cung gian theo ti le -> cot trai lap day het
@@ -276,7 +280,8 @@ md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; hei
             </div>
           </div>
         </div>
-        <div class="lock-note" ng-if="mode!=='manual'">⚠ Chuyển sang Manual để bấm được 6 nút thiết bị</div>
+        <div class="lock-note sending" ng-if="cmdPending">⏳ Đang gửi lệnh "{{ cmdLabel(cmdPending) }}" lên Server — các nút tạm khoá, đợi vài giây…</div>
+        <div class="lock-note" ng-if="!cmdPending && mode!=='manual'">⚠ Chuyển sang Manual để bấm được 6 nút thiết bị</div>
       </div>
 
       <div class="tiles">
@@ -382,6 +387,8 @@ md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; hei
     buzzer_on: 'Bật Buzzer', buzzer_off: 'Tắt Buzzer',
     relay_on: 'Bật Relay', relay_off: 'Tắt Relay'
   };
+  scope.cmdLabel = function(topic) { return TOPIC_LABEL[topic] || topic; };
+
   function showToast(text, ms) {
     scope.toastMsg = text;
     clearTimeout(toastTimer);
@@ -426,7 +433,11 @@ md-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; hei
     // cong/that bai (mqtt out la fire-and-forget) -> tu mo khoa sau 3s.
     // Nhanh HTTP se duoc mo khoa som hon qua cmd_ok/cmd_failed (xem $watch
     // ben duoi); timeout o day chi la luoi an toan phong khi mat msg.
-    var timeoutMs = MQTT_TOPICS[topic] ? 3000 : 20000;
+    // Nhanh HTTP co the phai thu lai toi da 10 lan x 3s (~30s) khi dinh gioi
+    // han ~17s/lan ghi cua ThingSpeak. Luoi an toan phai DAI HON chuoi do,
+    // neu khong khoa se mo som luc lenh cu con dang bay -> nguoi dung bam
+    // them lenh nua, hai lenh tranh nhau khe ghi va cung cham.
+    var timeoutMs = MQTT_TOPICS[topic] ? 3000 : 35000;
     clearTimeout(pendingTimer);
     pendingTimer = setTimeout(function() { scope.$apply(clearPending); }, timeoutMs);
     return true;
