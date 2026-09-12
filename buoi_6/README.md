@@ -7,6 +7,7 @@ thêm khả năng tự khởi động / tự phục hồi.
 
 ```
 buoi_6/
+├── KIEN_TRUC.md                # so do kien truc he thong (Mermaid)
 ├── raspberry/
 │   └── chuong_trinh_pi.py      # chuong trinh chay tren Raspberry Pi
 ├── node-red/
@@ -16,6 +17,9 @@ buoi_6/
 └── systemd/
     └── iot-buoi6.service       # unit tu khoi dong khi bat nguon
 ```
+
+Xem sơ đồ kiến trúc đầy đủ (luồng dữ liệu, vòng đời một lệnh) tại
+**[`KIEN_TRUC.md`](KIEN_TRUC.md)**.
 
 ## Khác gì so với buổi 5 (lớp thầy Thanh)
 
