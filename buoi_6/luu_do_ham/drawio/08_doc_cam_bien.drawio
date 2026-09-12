@@ -1,0 +1,55 @@
+<mxfile host="app.diagrams.net" modified="2026-09-12T16:24:00.000Z" agent="claude-code" version="24.7.5" type="device">
+  <diagram name="doc_cam_bien" id="page-sensors">
+    <mxGraphModel dx="1698" dy="1331" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2900" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- F1: read_temp_humi() — L=60 C=350 R=640 -->
+        <mxCell id="f1s" value="Bắt đầu&#10;read_temp_humi()" style="terminator;whiteSpace=wrap;html=1;fillColor=#1e3a5f;strokeColor=#38bdf8;fontColor=#ffffff;fontSize=12" vertex="1" parent="1"><mxGeometry x="350" y="40" width="220" height="60" as="geometry"/></mxCell>
+        <mxCell id="f1p" value="Đọc DHT (D5/GPIO5)&#10;humi_raw, temp_raw" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1e3a5f;strokeColor=#38bdf8;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="350" y="150" width="220" height="80" as="geometry"/></mxCell>
+        <mxCell id="f1d" value="Exception khi đọc /&#10;ép kiểu int?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#3a3316;strokeColor=#fbbf24;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="340" y="280" width="240" height="110" as="geometry"/></mxCell>
+        <mxCell id="f1l" value="In lỗi&#10;return None, None" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="60" y="450" width="220" height="80" as="geometry"/></mxCell>
+        <mxCell id="f1lend" value="Kết thúc" style="terminator;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=12" vertex="1" parent="1"><mxGeometry x="80" y="580" width="180" height="50" as="geometry"/></mxCell>
+        <mxCell id="f1r" value="Lọc theo dải hợp lệ:&#10;temp 0-100°C, humi 20-95%&#10;(ngoài dải → None)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#123a33;strokeColor=#2dd4bf;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="640" y="450" width="220" height="90" as="geometry"/></mxCell>
+        <mxCell id="f1rend" value="Trả về temp, humi" style="terminator;whiteSpace=wrap;html=1;fillColor=#123a33;strokeColor=#2dd4bf;fontColor=#ffffff;fontSize=12" vertex="1" parent="1"><mxGeometry x="640" y="580" width="220" height="50" as="geometry"/></mxCell>
+        <mxCell id="f1e1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f1s" target="f1p"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="f1e2" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f1p" target="f1d"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="f1e3" value="Có" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;fontColor=#f5cccc;labelBackgroundColor=none;exitX=0.25;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f1d" target="f1l"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="f1e4" value="Không" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;fontColor=#cfe0f5;labelBackgroundColor=none;exitX=0.75;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f1d" target="f1r"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="f1e5" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f1l" target="f1lend"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="f1e6" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f1r" target="f1rend"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- F2: read_voltage() — L=1010 C=1300 R=1590 -->
+        <mxCell id="f2s" value="Bắt đầu&#10;read_voltage()" style="terminator;whiteSpace=wrap;html=1;fillColor=#1e3a5f;strokeColor=#38bdf8;fontColor=#ffffff;fontSize=12" vertex="1" parent="1"><mxGeometry x="1300" y="40" width="220" height="60" as="geometry"/></mxCell>
+        <mxCell id="f2p" value="Đọc ADC I2C 0x08,&#10;kênh 2, chia 1000 (mV→V)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1e3a5f;strokeColor=#38bdf8;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="1300" y="150" width="220" height="80" as="geometry"/></mxCell>
+        <mxCell id="f2d" value="Exception?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#3a3316;strokeColor=#fbbf24;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="1290" y="280" width="240" height="110" as="geometry"/></mxCell>
+        <mxCell id="f2l" value="In lỗi&#10;return None" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="1010" y="450" width="220" height="80" as="geometry"/></mxCell>
+        <mxCell id="f2lend" value="Kết thúc" style="terminator;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=12" vertex="1" parent="1"><mxGeometry x="1030" y="580" width="180" height="50" as="geometry"/></mxCell>
+        <mxCell id="f2r" value="Lọc theo dải hợp lệ:&#10;0 ≤ voltage ≤ 3.3V&#10;(ngoài dải → None)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#123a33;strokeColor=#2dd4bf;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="1590" y="450" width="220" height="90" as="geometry"/></mxCell>
+        <mxCell id="f2rend" value="Trả về voltage" style="terminator;whiteSpace=wrap;html=1;fillColor=#123a33;strokeColor=#2dd4bf;fontColor=#ffffff;fontSize=12" vertex="1" parent="1"><mxGeometry x="1590" y="580" width="220" height="50" as="geometry"/></mxCell>
+        <mxCell id="f2e1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f2s" target="f2p"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="f2e2" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f2p" target="f2d"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="f2e3" value="Có" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;fontColor=#f5cccc;labelBackgroundColor=none;exitX=0.25;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f2d" target="f2l"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="f2e4" value="Không" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;fontColor=#cfe0f5;labelBackgroundColor=none;exitX=0.75;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f2d" target="f2r"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="f2e5" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f2l" target="f2lend"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="f2e6" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f2r" target="f2rend"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- F3: read_distance() — L=1960 C=2250 R=2540 -->
+        <mxCell id="f3s" value="Bắt đầu&#10;read_distance()" style="terminator;whiteSpace=wrap;html=1;fillColor=#1e3a5f;strokeColor=#38bdf8;fontColor=#ffffff;fontSize=12" vertex="1" parent="1"><mxGeometry x="2250" y="40" width="220" height="60" as="geometry"/></mxCell>
+        <mxCell id="f3p" value="Đọc cảm biến siêu âm&#10;(D16/GPIO16)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1e3a5f;strokeColor=#38bdf8;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="2250" y="150" width="220" height="80" as="geometry"/></mxCell>
+        <mxCell id="f3d" value="Exception?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#3a3316;strokeColor=#fbbf24;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="2240" y="280" width="240" height="110" as="geometry"/></mxCell>
+        <mxCell id="f3l" value="In lỗi&#10;return None" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="1960" y="450" width="220" height="80" as="geometry"/></mxCell>
+        <mxCell id="f3lend" value="Kết thúc" style="terminator;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=12" vertex="1" parent="1"><mxGeometry x="1980" y="580" width="180" height="50" as="geometry"/></mxCell>
+        <mxCell id="f3r" value="Lọc theo dải hợp lệ:&#10;2 ≤ distance ≤ 350cm&#10;(ngoài dải → None)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1e3a5f;strokeColor=#38bdf8;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="2540" y="450" width="220" height="90" as="geometry"/></mxCell>
+        <mxCell id="f3rend" value="Trả về distance" style="terminator;whiteSpace=wrap;html=1;fillColor=#1e3a5f;strokeColor=#38bdf8;fontColor=#ffffff;fontSize=12" vertex="1" parent="1"><mxGeometry x="2540" y="580" width="220" height="50" as="geometry"/></mxCell>
+        <mxCell id="f3e1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f3s" target="f3p"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="f3e2" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f3p" target="f3d"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="f3e3" value="Có" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;fontColor=#f5cccc;labelBackgroundColor=none;exitX=0.25;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f3d" target="f3l"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="f3e4" value="Không" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;fontColor=#cfe0f5;labelBackgroundColor=none;exitX=0.75;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f3d" target="f3r"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="f3e5" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f3l" target="f3lend"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="f3e6" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="f3r" target="f3rend"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

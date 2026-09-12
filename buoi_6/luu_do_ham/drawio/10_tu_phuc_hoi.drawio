@@ -1,0 +1,52 @@
+<mxfile host="app.diagrams.net" modified="2026-09-12T16:28:00.000Z" agent="claude-code" version="24.7.5" type="device">
+  <diagram name="Tu phuc hoi" id="page-recover">
+    <mxGraphModel dx="1698" dy="1331" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- L: note_sensor_fail() -->
+        <mxCell id="ls0" value="note_sensor_fail()&#10;được gọi" style="terminator;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=12" vertex="1" parent="1"><mxGeometry x="60" y="40" width="220" height="60" as="geometry"/></mxCell>
+        <mxCell id="lp1" value="health['sensor_fail'] += 1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="60" y="150" width="220" height="70" as="geometry"/></mxCell>
+        <mxCell id="lp2" value="In: n/30 lần liên tiếp" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="60" y="270" width="220" height="70" as="geometry"/></mxCell>
+        <mxCell id="ld1" value="n ≥ 30?&#10;(SENSOR_FAIL_LIMIT)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#3a3316;strokeColor=#fbbf24;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="50" y="390" width="240" height="110" as="geometry"/></mxCell>
+        <mxCell id="lend" value="Kết thúc, chạy tiếp" style="terminator;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=12" vertex="1" parent="1"><mxGeometry x="80" y="560" width="180" height="50" as="geometry"/></mxCell>
+
+        <!-- R: note_network_fail() -->
+        <mxCell id="rs0" value="note_network_fail()&#10;được gọi" style="terminator;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=12" vertex="1" parent="1"><mxGeometry x="640" y="40" width="220" height="60" as="geometry"/></mxCell>
+        <mxCell id="rp1" value="health['network_fail'] += 1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="640" y="150" width="220" height="70" as="geometry"/></mxCell>
+        <mxCell id="rp2" value="In: n/20 lần liên tiếp" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="640" y="270" width="220" height="70" as="geometry"/></mxCell>
+        <mxCell id="rd1" value="n ≥ 20?&#10;(NETWORK_FAIL_LIMIT)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#3a3316;strokeColor=#fbbf24;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="630" y="390" width="240" height="110" as="geometry"/></mxCell>
+        <mxCell id="rend" value="Kết thúc, chạy tiếp" style="terminator;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=12" vertex="1" parent="1"><mxGeometry x="660" y="560" width="180" height="50" as="geometry"/></mxCell>
+
+        <!-- C: fail_exit() -->
+        <mxCell id="cfe" value="fail_exit(reason)&#10;được gọi" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3a3316;strokeColor=#fbbf24;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="350" y="390" width="220" height="90" as="geometry"/></mxCell>
+        <mxCell id="ctry" value="try:" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#fbbf24;fontColor=#fbf0c8;fontSize=10;dashed=1" vertex="1" parent="1"><mxGeometry x="600" y="600" width="90" height="30" as="geometry"/></mxCell>
+        <mxCell id="cp1" value="log_event('TU KHOI DONG LAI: ...')" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3a3316;strokeColor=#fbbf24;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="350" y="590" width="220" height="70" as="geometry"/></mxCell>
+        <mxCell id="cp2" value="cleanup_outputs():&#10;tắt LED, Buzzer, Relay&#10;(mỗi thiết bị try/except riêng)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="350" y="700" width="220" height="90" as="geometry"/></mxCell>
+        <mxCell id="cp3" value="sys.stdout.flush()&#10;(đảm bảo log kịp ghi&#10;trước khi tiến trình chết)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3a3316;strokeColor=#fbbf24;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="350" y="830" width="220" height="90" as="geometry"/></mxCell>
+        <mxCell id="cfin" value="finally: (LUÔN chạy dù&#10;bước trên có lỗi hay không)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#f87171;fontColor=#f8b4b4;fontSize=10;dashed=1" vertex="1" parent="1"><mxGeometry x="600" y="945" width="220" height="50" as="geometry"/></mxCell>
+        <mxCell id="cp4" value="os._exit(1)&#10;(kết thúc CẢ tiến trình ngay,&#10;bỏ qua mọi finally khác)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=11" vertex="1" parent="1"><mxGeometry x="350" y="1030" width="220" height="90" as="geometry"/></mxCell>
+        <mxCell id="csys" value="systemd (iot-buoi6.service)&#10;Restart=always, RestartSec=10&#10;→ dựng lại 1 tiến trình sạch" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#f87171;fontColor=#f8b4b4;fontSize=10;dashed=1" vertex="1" parent="1"><mxGeometry x="900" y="1030" width="240" height="90" as="geometry"/></mxCell>
+
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="ls0" target="lp1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="lp1" target="lp2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="lp2" target="ld1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" value="Chưa" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;fontColor=#f5cccc;labelBackgroundColor=none;exitX=0.25;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="ld1" target="lend"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" value="Đủ" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#fbbf24;fontColor=#fbf0c8;labelBackgroundColor=none;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="ld1" target="cfe"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="rs0" target="rp1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="rp1" target="rp2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="rp2" target="rd1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e9" value="Chưa" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;fontColor=#f5cccc;labelBackgroundColor=none;exitX=0.75;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="rd1" target="rend"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e10" value="Đủ" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#fbbf24;fontColor=#fbf0c8;labelBackgroundColor=none;exitX=0;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="rd1" target="cfe"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#fbbf24;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="cfe" target="cp1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#fbbf24;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="cp1" target="cp2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#f87171;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="cp2" target="cp3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#fbbf24;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="cp3" target="cp4"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e15" value="→ systemd dựng lại" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#f87171;fontColor=#f8b4b4;labelBackgroundColor=none;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="cp4" target="csys"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
