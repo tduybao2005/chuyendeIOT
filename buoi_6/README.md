@@ -8,7 +8,8 @@ thêm khả năng tự khởi động / tự phục hồi.
 ```
 buoi_6/
 ├── KIEN_TRUC.md                # so do kien truc he thong (Mermaid)
-├── so_do_ham_pi.drawio         # so do CHI TIET TUNG HAM trong chuong_trinh_pi.py (draw.io)
+├── so_do_ham_pi.drawio         # so do goi ham (ai goi ai) - draw.io
+├── luu_do_ham/                 # luu do THUAT TOAN tung ham (Mermaid, xem README rieng)
 ├── raspberry/
 │   └── chuong_trinh_pi.py      # chuong trinh chay tren Raspberry Pi
 ├── node-red/
@@ -26,7 +27,10 @@ Xem sơ đồ kiến trúc đầy đủ (luồng dữ liệu, vòng đời một
 tại [app.diagrams.net](https://app.diagrams.net/) → **File → Open from →
 GitHub** → chọn repo `tduybao2005/chuyendeIOT`, nhánh `main`, file
 `buoi_6/so_do_ham_pi.drawio` (đăng nhập GitHub trong draw.io để lưu thẳng lại
-lên repo sau khi sửa).
+lên repo sau khi sửa). Lưu đồ **thuật toán bên trong từng hàm** (có nhánh
+rẽ, vòng lặp, điều kiện) nằm ở
+**[`luu_do_ham/`](luu_do_ham/README.md)** — một file Mermaid riêng cho mỗi
+hàm/nhóm hàm.
 
 ## Khác gì so với buổi 5 (lớp thầy Thanh)
 
