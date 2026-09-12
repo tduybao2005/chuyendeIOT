@@ -1,240 +1,150 @@
-<mxfile host="app.diagrams.net" modified="2026-09-12T00:00:00.000Z" agent="claude-code" version="24.7.5" type="device">
+<mxfile host="app.diagrams.net" modified="2026-09-12T15:40:00.000Z" agent="claude-code" version="24.7.5" type="device">
   <diagram name="Ham trong chuong_trinh_pi.py" id="ham-pi-buoi6">
-    <mxGraphModel dx="2200" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1000" math="0" shadow="0">
+    <mxGraphModel dx="1698" dy="1331" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="700" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-
-        <!-- ============ NHOM (group boxes) ============ -->
-        <mxCell id="g_main" value="Vong lap chinh" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0e1830;strokeColor=#38bdf8;fontColor=#e9f0fa;verticalAlign=top;fontSize=13;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="40" y="20" width="200" height="440" as="geometry" />
+        <mxCell id="n_main" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e3a5f;strokeColor=#38bdf8;fontColor=#ffffff;fontSize=12" value="main()" vertex="1">
+          <mxGeometry height="60" width="160" x="60" y="60" as="geometry" />
         </mxCell>
-        <mxCell id="g_init" value="Khoi dong / doc lenh" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#16223a;strokeColor=#2dd4bf;fontColor=#e9f0fa;verticalAlign=top;fontSize=13;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="300" y="20" width="220" height="440" as="geometry" />
+        <mxCell id="n_sync" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#123a33;strokeColor=#2dd4bf;fontColor=#ffffff;fontSize=11" value="sync_initial_state()" vertex="1">
+          <mxGeometry height="60" width="180" x="320" y="60" as="geometry" />
         </mxCell>
-        <mxCell id="g_send" value="Gui du lieu cam bien" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#16223a;strokeColor=#2dd4bf;fontColor=#e9f0fa;verticalAlign=top;fontSize=13;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="580" y="20" width="220" height="320" as="geometry" />
+        <mxCell id="n_poll_loop" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#123a33;strokeColor=#2dd4bf;fontColor=#ffffff;fontSize=11" value="control_poll_loop()" vertex="1">
+          <mxGeometry height="60" width="180" x="320" y="160" as="geometry" />
         </mxCell>
-        <mxCell id="g_sensor" value="Doc cam bien / dieu khien" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0e1830;strokeColor=#38bdf8;fontColor=#e9f0fa;verticalAlign=top;fontSize=13;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="860" y="20" width="220" height="440" as="geometry" />
+        <mxCell id="n_poll_cmd" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#123a33;strokeColor=#2dd4bf;fontColor=#ffffff;fontSize=11" value="poll_http_commands()" vertex="1">
+          <mxGeometry height="60" width="180" x="580" y="160" as="geometry" />
         </mxCell>
-        <mxCell id="g_util" value="Ham phu tro" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#16223a;strokeColor=#fbbf24;fontColor=#e9f0fa;verticalAlign=top;fontSize=13;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="1140" y="20" width="220" height="280" as="geometry" />
+        <mxCell id="n_apply" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#123a33;strokeColor=#2dd4bf;fontColor=#ffffff;fontSize=11" value="apply_outputs()" vertex="1">
+          <mxGeometry height="60" width="180" x="320" y="260" as="geometry" />
         </mxCell>
-        <mxCell id="g_recover" value="Tu phuc hoi (tinh nang moi buoi 6)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0e1830;strokeColor=#f87171;fontColor=#e9f0fa;verticalAlign=top;fontSize=13;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="1420" y="20" width="240" height="500" as="geometry" />
+        <mxCell id="n_send_avg" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#123a33;strokeColor=#2dd4bf;fontColor=#ffffff;fontSize=11" value="send_window_average()" vertex="1">
+          <mxGeometry height="60" width="180" x="60" y="360" as="geometry" />
         </mxCell>
-        <mxCell id="g_lcd" value="LCD JHD1802" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#16223a;strokeColor=#2dd4bf;fontColor=#e9f0fa;verticalAlign=top;fontSize=13;fontStyle=1" vertex="1" parent="1">
-          <mxGeometry x="1720" y="20" width="260" height="360" as="geometry" />
+        <mxCell id="n_send_ts" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#123a33;strokeColor=#2dd4bf;fontColor=#ffffff;fontSize=11" value="send_to_thingspeak()" vertex="1">
+          <mxGeometry height="60" width="180" x="320" y="360" as="geometry" />
         </mxCell>
-
-        <!-- ============ VONG LAP CHINH ============ -->
-        <mxCell id="n_main" value="main()&#10;dong 561" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e3a5f;strokeColor=#38bdf8;fontColor=#ffffff;fontSize=12" vertex="1" parent="1">
-          <mxGeometry x="60" y="60" width="160" height="60" as="geometry" />
+        <mxCell id="n_read_th" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e3a5f;strokeColor=#38bdf8;fontColor=#ffffff;fontSize=11" value="read_temp_humi()" vertex="1">
+          <mxGeometry height="60" width="180" x="60" y="160" as="geometry" />
         </mxCell>
-        <mxCell id="n_thread_note" value="threading.Thread&#10;target=control_poll_loop&#10;(luong rieng, daemon)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#38bdf8;fontColor=#a8c8f0;fontSize=10;dashed=1" vertex="1" parent="1">
-          <mxGeometry x="60" y="150" width="160" height="60" as="geometry" />
+        <mxCell id="n_read_v" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e3a5f;strokeColor=#38bdf8;fontColor=#ffffff;fontSize=11" value="read_voltage()" vertex="1">
+          <mxGeometry height="60" width="180" x="60" y="240" as="geometry" />
         </mxCell>
-        <mxCell id="n_kbint" value="KeyboardInterrupt&#10;/ finally:&#10;tat LED, Buzzer, Relay" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e3a5f;strokeColor=#38bdf8;fontColor=#ffffff;fontSize=11" vertex="1" parent="1">
-          <mxGeometry x="60" y="380" width="160" height="60" as="geometry" />
+        <mxCell id="n_read_d" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e3a5f;strokeColor=#38bdf8;fontColor=#ffffff;fontSize=11" value="read_distance()" vertex="1">
+          <mxGeometry height="60" width="180" x="60" y="460" as="geometry" />
         </mxCell>
-
-        <!-- ============ KHOI DONG / DOC LENH ============ -->
-        <mxCell id="n_sync" value="sync_initial_state()&#10;dong 443&#10;doc gia tri CUOI CUNG&#10;tung field (fields/N/last.json)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#123a33;strokeColor=#2dd4bf;fontColor=#ffffff;fontSize=11" vertex="1" parent="1">
-          <mxGeometry x="320" y="60" width="180" height="70" as="geometry" />
+        <mxCell id="n_show_lcd" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e3a5f;strokeColor=#38bdf8;fontColor=#ffffff;fontSize=11" value="show_lcd()" vertex="1">
+          <mxGeometry height="60" width="180" x="580" y="60" as="geometry" />
         </mxCell>
-        <mxCell id="n_poll_loop" value="control_poll_loop(stop_event)&#10;dong 482&#10;nhip CO DINH 1s&#10;(tru thoi gian request)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#123a33;strokeColor=#2dd4bf;fontColor=#ffffff;fontSize=11" vertex="1" parent="1">
-          <mxGeometry x="320" y="160" width="180" height="70" as="geometry" />
+        <mxCell id="n_is_valid" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a3316;strokeColor=#fbbf24;fontColor=#ffffff;fontSize=11" value="is_valid()" vertex="1">
+          <mxGeometry height="60" width="180" x="840" y="160" as="geometry" />
         </mxCell>
-        <mxCell id="n_poll_cmd" value="poll_http_commands()&#10;dong 383&#10;GET feeds.json&#10;(30 ban ghi gan nhat)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#123a33;strokeColor=#2dd4bf;fontColor=#ffffff;fontSize=11" vertex="1" parent="1">
-          <mxGeometry x="320" y="260" width="180" height="70" as="geometry" />
+        <mxCell id="n_to_bool" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a3316;strokeColor=#fbbf24;fontColor=#ffffff;fontSize=11" value="to_bool()" vertex="1">
+          <mxGeometry height="60" width="180" x="840" y="260" as="geometry" />
         </mxCell>
-        <mxCell id="n_apply" value="apply_outputs()&#10;dong 338&#10;Auto: LED 18-22h,&#10;Buzzer &gt;40/&lt;30C,&#10;Relay &gt;70/&lt;40%&#10;Manual: theo state[]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#123a33;strokeColor=#2dd4bf;fontColor=#ffffff;fontSize=11" vertex="1" parent="1">
-          <mxGeometry x="320" y="360" width="180" height="90" as="geometry" />
+        <mxCell id="n_log" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a3316;strokeColor=#fbbf24;fontColor=#ffffff;fontSize=11" value="log_event()" vertex="1">
+          <mxGeometry height="60" width="180" x="840" y="360" as="geometry" />
         </mxCell>
-
-        <!-- ============ GUI DU LIEU ============ -->
-        <mxCell id="n_send_avg" value="send_window_average(window)&#10;dong 539&#10;trung binh 20s cho&#10;temp/humi/voltage/distance" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#123a33;strokeColor=#2dd4bf;fontColor=#ffffff;fontSize=11" vertex="1" parent="1">
-          <mxGeometry x="600" y="60" width="180" height="80" as="geometry" />
+        <mxCell id="n_sensor_ok" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=11" value="note_sensor_ok()" vertex="1">
+          <mxGeometry height="60" width="200" x="1100" y="60" as="geometry" />
         </mxCell>
-        <mxCell id="n_send_ts" value="send_to_thingspeak(**fields)&#10;dong 510&#10;POST update.json&#10;3 lan thu, cach 3s&#10;kiem tra entry_id (khong&#10;chi raise_for_status)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#123a33;strokeColor=#2dd4bf;fontColor=#ffffff;fontSize=11" vertex="1" parent="1">
-          <mxGeometry x="600" y="180" width="180" height="100" as="geometry" />
+        <mxCell id="n_sensor_fail" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=11" value="note_sensor_fail()" vertex="1">
+          <mxGeometry height="60" width="200" x="1100" y="160" as="geometry" />
         </mxCell>
-
-        <!-- ============ DOC CAM BIEN / DIEU KHIEN ============ -->
-        <mxCell id="n_read_th" value="read_temp_humi()&#10;dong 230&#10;DHT -&gt; D5 (GPIO5)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e3a5f;strokeColor=#38bdf8;fontColor=#ffffff;fontSize=11" vertex="1" parent="1">
-          <mxGeometry x="880" y="60" width="180" height="60" as="geometry" />
+        <mxCell id="n_net_ok" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=11" value="note_network_ok()" vertex="1">
+          <mxGeometry height="60" width="200" x="1100" y="260" as="geometry" />
         </mxCell>
-        <mxCell id="n_read_v" value="read_voltage()&#10;dong 242&#10;ADC I2C 0x08, kenh 2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e3a5f;strokeColor=#38bdf8;fontColor=#ffffff;fontSize=11" vertex="1" parent="1">
-          <mxGeometry x="880" y="140" width="180" height="60" as="geometry" />
+        <mxCell id="n_net_fail" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=11" value="note_network_fail()" vertex="1">
+          <mxGeometry height="60" width="200" x="1100" y="360" as="geometry" />
         </mxCell>
-        <mxCell id="n_read_d" value="read_distance()&#10;dong 251&#10;Sieu am -&gt; D16 (GPIO16)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e3a5f;strokeColor=#38bdf8;fontColor=#ffffff;fontSize=11" vertex="1" parent="1">
-          <mxGeometry x="880" y="220" width="180" height="60" as="geometry" />
+        <mxCell id="n_fail_exit" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=11" value="fail_exit()" vertex="1">
+          <mxGeometry height="60" width="200" x="1380" y="160" as="geometry" />
         </mxCell>
-        <mxCell id="n_show_lcd" value="show_lcd(mode, led_on,&#10;buzzer_on, relay_on)&#10;dong 309" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e3a5f;strokeColor=#38bdf8;fontColor=#ffffff;fontSize=11" vertex="1" parent="1">
-          <mxGeometry x="880" y="300" width="180" height="70" as="geometry" />
+        <mxCell id="n_cleanup" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=11" value="cleanup_outputs()" vertex="1">
+          <mxGeometry height="60" width="200" x="1380" y="260" as="geometry" />
         </mxCell>
-        <mxCell id="n_outputs" value="LED (D18) / Buzzer (D24)&#10;Relay (D26)&#10;gpiozero" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#38bdf8;fontColor=#a8c8f0;fontSize=10;dashed=1" vertex="1" parent="1">
-          <mxGeometry x="880" y="390" width="180" height="60" as="geometry" />
+        <mxCell id="n_lcd_class" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#123a33;strokeColor=#2dd4bf;fontColor=#ffffff;fontSize=11" value="class JHD1802" vertex="1">
+          <mxGeometry height="60" width="180" x="840" y="60" as="geometry" />
         </mxCell>
-
-        <!-- ============ HAM PHU TRO ============ -->
-        <mxCell id="n_is_valid" value="is_valid(value, min, max)&#10;dong 139" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a3316;strokeColor=#fbbf24;fontColor=#ffffff;fontSize=11" vertex="1" parent="1">
-          <mxGeometry x="1160" y="60" width="180" height="50" as="geometry" />
-        </mxCell>
-        <mxCell id="n_to_bool" value="to_bool(value)&#10;dong 370" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a3316;strokeColor=#fbbf24;fontColor=#ffffff;fontSize=11" vertex="1" parent="1">
-          <mxGeometry x="1160" y="130" width="180" height="50" as="geometry" />
-        </mxCell>
-        <mxCell id="n_log" value="log_event(message)&#10;dong 127&#10;in gio:phut:giay.mili" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a3316;strokeColor=#fbbf24;fontColor=#ffffff;fontSize=11" vertex="1" parent="1">
-          <mxGeometry x="1160" y="200" width="180" height="60" as="geometry" />
-        </mxCell>
-
-        <!-- ============ TU PHUC HOI ============ -->
-        <mxCell id="n_sensor_ok" value="note_sensor_ok()&#10;dong 197&#10;reset bo dem ve 0" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=11" vertex="1" parent="1">
-          <mxGeometry x="1440" y="60" width="200" height="55" as="geometry" />
-        </mxCell>
-        <mxCell id="n_sensor_fail" value="note_sensor_fail()&#10;dong 201&#10;dem loi lien tiep&#10;>= 30 -&gt; fail_exit()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=11" vertex="1" parent="1">
-          <mxGeometry x="1440" y="130" width="200" height="65" as="geometry" />
-        </mxCell>
-        <mxCell id="n_net_ok" value="note_network_ok()&#10;dong 209&#10;reset bo dem ve 0" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=11" vertex="1" parent="1">
-          <mxGeometry x="1440" y="210" width="200" height="55" as="geometry" />
-        </mxCell>
-        <mxCell id="n_net_fail" value="note_network_fail()&#10;dong 213&#10;dem loi lien tiep&#10;>= 20 -&gt; fail_exit()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=11" vertex="1" parent="1">
-          <mxGeometry x="1440" y="280" width="200" height="65" as="geometry" />
-        </mxCell>
-        <mxCell id="n_fail_exit" value="fail_exit(reason)&#10;dong 174&#10;try/finally -&gt; os._exit(1)&#10;(khong dung sys.exit())" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=11" vertex="1" parent="1">
-          <mxGeometry x="1440" y="360" width="200" height="70" as="geometry" />
-        </mxCell>
-        <mxCell id="n_cleanup" value="cleanup_outputs()&#10;dong 161&#10;tat LED/Buzzer/Relay&#10;truoc khi thoat" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a1616;strokeColor=#f87171;fontColor=#ffffff;fontSize=11" vertex="1" parent="1">
-          <mxGeometry x="1440" y="450" width="200" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="n_systemd" value="systemd: iot-buoi6.service&#10;Restart=always, RestartSec=10&#10;-&gt; dung lai tien trinh sach" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#f87171;fontColor=#f8b4b4;fontSize=10;dashed=1" vertex="1" parent="1">
-          <mxGeometry x="1440" y="20" width="200" height="1" as="geometry" />
-        </mxCell>
-
-        <!-- ============ LCD ============ -->
-        <mxCell id="n_lcd_class" value="class JHD1802&#10;dong 263&#10;I2C 0x3E (man hinh)&#10;I2C 0x62 (den nen RGB)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#123a33;strokeColor=#2dd4bf;fontColor=#ffffff;fontSize=11" vertex="1" parent="1">
-          <mxGeometry x="1740" y="60" width="220" height="70" as="geometry" />
-        </mxCell>
-        <mxCell id="n_lcd_init" value="__init__() / _set_rgb_backlight()&#10;dong 264 / 277" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#2dd4bf;fontColor=#a8f0e6;fontSize=10;dashed=1" vertex="1" parent="1">
-          <mxGeometry x="1740" y="150" width="220" height="50" as="geometry" />
-        </mxCell>
-        <mxCell id="n_lcd_cmd" value="textCommand(cmd) / setCursor(row, col)&#10;dong 288 / 294" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#2dd4bf;fontColor=#a8f0e6;fontSize=10;dashed=1" vertex="1" parent="1">
-          <mxGeometry x="1740" y="220" width="220" height="50" as="geometry" />
-        </mxCell>
-        <mxCell id="n_lcd_write" value="write(msg)&#10;dong 298&#10;ghi tung ky tu qua I2C" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#2dd4bf;fontColor=#a8f0e6;fontSize=10;dashed=1" vertex="1" parent="1">
-          <mxGeometry x="1740" y="290" width="220" height="50" as="geometry" />
-        </mxCell>
-
-        <!-- ============ CANH (goi ham) ============ -->
-        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;fontColor=#cfe0f5;fontSize=9" edge="1" parent="1" source="n_main" target="n_sync">
+        <mxCell id="e1" edge="1" parent="1" source="n_main" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7aa7d9;exitX=1;exitY=0.25;entryX=0;entryY=0.5;" target="n_sync">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e2" value="tao luong" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;fontColor=#cfe0f5;fontSize=9" edge="1" parent="1" source="n_main" target="n_poll_loop">
+        <mxCell id="e2" edge="1" parent="1" source="n_main" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7aa7d9;exitX=0;exitY=0.75;entryX=1;entryY=0.5;" target="n_read_th">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;fontColor=#cfe0f5;fontSize=9" edge="1" parent="1" source="n_main" target="n_read_th">
+        <mxCell id="e3" edge="1" parent="1" source="n_main" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7aa7d9;exitX=0;exitY=1;entryX=1;entryY=0.5;" target="n_read_v">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;fontColor=#cfe0f5;fontSize=9" edge="1" parent="1" source="n_main" target="n_read_v">
+        <mxCell id="e5" edge="1" parent="1" source="n_main" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7aa7d9;exitX=1;exitY=0.75;entryX=0;entryY=0.5;" target="n_apply">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;fontColor=#cfe0f5;fontSize=9" edge="1" parent="1" source="n_main" target="n_read_d">
+        <mxCell id="e6" edge="1" parent="1" source="n_main" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7aa7d9;exitX=1;exitY=1;entryX=0;entryY=0.25;" target="n_show_lcd">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;fontColor=#cfe0f5;fontSize=9" edge="1" parent="1" source="n_main" target="n_apply">
+        <mxCell id="e7" edge="1" parent="1" source="n_main" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7aa7d9;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="n_send_avg">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;fontColor=#cfe0f5;fontSize=9" edge="1" parent="1" source="n_main" target="n_show_lcd">
+        <mxCell id="e2b" edge="1" parent="1" source="n_main" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7aa7d9;dashed=1;exitX=1;exitY=0.75;entryX=0;entryY=0.5;" target="n_poll_loop">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;fontColor=#cfe0f5;fontSize=9" edge="1" parent="1" source="n_main" target="n_send_avg">
+        <mxCell id="e8" edge="1" parent="1" source="n_sync" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#5fd6c4;" target="n_apply">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e9" value="ca 4 cam bien loi" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;fontColor=#f5cccc;fontSize=9" edge="1" parent="1" source="n_main" target="n_sensor_fail">
+        <mxCell id="e9" edge="1" parent="1" source="n_poll_loop" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#5fd6c4;" target="n_poll_cmd">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e10" value="1 cam bien OK" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;fontColor=#f5cccc;fontSize=9" edge="1" parent="1" source="n_main" target="n_sensor_ok">
+        <mxCell id="e10" edge="1" parent="1" source="n_poll_cmd" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#5fd6c4;" target="n_apply">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#5fd6c4;fontColor=#cdf5ec;fontSize=9" edge="1" parent="1" source="n_sync" target="n_apply">
+        <mxCell id="e11" edge="1" parent="1" source="n_poll_cmd" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#5fd6c4;" target="n_to_bool">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#5fd6c4;fontColor=#cdf5ec;fontSize=9" edge="1" parent="1" source="n_sync" target="n_to_bool">
+        <mxCell id="e12" edge="1" parent="1" source="n_poll_cmd" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#5fd6c4;" target="n_log">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#5fd6c4;fontColor=#cdf5ec;fontSize=9" edge="1" parent="1" source="n_poll_loop" target="n_poll_cmd">
+        <mxCell id="e13" edge="1" parent="1" source="n_poll_cmd" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#e08a8a;" target="n_net_ok">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#5fd6c4;fontColor=#cdf5ec;fontSize=9" edge="1" parent="1" source="n_poll_cmd" target="n_to_bool">
+        <mxCell id="e14" edge="1" parent="1" source="n_poll_cmd" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#e08a8a;" target="n_net_fail">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e15" value="GET that bai" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;fontColor=#f5cccc;fontSize=9" edge="1" parent="1" source="n_poll_cmd" target="n_net_fail">
+        <mxCell id="e15" edge="1" parent="1" source="n_send_avg" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#5fd6c4;" target="n_send_ts">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e16" value="GET thanh cong" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;fontColor=#f5cccc;fontSize=9" edge="1" parent="1" source="n_poll_cmd" target="n_net_ok">
+        <mxCell id="e16" edge="1" parent="1" source="n_send_ts" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#e08a8a;" target="n_net_ok">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e17" value="co thay doi" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#5fd6c4;fontColor=#cdf5ec;fontSize=9" edge="1" parent="1" source="n_poll_cmd" target="n_apply">
+        <mxCell id="e17" edge="1" parent="1" source="n_send_ts" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#e08a8a;" target="n_net_fail">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e18" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#5fd6c4;fontColor=#cdf5ec;fontSize=9" edge="1" parent="1" source="n_poll_cmd" target="n_log">
+        <mxCell id="e18" edge="1" parent="1" source="n_read_th" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7aa7d9;" target="n_is_valid">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="e19" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#5fd6c4;fontColor=#cdf5ec;fontSize=9" edge="1" parent="1" source="n_send_avg" target="n_send_ts">
+        <mxCell id="e19" edge="1" parent="1" source="n_read_v" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7aa7d9;" target="n_is_valid">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e20" value="that bai" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;fontColor=#f5cccc;fontSize=9" edge="1" parent="1" source="n_send_ts" target="n_net_fail">
+        <mxCell id="e20" edge="1" parent="1" source="n_read_d" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7aa7d9;" target="n_is_valid">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e21" value="entry_id &gt; 0" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;fontColor=#f5cccc;fontSize=9" edge="1" parent="1" source="n_send_ts" target="n_net_ok">
+        <mxCell id="e21" edge="1" parent="1" source="n_show_lcd" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7aa7d9;" target="n_lcd_class">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="e22" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;fontColor=#cfe0f5;fontSize=9" edge="1" parent="1" source="n_read_th" target="n_is_valid">
+        <mxCell id="e22" edge="1" parent="1" source="n_main" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#e08a8a;dashed=1;" target="n_sensor_fail">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e23" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;fontColor=#cfe0f5;fontSize=9" edge="1" parent="1" source="n_read_v" target="n_is_valid">
+        <mxCell id="e23" edge="1" parent="1" source="n_main" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#e08a8a;dashed=1;" target="n_sensor_ok">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e24" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;fontColor=#cfe0f5;fontSize=9" edge="1" parent="1" source="n_read_d" target="n_is_valid">
+        <mxCell id="e24" edge="1" parent="1" source="n_sensor_fail" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#e08a8a;dashed=1;" target="n_fail_exit">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e25" value="setCursor/write" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;fontColor=#cfe0f5;fontSize=9" edge="1" parent="1" source="n_show_lcd" target="n_lcd_class">
+        <mxCell id="e25" edge="1" parent="1" source="n_net_fail" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#e08a8a;dashed=1;" target="n_fail_exit">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="e26" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#7aa7d9;fontColor=#cfe0f5;fontSize=9" edge="1" parent="1" source="n_apply" target="n_outputs">
+        <mxCell id="e26" edge="1" parent="1" source="n_fail_exit" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#e08a8a;" target="n_cleanup">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-
-        <mxCell id="e27" value="≥30 lan lien tiep" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;fontColor=#f5cccc;fontSize=9;dashed=1" edge="1" parent="1" source="n_sensor_fail" target="n_fail_exit">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e28" value="≥20 lan lien tiep" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;fontColor=#f5cccc;fontSize=9;dashed=1" edge="1" parent="1" source="n_net_fail" target="n_fail_exit">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e29" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;fontColor=#f5cccc;fontSize=9" edge="1" parent="1" source="n_fail_exit" target="n_cleanup">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e30" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#e08a8a;fontColor=#f5cccc;fontSize=9" edge="1" parent="1" source="n_fail_exit" target="n_log">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e31" value="os._exit(1) -&gt;&#10;systemd dung lai" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#f87171;fontColor=#f8b4b4;fontSize=9;dashed=1;endArrow=open;startArrow=none" edge="1" parent="1" source="n_fail_exit" target="n_systemd">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
-        <mxCell id="e32" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#5fd6c4;fontColor=#cdf5ec;fontSize=9" edge="1" parent="1" source="n_lcd_class" target="n_lcd_init">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e33" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#5fd6c4;fontColor=#cdf5ec;fontSize=9" edge="1" parent="1" source="n_lcd_class" target="n_lcd_cmd">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="e34" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#5fd6c4;fontColor=#cdf5ec;fontSize=9" edge="1" parent="1" source="n_lcd_cmd" target="n_lcd_write">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-
       </root>
     </mxGraphModel>
   </diagram>
