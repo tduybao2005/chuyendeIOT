@@ -23,10 +23,10 @@ Chuc nang:
     Manual      -> MQTT   (field4 = 1)
     LED Bat     -> MQTT   (field1 = 1)
     LED Tat     -> HTTP   (field1 = 0)
-    Buzzer Bat  -> MQTT   (field2 = 1)
-    Buzzer Tat  -> HTTP   (field2 = 0)
-    Relay Bat   -> HTTP   (field3 = 1)
-    Relay Tat   -> HTTP   (field3 = 0)
+    Buzzer Bat  -> MQTT   (field3 = 1)
+    Buzzer Tat  -> HTTP   (field3 = 0)
+    Relay Bat   -> HTTP   (field2 = 1)
+    Relay Tat   -> HTTP   (field2 = 0)
   Ca 8 nut nay do WEB (Node-RED) ghi len CHANNEL LENH - giao thuc MQTT/HTTP
   chi anh huong ben phia Web, khong bat buoc Pi phai doc bang cung giao thuc.
 
@@ -69,7 +69,7 @@ from seeed_dht import DHT
 from grove.adc import ADC
 from grove.grove_ultrasonic_ranger import GroveUltrasonicRanger
 from gpiozero import LED, Buzzer, OutputDevice
-from time import sleep
+from time import sleep, monotonic
 from datetime import datetime
 import threading
 import smbus2
@@ -89,8 +89,7 @@ VOLTAGE_RANGE = (0, 3.3)
 DISTANCE_RANGE = (2, 350)   # cm, theo thong so pho bien cua Grove Ultrasonic Ranger
 
 # ---------------------------------------------------------------------------
-# Thong tin ThingSpeak (khoa that cua Nhom 7 - lop thay Kien, de nop bai chay
-# duoc ngay khong can chinh sua):
+# Thong tin ThingSpeak - HAY DIEN THONG TIN THAT CUA BAN VAO DAY TRUOC KHI CHAY
 #
 # Pi CHI CAN thong tin HTTP cua 2 channel (khong can thong tin MQTT vi khong
 # con subscribe - xem giai thich o dau file):
@@ -98,12 +97,12 @@ DISTANCE_RANGE = (2, 350)   # cm, theo thong so pho bien cua Grove Ultrasonic Ra
 #   - Channel LENH:     chi can READ key  (Pi doc field5-8 moi 1s).
 # ---------------------------------------------------------------------------
 # --- Channel CAM BIEN: chi chua du lieu cam bien, Pi ghi moi 20s ---
-SENSOR_CHANNEL_ID = "3484407"
-SENSOR_WRITE_API_KEY = "N73SVAS2MEDLUESL"
+SENSOR_CHANNEL_ID = "DIEN_CHANNEL_ID_CAM_BIEN_CUA_BAN"
+SENSOR_WRITE_API_KEY = "DIEN_WRITE_API_KEY_CAM_BIEN_CUA_BAN"
 
 # --- Channel LENH: chi chua 8 nut dieu khien, Web ghi (MQTT + HTTP) ---
-COMMAND_CHANNEL_ID = "3484393"
-COMMAND_READ_API_KEY = "95WYH34HA3U7KLMO"
+COMMAND_CHANNEL_ID = "DIEN_CHANNEL_ID_LENH_CUA_BAN"
+COMMAND_READ_API_KEY = "DIEN_READ_API_KEY_LENH_CUA_BAN"
 
 THINGSPEAK_UPDATE_URL = "https://api.thingspeak.com/update.json"
 COMMAND_FEEDS_URL = f"https://api.thingspeak.com/channels/{COMMAND_CHANNEL_ID}/feeds.json"
@@ -111,12 +110,12 @@ COMMAND_FEEDS_URL = f"https://api.thingspeak.com/channels/{COMMAND_CHANNEL_ID}/f
 # Field tren channel CAM BIEN
 FIELD_TEMP = "field1"      # Pi ghi (HTTP, trung binh 20s)
 FIELD_HUMI = "field2"      # Pi ghi (HTTP, trung binh 20s)
-FIELD_DISTANCE = "field3"  # Pi ghi (HTTP, trung binh 20s)
-FIELD_VOLTAGE = "field4"   # Pi ghi (HTTP, trung binh 20s)
+FIELD_DISTANCE = "field4"  # Pi ghi (HTTP, trung binh 20s)
+FIELD_VOLTAGE = "field3"   # Pi ghi (HTTP, trung binh 20s)
 # Field tren channel LENH (channel rieng, danh so lai tu field1)
 FIELD_LED = "field1"       # Web ghi: MQTT khi Bat (1), HTTP khi Tat (0)
-FIELD_BUZZER = "field2"    # Web ghi: MQTT khi Bat (1), HTTP khi Tat (0)
-FIELD_RELAY = "field3"     # Web ghi HTTP ca Bat lan Tat
+FIELD_BUZZER = "field3"    # Web ghi: MQTT khi Bat (1), HTTP khi Tat (0)
+FIELD_RELAY = "field2"     # Web ghi HTTP ca Bat lan Tat
 FIELD_MODE = "field4"      # Web ghi MQTT: 0 = Auto, 1 = Manual
 CONTROL_POLL_RESULTS = 30  # so ban ghi gan nhat lay ve moi lan doc lenh dieu khien
                            # (~10 phut vi Pi ghi cam bien moi 20s) - du de bat
@@ -408,11 +407,19 @@ def control_poll_loop(stop_event):
     lenh luon dung nhip 1s, khong bi cam bien cham lam nghen.
     """
     while not stop_event.is_set():
+        started = monotonic()
         try:
             poll_http_commands()
         except Exception as e:
             print("[HTTP] Loi trong luong doc lenh:", e)
-        stop_event.wait(CONTROL_POLL_INTERVAL)
+        # PHAI tru di thoi gian vua ton cho request HTTP thi CHU KY moi dung
+        # 1 giay. Truoc day chi wait(1) SAU moi request nen chu ky thuc te =
+        # 1s + thoi gian request (~0.3-0.9s) = 1.3-1.9s, khien do tre toi da
+        # tu luc lenh len ThingSpeak den luc Pi ap dung cham sat 2s (do thuc
+        # te khi test nut Manual: 1.977s - chi con du 23ms so voi moc 2s cua
+        # de bai). Tru di roi thi chu ky luon la 1s, do tre toi da ~1.4s.
+        remaining = CONTROL_POLL_INTERVAL - (monotonic() - started)
+        stop_event.wait(max(0.05, remaining))
 
 
 # ---------------------------------------------------------------------------
