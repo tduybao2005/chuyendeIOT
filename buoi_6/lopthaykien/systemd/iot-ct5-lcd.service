@@ -1,0 +1,42 @@
+[Unit]
+Description=IoT buoi 6 - CT5: doc text 16x2 tu server, hien thi len LCD
+Documentation=https://github.com/tduybao2005/chuyendeIOT
+# Luc moi bat nguon, Wi-Fi len CHAM hon systemd. Khong cho mang thi lan chay
+# dau tien se rot mang ngay, dot bo dem loi vo co roi restart lien tuc.
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/iot_buoi6/raspberry
+# -u : khong dem log trong buffer, log hien ra journal ngay lap tuc
+ExecStart=/usr/bin/python3 -u /home/pi/iot_buoi6/raspberry/ct5_lcd.py
+
+# ---------------------------------------------------------------------------
+# TU KHOI DONG LAI (yeu cau de bai)
+# Chuong trinh tu thoat ma 1 khi loi cam bien / rot mang LIEN TIEP vuot nguong
+# (xem TheoDoiSucKhoe trong thu_vien_chung.py).
+#
+#   Restart=always            : dung lai ca khi thoat binh thuong lan khi loi
+#   RestartSec=10             : cho 10 giay de mang / cam bien kip on dinh
+#   StartLimitIntervalSec=0   : mac dinh systemd BO CUOC sau 5 lan restart
+#                               trong 10 giay. Dat 0 de KHONG BAO GIO bo cuoc -
+#                               mat mang ca tieng thi van phai tu song lai.
+# ---------------------------------------------------------------------------
+Restart=always
+RestartSec=10
+StartLimitIntervalSec=0
+
+# Dung bang SIGINT de chuong trinh chay het phan don dep (tat LED / ngat relay)
+# thay vi bi giet ngang, tranh de thiet bi ket o trang thai dang bat.
+KillSignal=SIGINT
+TimeoutStopSec=15
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=iot-ct5-lcd
+
+[Install]
+WantedBy=multi-user.target

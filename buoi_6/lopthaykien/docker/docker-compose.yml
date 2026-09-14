@@ -1,0 +1,68 @@
+# ===========================================================================
+# CHUONG TRINH 1 - GIAO DIEN WEB NODE-RED CHAY TRONG DOCKER
+# ===========================================================================
+# De bai: "+2 Nếu dùng Docker". Web chay trong container; 4 chuong trinh
+# Python (CT2-CT5) chay native qua systemd vi chung can truy cap truc tiep
+# GPIO/I2C va can DHT doc dung timing tung micro giay - thu ma container
+# khong dam bao duoc.
+#
+# CACH DUNG
+#     cd ~/iot_buoi6/docker
+#     docker compose up -d          # dung va chay nen
+#     docker compose logs -f        # xem log
+#     docker compose down           # dung han
+#
+# TU KHOI DONG KHI BAT NGUON
+#     restart: unless-stopped  +  systemctl enable docker
+#     => docker.service tu len luc boot, roi tu dung lai container nay.
+#     Kiem tra: systemctl is-enabled docker  -> phai in ra "enabled"
+# ===========================================================================
+
+services:
+  node-red:
+    image: nodered/node-red:4.0
+    container_name: iot_buoi6_web
+
+    # Tu dung lai khi container chet HOAC khi Pi khoi dong lai.
+    # "unless-stopped" (khong phai "always") de neu minh chu dong
+    # `docker compose stop` thi no dung yen, khong tu song lai sau reboot.
+    restart: unless-stopped
+
+    ports:
+      - "1880:1880"
+
+    volumes:
+      # Thu muc du lieu Node-RED (flows.json, flows_cred.json, node_modules).
+      # Mount ra thu muc that tren Pi thay vi dung volume an cua Docker, de
+      # co the doc/sua/sao luu flow bang trinh soan thao binh thuong.
+      - ../node-red-data:/data
+
+    environment:
+      # Gio he thong trong container mac dinh la UTC. Phai dat dung mui gio
+      # Viet Nam, neu khong tinh nang HEN GIO RELAY se lech 7 tieng.
+      - TZ=Asia/Ho_Chi_Minh
+      # Node-RED tu tao flows.json rong neu chua co - dat ten co dinh de
+      # khong bi doi theo hostname cua container.
+      - FLOWS=flows.json
+      # IP THAT cua Raspberry Pi, do chay.sh do duoc va truyen vao.
+      # Container KHONG THE tu biet dia chi cua may chu - Node-RED chi in ra
+      # "http://127.0.0.1:1880" la dia chi ben trong container, mo tren laptop
+      # khong vao duoc. Truyen vao day de settings.js in ra URL dung.
+      # Chay "docker compose up -d" thang (khong qua chay.sh) thi 2 bien nay
+      # rong, settings.js se bo qua phan in URL chu khong bao loi.
+      - HOST_IP_TAILSCALE=${HOST_IP_TAILSCALE:-}
+      - HOST_IP_LAN=${HOST_IP_LAN:-}
+
+    # Gioi han bo nho: Pi 4 ban 2GB, de container an het thi 4 chuong trinh
+    # Python se bi OOM killer giet - dung luc dang quay video minh chung.
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:1880/ >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s

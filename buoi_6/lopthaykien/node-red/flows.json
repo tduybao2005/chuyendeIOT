@@ -1,0 +1,557 @@
+[
+  {
+    "id": "b6k_flow",
+    "type": "tab",
+    "label": "Buoi 6 - muc 15 diem",
+    "disabled": false,
+    "info": "Chuong trinh 1: giao dien Web dieu khien 3 LED + relay (co hen gio)\n+ gui text 16x2 len LCD, doc nhiet do/do am tu ThingSpeak.\n\nDien API key tai node 'CAU HINH THINGSPEAK' (tab Setup/On Start).",
+    "env": []
+  },
+  {
+    "id": "b6k_g0",
+    "type": "group",
+    "z": "b6k_flow",
+    "name": "0 · CAU HINH (dien API key o day)",
+    "style": {
+      "label": true,
+      "color": "#ffffff",
+      "fill": "#3f3f6b"
+    },
+    "nodes": [
+      "b6k_cauhinh"
+    ],
+    "x": 54,
+    "y": 39,
+    "w": 332,
+    "h": 82
+  },
+  {
+    "id": "b6k_g1",
+    "type": "group",
+    "z": "b6k_flow",
+    "name": "1 · DOC CAM BIEN (channel A, moi 20s)",
+    "style": {
+      "label": true,
+      "color": "#ffffff",
+      "fill": "#255d3a"
+    },
+    "nodes": [
+      "b6k_tick_cambien",
+      "b6k_url_cambien",
+      "b6k_get_cambien",
+      "b6k_parse_cambien"
+    ],
+    "x": 54,
+    "y": 159,
+    "w": 752,
+    "h": 82
+  },
+  {
+    "id": "b6k_g2",
+    "type": "group",
+    "z": "b6k_flow",
+    "name": "2 · DOC TRANG THAI LENH (channel B, moi 5s)",
+    "style": {
+      "label": true,
+      "color": "#ffffff",
+      "fill": "#1f4d6b"
+    },
+    "nodes": [
+      "b6k_tick_lenh",
+      "b6k_url_lenh",
+      "b6k_get_lenh",
+      "b6k_parse_lenh"
+    ],
+    "x": 54,
+    "y": 259,
+    "w": 752,
+    "h": 82
+  },
+  {
+    "id": "b6k_g3",
+    "type": "group",
+    "z": "b6k_flow",
+    "name": "3 · GIAO DIEN WEB (Chuong trinh 1)",
+    "style": {
+      "label": true,
+      "color": "#ffffff",
+      "fill": "#6b4a1f"
+    },
+    "nodes": [
+      "b6k_dashboard"
+    ],
+    "x": 854,
+    "y": 199,
+    "w": 292,
+    "h": 82
+  },
+  {
+    "id": "b6k_g4",
+    "type": "group",
+    "z": "b6k_flow",
+    "name": "4 · GHI LENH LEN SERVER (moi lan 1 nut, khoa 15s)",
+    "style": {
+      "label": true,
+      "color": "#ffffff",
+      "fill": "#6b1f3f"
+    },
+    "nodes": [
+      "b6k_tick_ghi",
+      "b6k_dieuphoi",
+      "b6k_post_lenh",
+      "b6k_kiemtra"
+    ],
+    "x": 54,
+    "y": 379,
+    "w": 752,
+    "h": 122
+  },
+  {
+    "id": "b6k_cauhinh",
+    "type": "function",
+    "z": "b6k_flow",
+    "name": "CAU HINH THINGSPEAK",
+    "func": "// Node nay KHONG can noi day vao dau ca. Toan bo ma nam o tab \"On Start\"\n// (Setup) nen Node-RED chay no NGAY KHI khoi dong flow, truoc moi message.\n// Nho vay cac node khac luon doc duoc cau hinh, khong bi dua nhau luc dau.\nreturn msg;\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "// ===========================================================================\n// DIEN THONG TIN THINGSPEAK CUA BAN VAO DAY  -  DUY NHAT MOT CHO\n// ===========================================================================\n// Phai khop voi raspberry/cau_hinh.py ben Raspberry Pi.\nflow.set('cauHinh', {\n\n    // --- Channel A: CAM BIEN (CT2 ghi, Web doc de ve do thi) ---\n    camBienId:       '',      // vi du '3486158'\n    camBienReadKey:  '',      // de trong neu channel de che do Public\n\n    // --- Channel B: LENH (Web ghi, CT3/CT4/CT5 doc) ---\n    lenhId:          '',      // vi du '3486161'\n    lenhReadKey:     '',\n    lenhWriteKey:    '',      // BAT BUOC - Web dung key nay de ghi lenh\n\n    // --- Khong can sua ---\n    soBanGhiCamBien:  30,\n    soBanGhiLenh:     10,\n\n    // Khoa 8 nut bao lau sau moi lan ghi. Phai khop voi KHOA_NUT_SAU_KHI_GHI\n    // trong raspberry/cau_hinh.py.\n    khoaSauKhiGhiMs:  15000,\n    khoaSauKhiHongMs: 5000\n});\nnode.warn('Da nap cau hinh ThingSpeak cho flow buoi 6');\n",
+    "finalize": "",
+    "libs": [],
+    "x": 200,
+    "y": 80,
+    "wires": [
+      []
+    ],
+    "g": "b6k_g0"
+  },
+  {
+    "id": "b6k_tick_cambien",
+    "type": "inject",
+    "z": "b6k_flow",
+    "g": "b6k_g1",
+    "name": "moi 20s",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "20",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "2",
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 140,
+    "y": 200,
+    "wires": [
+      [
+        "b6k_url_cambien"
+      ]
+    ]
+  },
+  {
+    "id": "b6k_url_cambien",
+    "type": "function",
+    "z": "b6k_flow",
+    "name": "dung URL",
+    "func": "// Dung URL doc channel CAM BIEN.\n// Node \"http request\" phia sau lay dia chi tu msg.url.\nconst c = flow.get('cauHinh') || {};\nif (!c.camBienId) {\n    node.error('Chua dien camBienId trong node CAU HINH THINGSPEAK');\n    return null;\n}\nlet url = `https://api.thingspeak.com/channels/${c.camBienId}/feeds.json`\n        + `?results=${c.soBanGhiCamBien}`;\n// Channel de Public thi khong can api_key; de Private thi bat buoc.\nif (c.camBienReadKey) url += `&api_key=${c.camBienReadKey}`;\nmsg.url = url;\nreturn msg;\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 300,
+    "y": 200,
+    "wires": [
+      [
+        "b6k_get_cambien"
+      ]
+    ],
+    "g": "b6k_g1"
+  },
+  {
+    "id": "b6k_get_cambien",
+    "type": "http request",
+    "z": "b6k_flow",
+    "g": "b6k_g1",
+    "name": "GET feeds.json",
+    "method": "GET",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "insecureHTTPParser": false,
+    "authType": "",
+    "senderr": true,
+    "headers": [],
+    "x": 480,
+    "y": 200,
+    "wires": [
+      [
+        "b6k_parse_cambien"
+      ]
+    ]
+  },
+  {
+    "id": "b6k_parse_cambien",
+    "type": "function",
+    "z": "b6k_flow",
+    "name": "phan tich -> do thi",
+    "func": "// Doi ban ghi tho cua ThingSpeak thanh du lieu ve do thi.\n//\n//   field1 = nhiet do trung binh 20s   (CT2 ghi)\n//   field2 = do am   trung binh 20s    (CT2 ghi)\n//\n// Ban ghi nao thieu field thi giu null - ham ve do thi ben dashboard tu bo\n// qua diem null thay vi ve tut xuong 0 (se lam do thi gay hinh rang cua).\nif (msg.statusCode !== 200) {\n    msg.payload = { loai: 'du_lieu_cam_bien', ok: false, lichSu: [], moiNhat: null };\n    return msg;\n}\n\nconst feeds = (msg.payload && msg.payload.feeds) || [];\n\nconst soHoacNull = (v) => (v === null || v === undefined || v === '') ? null : Number(v);\n\nconst lichSu = feeds.map(f => ({\n    nhietDo:  soHoacNull(f.field1),\n    doAm:     soHoacNull(f.field2),\n    thoiGian: f.created_at\n}));\n\n// Ban ghi moi nhat CO gia tri - quet nguoc vi ban ghi cuoi co the thieu field.\nlet moiNhat = { nhietDo: null, doAm: null, thoiGian: null, mocIso: null };\nfor (let i = lichSu.length - 1; i >= 0; i--) {\n    if (moiNhat.nhietDo === null && lichSu[i].nhietDo !== null) {\n        moiNhat.nhietDo = lichSu[i].nhietDo;\n        moiNhat.thoiGian = new Date(lichSu[i].thoiGian).toLocaleTimeString('vi-VN', { hour12: false });\n        // Gui kem moc ISO THO de giao dien tu tinh duoc so lieu da cu bao lau.\n        // Chi co chuoi \"14:59:19\" thi khong biet no cua hom nay hay hom qua.\n        moiNhat.mocIso = lichSu[i].thoiGian;\n    }\n    if (moiNhat.doAm === null && lichSu[i].doAm !== null) moiNhat.doAm = lichSu[i].doAm;\n    if (moiNhat.nhietDo !== null && moiNhat.doAm !== null) break;\n}\n\nmsg.payload = { loai: 'du_lieu_cam_bien', ok: true, lichSu, moiNhat };\nreturn msg;\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 680,
+    "y": 200,
+    "wires": [
+      [
+        "b6k_dashboard"
+      ]
+    ],
+    "g": "b6k_g1"
+  },
+  {
+    "id": "b6k_tick_lenh",
+    "type": "inject",
+    "z": "b6k_flow",
+    "g": "b6k_g2",
+    "name": "moi 5s",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "5",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "3",
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 140,
+    "y": 300,
+    "wires": [
+      [
+        "b6k_url_lenh"
+      ]
+    ]
+  },
+  {
+    "id": "b6k_url_lenh",
+    "type": "function",
+    "z": "b6k_flow",
+    "name": "dung URL",
+    "func": "// Dung URL doc channel LENH (de dong bo giao dien voi gia tri that tren server).\nconst c = flow.get('cauHinh') || {};\nif (!c.lenhId) {\n    node.error('Chua dien lenhId trong node CAU HINH THINGSPEAK');\n    return null;\n}\nlet url = `https://api.thingspeak.com/channels/${c.lenhId}/feeds.json`\n        + `?results=${c.soBanGhiLenh}`;\nif (c.lenhReadKey) url += `&api_key=${c.lenhReadKey}`;\nmsg.url = url;\nreturn msg;\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 300,
+    "y": 300,
+    "wires": [
+      [
+        "b6k_get_lenh"
+      ]
+    ],
+    "g": "b6k_g2"
+  },
+  {
+    "id": "b6k_get_lenh",
+    "type": "http request",
+    "z": "b6k_flow",
+    "g": "b6k_g2",
+    "name": "GET feeds.json",
+    "method": "GET",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "insecureHTTPParser": false,
+    "authType": "",
+    "senderr": true,
+    "headers": [],
+    "x": 480,
+    "y": 300,
+    "wires": [
+      [
+        "b6k_parse_lenh"
+      ]
+    ]
+  },
+  {
+    "id": "b6k_parse_lenh",
+    "type": "function",
+    "z": "b6k_flow",
+    "name": "lay gia tri moi nhat",
+    "func": "// Lay gia tri MOI NHAT cua tung field tren channel LENH.\n//\n// VI SAO PHAI QUET NGUOC TUNG FIELD thay vi lay ban ghi cuoi:\n// moi lan ghi, ThingSpeak tao mot dong moi va dat null cho cac field khong\n// duoc gui trong lan do. Neu ai do (vd curl) ghi le mot field thi dong cuoi\n// se co 5 o null - nhin moi dong cuoi se tuong 5 field kia da bi xoa.\nif (msg.statusCode !== 200) {\n    msg.payload = { loai: 'trang_thai_server', ok: false, giaTri: null };\n    return msg;\n}\n\nconst feeds = (msg.payload && msg.payload.feeds) || [];\n\n// Ten dung trong giao dien -> so field tren channel LENH\nconst BAN_DO = { led1: 'field1', led2: 'field2', led3: 'field3',\n                 relay: 'field4', text: 'field5', lich: 'field6' };\n\nconst giaTri = {};\nfor (const ten of Object.keys(BAN_DO)) giaTri[ten] = null;\n\nfor (let i = feeds.length - 1; i >= 0; i--) {     // moi -> cu\n    for (const [ten, field] of Object.entries(BAN_DO)) {\n        if (giaTri[ten] !== null) continue;\n        const v = feeds[i][field];\n        if (v !== null && v !== undefined && v !== '') giaTri[ten] = v;\n    }\n    if (Object.values(giaTri).every(v => v !== null)) break;\n}\n\nmsg.payload = { loai: 'trang_thai_server', ok: true, giaTri };\nreturn msg;\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 680,
+    "y": 300,
+    "wires": [
+      [
+        "b6k_dashboard"
+      ]
+    ],
+    "g": "b6k_g2"
+  },
+  {
+    "id": "b6k_dashboard",
+    "type": "ui_template",
+    "z": "b6k_flow",
+    "g": "b6k_g3",
+    "group": "b6k_ui_group",
+    "name": "Giao dien dieu khien",
+    "order": 1,
+    "width": "0",
+    "height": "0",
+    "format": "<!--\n  ============================================================================\n  BUOI 6 - MUC 15 DIEM - GIAO DIEN WEB (CHUONG TRINH 1)\n  ============================================================================\n  Toan bo dashboard nam trong DUNG MOT node ui_template. Giao dien la\n  HTML/CSS/JS tu viet, khong dung widget dung san cua node-red-dashboard, de\n  kiem soat duoc bo cuc \"gon dung mot khung hinh, khong thanh cuon\".\n\n  DAP UNG YEU CAU DE BAI\n    Muc do 3  - 6 nut nhan dieu khien 3 LED          -> panel \"DIEU KHIEN LED\"\n              - hien thi nhiet do, do am             -> 2 the so lieu + 2 do thi\n              - hien thi trang thai LED              -> den bao + nhan BAT/TAT\n    Nang cao  - hen gio bat tat relay                -> panel \"RELAY & HEN GIO\"\n              - nhap text toi da 16x2 gui len server -> panel \"TEXT LEN LCD 16x2\"\n  ============================================================================\n-->\n\n<style>\n/* ==========================================================================\n   1. EP KHUNG CUA NODE-RED-DASHBOARD GIAN HET MAN HINH\n\n   node-red-dashboard (ban AngularJS) boc widget trong <md-card> co chieu rong\n   co dinh tinh bang pixel theo ui_group, va md-content cua no tu bat thanh\n   cuon. Muon dashboard chiem tron man hinh thi phai ep ca chuoi container cha.\n   ========================================================================== */\n.nr-dashboard-theme .card-panel { background: transparent !important; box-shadow: none !important; }\n.nr-dashboard-template.nr-dashboard-template,\n.nr-dashboard-cardcontainer, .nr-dashboard-cardpanel, ui-card-panel,\n.masonry-container {\n  width: 100% !important; max-width: 100% !important; left: 0 !important;\n  position: relative !important; overflow: hidden !important;\n  padding: 0 !important; margin: 0 !important;\n}\nmd-content.nr-dashboard-theme, md-content._md { overflow: hidden !important; }\n/* Node-RED tu chen mot dong tieu de ten ui_group phia tren widget - an di vi\n   dashboard da co thanh tieu de rieng. */\n.nr-dashboard-cardtitle { display: none !important; }\n\n/* ==========================================================================\n   2. BANG MAU\n\n   Nen toi kieu \"phong dieu khien\": do tuong phan cao de quay video van doc ro,\n   va mau chuc nang (xanh la = dang bat, xam = dang tat, ho phach = dang cho).\n   ========================================================================== */\n#iot-root {\n  --nen:        #080c17;\n  --nen-panel:  #101827;\n  --nen-o:      #17203450;\n  --vien:       #1f2c45;\n  --vien-sang:  #2f4266;\n  --chu:        #e8eef9;\n  --chu-mo:     #8394b0;\n  --chu-rat-mo: #5b6a85;\n  --nhan-manh:  #22d3ee;\n  --bat:        #34d399;\n  --tat:        #46536b;\n  --cho:        #fbbf24;\n  --loi:        #f87171;\n  --nhiet:      #fb923c;\n  --am:         #38bdf8;\n\n  /* Khoang cach gom lai mot cho de thu gon ca giao dien theo chieu cao man\n     hinh chi bang cach doi 6 bien nay (xem muc 11). */\n  --khe: 14px;              /* khe giua cac panel */\n  --le: 20px;               /* le trai/phai */\n  --pad-panel: 13px 15px 15px;\n  --pad-hang: 9px 11px;     /* padding mot hang thiet bi */\n  --khe-hang: 8px;          /* khe giua 2 hang thiet bi */\n  --pad-dau: 12px;          /* khoang cach duoi tieu de panel */\n\n  position: fixed; inset: 0; z-index: 5;\n  background: var(--nen);\n  color: var(--chu);\n  font-family: \"Inter\", \"Segoe UI\", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;\n  font-size: 14px; line-height: 1.45;\n  display: flex; flex-direction: column;\n  overflow: hidden;\n  -webkit-font-smoothing: antialiased;\n}\n#iot-root *, #iot-root *::before, #iot-root *::after { box-sizing: border-box; }\n\n/* ==========================================================================\n   3. THANH TIEU DE\n   ========================================================================== */\n.thanh-tieu-de {\n  flex: 0 0 auto;\n  display: flex; align-items: center; gap: 14px;\n  padding: 12px 20px;\n  background: linear-gradient(180deg, #111c31, #0c1424);\n  border-bottom: 1px solid var(--vien);\n}\n.logo {\n  width: 34px; height: 34px; flex: 0 0 auto;\n  display: grid; place-items: center;\n  border-radius: 9px;\n  background: linear-gradient(135deg, var(--nhan-manh), #3b82f6);\n  color: #06121c; font-size: 18px; font-weight: 700;\n}\n.tieu-de-chinh { font-size: 16px; font-weight: 650; letter-spacing: .2px; }\n.tieu-de-phu   { font-size: 11.5px; color: var(--chu-rat-mo); letter-spacing: .6px; text-transform: uppercase; }\n.dem-tieu-de   { flex: 1 1 auto; }\n\n.vien-trang-thai {\n  display: flex; align-items: center; gap: 7px;\n  padding: 5px 12px; border-radius: 999px;\n  background: var(--nen-o); border: 1px solid var(--vien);\n  font-size: 12px; font-weight: 600; white-space: nowrap;\n}\n.cham { width: 8px; height: 8px; border-radius: 50%; background: var(--tat); flex: 0 0 auto; }\n.cham.song  { background: var(--bat); box-shadow: 0 0 0 3px #34d39926; }\n.cham.cho   { background: var(--cho); box-shadow: 0 0 0 3px #fbbf2426; }\n.cham.loi   { background: var(--loi); box-shadow: 0 0 0 3px #f8717126; }\n.dong-ho { font-variant-numeric: tabular-nums; font-size: 20px; font-weight: 650; letter-spacing: .5px; }\n.ngay    { font-size: 11px; color: var(--chu-rat-mo); text-align: right; }\n\n/* ==========================================================================\n   4. BO CUC - CSS GRID THEO VUNG\n\n   Nam panel duoc dat ten vung (cambien / dothi / led / relay / text) roi\n   grid-template-areas sap xep lai theo tung co man hinh. Lam vay thay vi long\n   2 the <div class=\"cot\"> vi cot long nhau KHONG the doi thu tu theo man\n   hinh - ma day chinh la thu can lam: man hinh thap thi phai tra panel sang\n   cot khac, khong thi cot phai tran ra ngoai.\n\n   VUNG 'dothi' luon la vung DUY NHAT co the co gian (minmax(0,1fr)) - no hut\n   het cho trong con thua. Bon vung kia giu dung chieu cao noi dung.\n   ========================================================================== */\n.than {\n  flex: 1 1 auto; min-height: 0;\n  display: grid;\n  gap: var(--khe); padding: var(--khe) var(--le) 0;\n  /* overflow-y:auto chu KHONG PHAI hidden. Bo cuc da tinh de vua man hinh, day\n     chi la luoi an toan: neu co co man hinh nao van khong vua thi nguoi dung\n     CUON XUONG BAM DUOC, con hidden thi nut bien mat khong dau vet - dung lo\n     hong da lam nguoi dung khong gui duoc text. Tha co thanh cuon con hon mat\n     nut bam. */\n  overflow-y: auto; overflow-x: hidden;\n\n  /* Mac dinh: man hinh rong va cao (laptop >=1200x880) */\n  grid-template-columns: minmax(0, 1fr) minmax(330px, 400px);\n  /* HANG CUOI LA 1fr VA DE TRONG BEN PHAI.\n     Truoc day hang chua Text chinh la hang 1fr (hut cho thua). Khi cho thua it\n     hon chieu cao that cua panel Text - xay ra o khoang cao 880-930px, vi du\n     man hinh 1440x900 - thi panel bi bop nho lai, phan duoi tran ra ngoai va bi\n     overflow:hidden XEN MAT, keo theo ca NUT GUI TEXT. Nguoi dung khong bam\n     duoc vi nut khong con ton tai tren man hinh. Da do duoc: nut nam o 843-873\n     trong khi khung chi den 851.\n     Gio Text nam o hang 'auto' (luon du chieu cao noi dung), con cho thua dua\n     het xuong hang 4 de DO THI hut - do thi co gian duoc, panel dieu khien thi\n     khong. */\n  grid-template-rows: auto auto auto minmax(0, 1fr);\n  grid-template-areas:\n    \"cambien led\"\n    \"dothi   relay\"\n    \"dothi   text\"\n    \"dothi   .\";\n}\n.o-cambien { grid-area: cambien; }\n.o-dothi   { grid-area: dothi; }\n.o-led     { grid-area: led; }\n.o-relay   { grid-area: relay; }\n.o-text    { grid-area: text; }\n\n/* Panel khong phai do thi thi bam dinh vung, khong bi keo gian ra lam thua\n   khoang trong o duoi. */\n.o-led, .o-relay, .o-text { align-self: start; }\n/* Cam bien GIAN het hang: o bo cuc 3 cot, hang 1 cao bang panel LED nen neu\n   khong gian thi phan cam bien de trong mot mang lon o duoi. Gian ra thi 2 the\n   so lieu cao len, chu so to hon - dung cho chu khong phai vung trong. */\n.o-cambien, .o-dothi { align-self: stretch; }\n\n.panel {\n  background: var(--nen-panel);\n  border: 1px solid var(--vien);\n  border-radius: 12px;\n  padding: var(--pad-panel);\n  display: flex; flex-direction: column; min-height: 0;\n  overflow: hidden;\n}\n.dau-panel {\n  display: flex; align-items: center; gap: 8px;\n  font-size: 11.5px; font-weight: 700; letter-spacing: 1.1px;\n  text-transform: uppercase; color: var(--chu-mo);\n  margin-bottom: var(--pad-dau); flex: 0 0 auto;\n}\n/* Ten panel KHONG duoc xuong dong - o bo cuc 3 cot, cot hep lam\n   \"DIEU KHIEN LED\" vo thanh 2 dong, day panel xuong va lech het hang. */\n.dau-panel > span:first-child { white-space: nowrap; flex: 0 0 auto; }\n.dau-panel .gach { flex: 1 1 auto; min-width: 6px; height: 1px; background: var(--vien); }\n/* Ghi chu la thu HY SINH duoc: hep qua thi cat bot bang dau ... */\n.dau-panel .ghi-chu {\n  font-size: 10.5px; font-weight: 600; color: var(--chu-rat-mo);\n  letter-spacing: .3px; text-transform: none;\n  flex: 0 1 auto; min-width: 0; white-space: nowrap;\n  overflow: hidden; text-overflow: ellipsis;\n}\n\n/* ==========================================================================\n   5. THE SO LIEU CAM BIEN\n   ========================================================================== */\n.hang-so-lieu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1 1 auto; min-height: 0; }\n.the-so-lieu {\n  background: var(--nen-o); border: 1px solid var(--vien);\n  border-radius: 11px; padding: 12px 14px;\n  border-left: 3px solid var(--vien-sang);\n  display: flex; flex-direction: column; justify-content: center; min-height: 0;\n}\n.the-so-lieu.nhiet { border-left-color: var(--nhiet); }\n.the-so-lieu.am    { border-left-color: var(--am); }\n.ten-so-lieu { font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: var(--chu-mo); font-weight: 600; }\n.gia-tri-so-lieu { font-size: 34px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; margin-top: 2px; }\n.gia-tri-so-lieu .dv { font-size: 15px; font-weight: 600; color: var(--chu-mo); margin-left: 3px; }\n.the-so-lieu.nhiet .gia-tri-so-lieu { color: var(--nhiet); }\n.the-so-lieu.am    .gia-tri-so-lieu { color: var(--am); }\n.chan-so-lieu { font-size: 11px; color: var(--chu-rat-mo); margin-top: 3px; }\n/* So lieu qua han: lam mo con so va doi vien sang mau canh bao, de khong ai\n   nhin thoang qua ma tuong do la gia tri dang cap nhat. */\n.the-so-lieu.qua-han { border-left-color: var(--cho) !important; }\n.the-so-lieu.qua-han .gia-tri-so-lieu { color: var(--chu-rat-mo) !important; }\n.chan-so-lieu .qua-han-chu { color: var(--cho); font-weight: 700; }\n\n/* ==========================================================================\n   6. DO THI SVG\n   ========================================================================== */\n.khung-do-thi { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 10px; }\n.mot-do-thi { flex: 1 1 0; min-height: 44px; display: flex; flex-direction: column; }\n.nhan-do-thi { display: flex; align-items: baseline; gap: 8px; font-size: 11px; color: var(--chu-mo); margin-bottom: 2px; }\n.nhan-do-thi b { font-size: 11.5px; letter-spacing: .5px; text-transform: uppercase; }\n.nhan-do-thi .khoang { margin-left: auto; color: var(--chu-rat-mo); font-variant-numeric: tabular-nums; }\n/* Khung ve phai position:relative de neo o gia tri noi (.o-gia-tri) theo toa\n   do pixel that cua diem vua bam, thay vi ghim co dinh o mot goc. */\n.khung-ve { position: relative; flex: 1 1 auto; min-height: 0; }\n.khung-ve svg { width: 100%; height: 100%; display: block; overflow: visible; }\n.luoi { stroke: var(--vien); stroke-width: 1; stroke-dasharray: 3 4; }\n.nhan-truc { fill: var(--chu-rat-mo); font-size: 9.5px; font-variant-numeric: tabular-nums; }\n/* Vung bam rong hon cham ve (r=3.4) de tren dien thoai / iPad ngon tay van\n   trung - stroke trong suot lam vien bat su kien. */\n.diem { cursor: pointer; stroke: transparent; stroke-width: 9; }\n/* Duong ke soc doc va cham sang PHAI pointer-events:none, neu khong chung se\n   che mat cham du lieu ben duoi va bam lan 2 khong an. */\n.ke-chon { stroke-width: 1; stroke-dasharray: 3 3; pointer-events: none; }\n.diem-chon { stroke: var(--chu); stroke-width: 2; pointer-events: none; }\n.o-gia-tri {\n  position: absolute; width: 136px; text-align: center; pointer-events: none;\n  font-size: 10.5px; font-weight: 700; color: #04212c;\n  background: var(--nhan-manh); border-radius: 6px; padding: 3px 4px;\n  box-shadow: 0 2px 10px rgba(0, 0, 0, .55);\n  font-variant-numeric: tabular-nums; white-space: nowrap;\n}\n.goi-y {\n  position: absolute; left: 36px; bottom: 1px;\n  font-size: 10px; color: var(--chu-rat-mo); pointer-events: none;\n}\n.trong-do-thi {\n  position: absolute; inset: 0; display: grid; place-items: center;\n  color: var(--chu-rat-mo); font-size: 12px; pointer-events: none;\n}\n\n/* ==========================================================================\n   7. HANG DIEU KHIEN LED / RELAY\n   ========================================================================== */\n.hang-thiet-bi {\n  display: flex; align-items: center; gap: 11px;\n  padding: var(--pad-hang); border-radius: 10px;\n  background: var(--nen-o); border: 1px solid var(--vien);\n  border-left: 3px solid var(--tat);\n  transition: border-left-color .18s ease;\n}\n.hang-thiet-bi + .hang-thiet-bi { margin-top: var(--khe-hang); }\n.hang-thiet-bi.dang-bat { border-left-color: var(--bat); }\n.bieu-tuong { font-size: 19px; width: 24px; text-align: center; flex: 0 0 auto; filter: grayscale(1) opacity(.5); transition: filter .18s ease; }\n.hang-thiet-bi.dang-bat .bieu-tuong { filter: none; }\n.ten-thiet-bi { flex: 1 1 auto; min-width: 0; }\n.ten-thiet-bi .ten { font-size: 13.5px; font-weight: 600; }\n.ten-thiet-bi .chan { font-size: 10.5px; color: var(--chu-rat-mo); }\n.nhan-trang-thai {\n  font-size: 10.5px; font-weight: 700; letter-spacing: .7px;\n  padding: 3px 8px; border-radius: 5px;\n  background: #46536b33; color: var(--chu-mo); flex: 0 0 auto;\n}\n.hang-thiet-bi.dang-bat .nhan-trang-thai { background: #34d39922; color: var(--bat); }\n\n.cap-nut { display: flex; gap: 6px; flex: 0 0 auto; }\n.nut {\n  border: 1px solid var(--vien-sang); background: #1a2438; color: var(--chu);\n  border-radius: 8px; padding: 7px 13px;\n  font-size: 12px; font-weight: 650; font-family: inherit;\n  cursor: pointer; transition: all .14s ease; white-space: nowrap;\n}\n.nut:hover:not(:disabled) { background: #243252; border-color: #3f5480; }\n.nut:active:not(:disabled) { transform: translateY(1px); }\n.nut:disabled { opacity: .4; cursor: not-allowed; }\n.nut.bat.chon  { background: var(--bat); border-color: var(--bat); color: #05261a; }\n.nut.tat.chon  { background: #55627a; border-color: #55627a; color: #0b1220; }\n.nut.chinh {\n  background: linear-gradient(135deg, var(--nhan-manh), #3b82f6);\n  border-color: transparent; color: #06121c; font-weight: 700;\n}\n.nut.chinh:hover:not(:disabled) { filter: brightness(1.12); }\n/* \"Mo di\" thay cho disabled: van bam duoc, van nhan duoc su kien click. */\n.nut.mo-di { opacity: .5; }\n/* HAI NUT GUI PHAI KHAC HAN NHAU.\n   Truoc day ca hai cung mau xanh, cung rong 100%, cung nam day panel - nguoi\n   dung bam nham nut Lich khi dinh gui Text (da bat duoc trong log). Gio tach\n   mau: Text = xanh ngoc, Lich = ho phach, kem bieu tuong khac nhau. */\n.nut.chinh.nut-text {\n  background: linear-gradient(135deg, #2dd4bf, #22d3ee);\n  border-color: transparent; color: #04212c;\n}\n.nut.chinh.nut-lich {\n  background: linear-gradient(135deg, #fbbf24, #f59e0b);\n  border-color: transparent; color: #2a1a02;\n}\n\n/* ==========================================================================\n   8. HEN GIO\n   ========================================================================== */\n.cong-tac { display: flex; align-items: center; gap: 9px; cursor: pointer; user-select: none; }\n.o-truot {\n  width: 38px; height: 21px; border-radius: 999px; flex: 0 0 auto;\n  background: #2a3550; border: 1px solid var(--vien-sang); position: relative;\n  transition: background .18s ease, border-color .18s ease;\n}\n.o-truot::after {\n  content: ''; position: absolute; top: 2px; left: 2px;\n  width: 15px; height: 15px; border-radius: 50%;\n  background: #8fa0bd; transition: transform .18s ease, background .18s ease;\n}\n.cong-tac.mo .o-truot { background: #34d39933; border-color: var(--bat); }\n.cong-tac.mo .o-truot::after { transform: translateX(17px); background: var(--bat); }\n\n.luoi-gio { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 11px; }\n.o-nhap-gio { display: flex; flex-direction: column; gap: 4px; }\n.o-nhap-gio label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .7px; color: var(--chu-mo); font-weight: 600; }\n#iot-root input[type=\"time\"], #iot-root input[type=\"text\"] {\n  background: #0c1424; border: 1px solid var(--vien-sang); color: var(--chu);\n  border-radius: 8px; padding: 8px 10px;\n  font-family: inherit; font-size: 13px; width: 100%;\n}\n.cap-chon-gio { display: flex; align-items: center; gap: 5px; }\n.cap-chon-gio .hai-cham { font-weight: 700; color: var(--chu-mo); }\n#iot-root select {\n  flex: 1 1 0; min-width: 0;\n  background: #0c1424; border: 1px solid var(--vien-sang); color: var(--chu);\n  border-radius: 8px; padding: 8px 6px;\n  font-family: inherit; font-size: 14px; font-variant-numeric: tabular-nums;\n  text-align: center; cursor: pointer; appearance: none; -webkit-appearance: none;\n}\n#iot-root select:focus { outline: none; border-color: var(--nhan-manh); }\n#iot-root select:disabled { opacity: .45; cursor: not-allowed; }\n#iot-root input:focus { outline: none; border-color: var(--nhan-manh); }\n#iot-root input:disabled { opacity: .45; }\n.giai-thich-lich {\n  margin-top: 10px; padding: 8px 11px; border-radius: 8px;\n  background: #22d3ee0f; border: 1px solid #22d3ee2e;\n  font-size: 11.5px; color: #9fdcea; line-height: 1.45;\n}\n\n/* ==========================================================================\n   9. O NHAP TEXT 16x2 + MAN HINH LCD MO PHONG\n   ========================================================================== */\n.dong-nhap { display: flex; align-items: center; gap: 9px; }\n.dong-nhap + .dong-nhap { margin-top: 8px; }\n.so-thu-tu-dong {\n  font-size: 10.5px; font-weight: 700; color: var(--chu-rat-mo);\n  width: 16px; flex: 0 0 auto; text-align: center;\n}\n.dem-ky-tu {\n  font-size: 10.5px; font-variant-numeric: tabular-nums; color: var(--chu-rat-mo);\n  width: 38px; flex: 0 0 auto; text-align: right;\n}\n.dem-ky-tu.day { color: var(--cho); font-weight: 700; }\n.man-hinh-lcd {\n  margin-top: 11px; padding: 10px 12px; border-radius: 8px;\n  background: #0b3b2e; border: 1px solid #17614a;\n  font-family: \"SFMono-Regular\", \"JetBrains Mono\", Consolas, \"Courier New\", monospace;\n  font-size: 13.5px; letter-spacing: 1.6px; color: #7cf3c0;\n  white-space: pre; overflow: hidden;\n  text-shadow: 0 0 7px #34d39959;\n}\n.nhan-lcd { font-size: 10px; letter-spacing: .8px; color: var(--chu-rat-mo); text-transform: uppercase; margin-bottom: 5px; }\n\n/* ==========================================================================\n   10. THANH TRANG THAI DUOI CUNG\n   ========================================================================== */\n.thanh-duoi {\n  flex: 0 0 auto;\n  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;\n  padding: 9px 20px; margin-top: 14px;\n  background: #0c1322; border-top: 1px solid var(--vien);\n  font-size: 11.5px; color: var(--chu-mo);\n}\n.thanh-duoi .muc { display: flex; align-items: center; gap: 6px; white-space: nowrap; }\n.thanh-duoi b { color: var(--chu); font-weight: 600; font-variant-numeric: tabular-nums; }\n.thanh-duoi .day-ra { margin-left: auto; }\n\n.khung-khoa {\n  display: flex; align-items: center; gap: 9px;\n  padding: 6px 13px; border-radius: 999px;\n  background: #fbbf2414; border: 1px solid #fbbf2440;\n  font-size: 12px; font-weight: 650; color: var(--cho); white-space: nowrap;\n}\n/* Dang khoa thi dap nhe cho de nhan ra - nguoi dung hay bo qua dai bao tinh\n   roi tuong nut hong. */\n.khung-khoa:not(.ranh) { animation: dap-khoa 1.6s ease-in-out infinite; }\n@keyframes dap-khoa {\n  0%, 100% { background: #fbbf2414; border-color: #fbbf2440; }\n  50%      { background: #fbbf2430; border-color: #fbbf2480; }\n}\n.khung-khoa.ranh { background: #34d39912; border-color: #34d39938; color: var(--bat); }\n.dong-ho-khoa { font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 700; }\n.vach-khoa { width: 54px; height: 4px; border-radius: 2px; background: #ffffff1a; overflow: hidden; flex: 0 0 auto; }\n.vach-khoa i { display: block; height: 100%; background: var(--cho); transition: width .9s linear; }\n\n/* Thong bao noi - PHAI that noi bat. Truoc day chi hien mot dong chu nho o\n   thanh duoi cung, nguoi dung khong he nhin thay. */\n.toast {\n  position: fixed; left: 50%; bottom: 58px; transform: translateX(-50%);\n  z-index: 40; max-width: 86%;\n  padding: 11px 20px; border-radius: 10px;\n  font-size: 13.5px; font-weight: 650; text-align: center;\n  box-shadow: 0 6px 26px rgba(0, 0, 0, .6);\n  animation: hien-toast .18s ease-out;\n}\n.toast.ok   { background: #064e3b; border: 1px solid var(--bat); color: #a7f3d0; }\n.toast.cho  { background: #4a3410; border: 1px solid var(--cho); color: #fde68a; }\n.toast.loi  { background: #4c1d24; border: 1px solid var(--loi); color: #fecaca; }\n@keyframes hien-toast { from { opacity: 0; transform: translate(-50%, 8px); } }\n\n.bao-loi {\n  padding: 8px 11px; border-radius: 8px; margin-top: 10px;\n  background: #f8717114; border: 1px solid #f8717140;\n  color: #fca5a5; font-size: 11.5px;\n}\n\n/* ==========================================================================\n   11. SAP LAI BO CUC THEO MAN HINH\n\n   Bai toan: cot phai (LED + Relay + Text) can khoang 755px chieu cao. Laptop\n   1366x768 chi con 646px cho phan than -> tran, panel de len nhau.\n\n   Hai cach chua, dung ca hai:\n     (a) Tra bot panel sang cot khac khi man hinh thap hoac hep  -> muc 11.1\n     (b) Thu gon khoang cach khi man hinh thap                    -> muc 11.2\n\n   DA DO THAT bang trinh duyet: resize viewport that roi do toa do NUT GUI TEXT,\n   kiem tra ca hai dieu: khung .than khong tran, VA nut nam tron trong khung.\n\n     2560x1440  man hinh QHD roi   -> bo cuc A, nut cach day 517px\n     1920x1080  man hinh FHD roi   -> bo cuc A, nut cach day 157px\n     1600x900   man hinh roi       -> bo cuc A, nut cach day  50px\n     1440x900   MacBook Air        -> bo cuc A, nut cach day  51px\n     1366x768   laptop pho thong   -> bo cuc B, nut cach day 402px\n     1280x720   laptop nho         -> bo cuc B, khong tran\n     1024x768   iPad co ngang      -> bo cuc C, khong tran\n      820x1180  iPad Air doc       -> bo cuc D, khong tran\n\n   BAI HOC: ban dau bang nay liet ke ca nhung co CHUA HE DO THAT, va lan do dau\n   dung cach sai - doi style cua documentElement thay vi resize viewport that,\n   nen media query khong he doi va moi phep do deu ra 0 mot cach gia tao. Hau\n   qua: dai chieu cao 880-930px lot luoi, panel Text bi overflow:hidden xen mat\n   NUT GUI, nguoi dung bam mai khong duoc ma khong hieu tai sao.\n   Chi ghi vao bang nay nhung co DA THUC SU resize viewport va do lai.\n   ========================================================================== */\n\n/* ---- 11.1.B · RONG NHUNG THAP (laptop 1366x768, 1536x864): 3 cot ----\n   Cot phai khong chua noi ca 3 panel -> tach Text sang cot thu ba. */\n@media (min-width: 1200px) and (max-height: 880px) {\n  .than {\n    grid-template-columns: minmax(0, 1fr) minmax(290px, 350px) minmax(290px, 350px);\n    grid-template-rows: auto auto minmax(0, 1fr);\n    grid-template-areas:\n      \"cambien led   text\"\n      \"dothi   relay text\"\n      \"dothi   .     .\";\n  }\n}\n\n/* ---- 11.1.C · TRUNG BINH (iPad ngang 1024-1199): 2 cot, Text xuong duoi trai ----\n   Relay trai dai 2 hang de du cho, Text nam duoi do thi. */\n@media (min-width: 900px) and (max-width: 1199px) {\n  .than {\n    grid-template-columns: minmax(0, 1fr) minmax(310px, 370px);\n    grid-template-rows: auto minmax(0, 1fr) auto;\n    grid-template-areas:\n      \"cambien led\"\n      \"dothi   relay\"\n      \"text    relay\";\n  }\n}\n\n/* ---- 11.1.D · IPAD DOC (768-899): 2 cot cho phan dieu khien ---- */\n@media (min-width: 600px) and (max-width: 899px) {\n  .than {\n    grid-template-columns: 1fr 1fr;\n    grid-template-rows: auto minmax(0, 1fr) auto auto;\n    grid-template-areas:\n      \"cambien cambien\"\n      \"dothi   dothi\"\n      \"led     relay\"\n      \"text    text\";\n  }\n  .thanh-tieu-de { flex-wrap: wrap; }\n}\n\n/* ---- 11.1.E · DIEN THOAI (<600): 1 cot, day la co man hinh DUY NHAT duoc\n   phep cuon doc - nhoi 5 panel vao mot man hinh dien thoai thi chu se nho\n   den muc khong doc noi. ---- */\n@media (max-width: 599px) {\n  .than {\n    grid-template-columns: minmax(0, 1fr);\n    grid-template-rows: none;\n    grid-auto-rows: auto;\n    grid-template-areas: \"cambien\" \"dothi\" \"led\" \"relay\" \"text\";\n    overflow-y: auto;\n  }\n  .o-dothi { min-height: 230px; }\n  .hang-so-lieu { grid-template-columns: 1fr; }\n  .thanh-tieu-de { padding: 10px 14px; gap: 10px; flex-wrap: wrap; }\n  .tieu-de-phu { display: none; }\n  .thanh-duoi { gap: 10px; font-size: 11px; }\n}\n\n/* ---- 11.2 · THU GON KHOANG CACH THEO CHIEU CAO ----\n   Chi doi 6 bien khoang cach o :root cua #iot-root, khong dung den bo cuc.\n   Tiet kiem khoang 60px (muc 1) va 110px (muc 2) cho moi cot.\n\n   NGUONG 1000px, KHONG PHAI 880px: cot phai o bo cuc A can\n       58 (tieu de) + 36 (thanh duoi) + 230 (LED) + 280 (Relay) + 280 (Text)\n       + 42 (4 khe) = 926px\n   voi khoang cach day du. Dat nguong 880 thi dai chieu cao 880-930 roi vao\n   vung chet: khong duoc thu gon ma cung khong du cho -> panel Text tran ra\n   ngoai va bi xen mat NUT GUI. Da do duoc dung loi nay o 1440x900 (tran 17px).\n   Lay 1000 de con bien an toan. */\n@media (max-height: 1000px) {\n  #iot-root {\n    --khe: 10px; --le: 16px;\n    --pad-panel: 10px 12px 12px;\n    --pad-hang: 7px 10px;\n    --khe-hang: 6px;\n    --pad-dau: 9px;\n    font-size: 13.5px;\n  }\n  .thanh-tieu-de { padding: 9px 16px; }\n  .dong-ho { font-size: 18px; }\n  .gia-tri-so-lieu { font-size: 28px; }\n  .thanh-duoi { padding: 7px 16px; margin-top: 10px; }\n}\n\n@media (max-height: 760px) {\n  #iot-root {\n    --khe: 8px; --le: 12px;\n    --pad-panel: 8px 10px 10px;\n    --pad-hang: 5px 9px;\n    --khe-hang: 5px;\n    --pad-dau: 7px;\n    font-size: 13px;\n  }\n  .thanh-tieu-de { padding: 7px 12px; gap: 10px; }\n  .logo { width: 28px; height: 28px; font-size: 15px; }\n  .tieu-de-chinh { font-size: 14px; }\n  .tieu-de-phu { display: none; }\n  .dong-ho { font-size: 16px; }\n  .ngay { display: none; }\n  .gia-tri-so-lieu { font-size: 24px; }\n  .man-hinh-lcd { padding: 7px 10px; font-size: 12.5px; }\n  .thanh-duoi { padding: 5px 12px; margin-top: 8px; font-size: 11px; }\n  .nut { padding: 6px 11px; }\n}\n</style>\n\n<div id=\"iot-root\">\n\n  <!-- ================= THANH TIEU DE ================= -->\n  <div class=\"thanh-tieu-de\">\n    <div class=\"logo\">⬢</div>\n    <div>\n      <div class=\"tieu-de-chinh\">Hệ thống IoT giám sát &amp; điều khiển</div>\n      <!-- So hieu phien ban: nhin vao day la biet trinh duyet dang chay ban\n           nao. Neu no khac voi ban vua nap len Pi thi tab dang chay code cu,\n           phai Ctrl+Shift+R. -->\n      <div class=\"tieu-de-phu\">Bài 6 · Mức 15 điểm · Raspberry Pi 4 · <b>bản {{ soHieuBan }}</b></div>\n    </div>\n    <div class=\"dem-tieu-de\"></div>\n\n    <div class=\"khung-khoa\" ng-class=\"{'ranh': !khoa.dangKhoa}\">\n      <span ng-if=\"khoa.dangGui\">⏳ Đang gửi lệnh…</span>\n      <span ng-if=\"!khoa.dangGui && khoa.dangKhoa\">🔒 Chờ</span>\n      <span class=\"dong-ho-khoa\" ng-if=\"!khoa.dangGui && khoa.dangKhoa\">{{ khoa.conLai }}s</span>\n      <span class=\"vach-khoa\" ng-if=\"!khoa.dangGui && khoa.dangKhoa\">\n        <i ng-style=\"{width: (100 - khoa.conLai * 100 / 15) + '%'}\"></i>\n      </span>\n      <span ng-if=\"!khoa.dangKhoa\">✅ Sẵn sàng nhận lệnh</span>\n    </div>\n\n    <div class=\"vien-trang-thai\">\n      <span class=\"cham\" ng-class=\"{'song': ketNoi === 'ok', 'loi': ketNoi === 'loi', 'cho': ketNoi === 'cho'}\"></span>\n      <span>{{ nhanKetNoi }}</span>\n    </div>\n\n    <div>\n      <div class=\"dong-ho\">{{ chuoiDongHo }}</div>\n      <div class=\"ngay\">{{ chuoiNgay }}</div>\n    </div>\n  </div>\n\n  <!-- ================= THAN ================= -->\n  <div class=\"than\">\n\n    <!-- ---------- VUNG: DU LIEU CAM BIEN ---------- -->\n      <div class=\"panel o-cambien\">\n        <div class=\"dau-panel\">\n          <span>Dữ liệu cảm biến</span><span class=\"gach\"></span>\n          <span class=\"ghi-chu\">trung bình 20s · channel CẢM BIẾN</span>\n        </div>\n        <div class=\"hang-so-lieu\">\n          <div class=\"the-so-lieu nhiet\" ng-class=\"{'qua-han': soLieuQuaHan()}\">\n            <div class=\"ten-so-lieu\">🌡 Nhiệt độ</div>\n            <div class=\"gia-tri-so-lieu\">{{ moiNhat.nhietDo === null ? '--' : moiNhat.nhietDo }}<span class=\"dv\">°C</span></div>\n            <div class=\"chan-so-lieu\">\n              <span ng-if=\"!moiNhat.thoiGian\">chờ dữ liệu từ CT2…</span>\n              <span ng-if=\"moiNhat.thoiGian && !soLieuQuaHan()\">lúc {{ moiNhat.thoiGian }}</span>\n              <span ng-if=\"moiNhat.thoiGian && soLieuQuaHan()\" class=\"qua-han-chu\">\n                ⚠️ số liệu cũ {{ moTaTuoiSoLieu() }} — CT2 ngừng gửi\n              </span>\n            </div>\n          </div>\n          <div class=\"the-so-lieu am\" ng-class=\"{'qua-han': soLieuQuaHan()}\">\n            <div class=\"ten-so-lieu\">💧 Độ ẩm</div>\n            <div class=\"gia-tri-so-lieu\">{{ moiNhat.doAm === null ? '--' : moiNhat.doAm }}<span class=\"dv\">%</span></div>\n            <div class=\"chan-so-lieu\">\n              <span ng-if=\"!soLieuQuaHan()\">{{ soMau }} bản ghi gần nhất</span>\n              <span ng-if=\"soLieuQuaHan()\" class=\"qua-han-chu\">⚠️ ghi cuối lúc {{ moiNhat.thoiGian }}</span>\n            </div>\n          </div>\n        </div>\n      </div>\n\n      <!-- ---------- VUNG: DO THI ---------- -->\n      <div class=\"panel o-dothi\">\n        <div class=\"dau-panel\">\n          <span>Biểu đồ theo thời gian</span><span class=\"gach\"></span>\n          <span class=\"ghi-chu\">bấm vào điểm để xem giá trị</span>\n        </div>\n        <div class=\"khung-do-thi\" id=\"khung-do-thi\">\n\n          <div class=\"mot-do-thi\">\n            <div class=\"nhan-do-thi\">\n              <b style=\"color:var(--nhiet)\">Nhiệt độ °C</b>\n              <span class=\"khoang\" ng-if=\"nhietDoMin !== null\">{{ nhietDoMin }} – {{ nhietDoMax }}</span>\n            </div>\n            <div class=\"khung-ve\">\n              <div class=\"trong-do-thi\" ng-if=\"!duongNhietDo\">Chưa có dữ liệu</div>\n              <svg ng-if=\"duongNhietDo\" ng-attr-view_box=\"0 0 {{ rongDoThi }} {{ caoDoThi }}\" preserveAspectRatio=\"none\">\n                <line ng-repeat=\"g in luoiNhietDo\" class=\"luoi\" x1=\"34\" ng-attr-y1=\"{{ g.y }}\" ng-attr-x2=\"{{ rongDoThi - 6 }}\" ng-attr-y2=\"{{ g.y }}\"></line>\n                <text ng-repeat=\"g in luoiNhietDo\" class=\"nhan-truc\" x=\"2\" ng-attr-y=\"{{ g.yChu }}\">{{ g.nhan }}</text>\n                <polyline ng-attr-points=\"{{ duongNhietDo }}\" fill=\"none\" stroke=\"var(--nhiet)\" stroke-width=\"2\"\n                          stroke-linejoin=\"round\" stroke-linecap=\"round\"></polyline>\n                <!-- data-* de ham bat click native tim lai dung diem; xem ghi chu\n                     \"KHONG DUNG ng-click\" trong phan script. -->\n                <circle ng-repeat=\"p in diemNhietDo\" class=\"diem\" ng-attr-cx=\"{{ p.x }}\" ng-attr-cy=\"{{ p.y }}\" r=\"3.4\"\n                        fill=\"var(--nhiet)\" data-chart-key=\"nhietDo\" data-chart-idx=\"{{ $index }}\"></circle>\n                <!-- Duong ke soc doc tu diem dang chon xuong day khung ve -->\n                <line ng-if=\"chon.nhietDo\" class=\"ke-chon\" ng-attr-x1=\"{{ chon.nhietDo.x }}\" ng-attr-y1=\"{{ chon.nhietDo.y }}\"\n                      ng-attr-x2=\"{{ chon.nhietDo.x }}\" ng-attr-y2=\"{{ caoDoThi - 4 }}\" stroke=\"var(--nhiet)\"></line>\n                <circle ng-if=\"chon.nhietDo\" class=\"diem-chon\" ng-attr-cx=\"{{ chon.nhietDo.x }}\" ng-attr-cy=\"{{ chon.nhietDo.y }}\"\n                        r=\"5.5\" fill=\"var(--nhiet)\"></circle>\n              </svg>\n              <div class=\"o-gia-tri\" ng-if=\"chon.nhietDo\"\n                   ng-style=\"{left: viTriTraiOGiaTri(chon.nhietDo) + 'px', top: viTriTrenOGiaTri(chon.nhietDo) + 'px'}\">\n                {{ chon.nhietDo.giaTri }}°C · {{ chon.nhietDo.thoiGian }}\n              </div>\n              <div class=\"goi-y\" ng-if=\"duongNhietDo && !chon.nhietDo\">Bấm vào một điểm để xem giá trị</div>\n            </div>\n          </div>\n\n          <div class=\"mot-do-thi\">\n            <div class=\"nhan-do-thi\">\n              <b style=\"color:var(--am)\">Độ ẩm %</b>\n              <span class=\"khoang\" ng-if=\"doAmMin !== null\">{{ doAmMin }} – {{ doAmMax }}</span>\n            </div>\n            <div class=\"khung-ve\">\n              <div class=\"trong-do-thi\" ng-if=\"!duongDoAm\">Chưa có dữ liệu</div>\n              <svg ng-if=\"duongDoAm\" ng-attr-view_box=\"0 0 {{ rongDoThi }} {{ caoDoThi }}\" preserveAspectRatio=\"none\">\n                <line ng-repeat=\"g in luoiDoAm\" class=\"luoi\" x1=\"34\" ng-attr-y1=\"{{ g.y }}\" ng-attr-x2=\"{{ rongDoThi - 6 }}\" ng-attr-y2=\"{{ g.y }}\"></line>\n                <text ng-repeat=\"g in luoiDoAm\" class=\"nhan-truc\" x=\"2\" ng-attr-y=\"{{ g.yChu }}\">{{ g.nhan }}</text>\n                <polyline ng-attr-points=\"{{ duongDoAm }}\" fill=\"none\" stroke=\"var(--am)\" stroke-width=\"2\"\n                          stroke-linejoin=\"round\" stroke-linecap=\"round\"></polyline>\n                <!-- data-* de ham bat click native tim lai dung diem; xem ghi chu\n                     \"KHONG DUNG ng-click\" trong phan script. -->\n                <circle ng-repeat=\"p in diemDoAm\" class=\"diem\" ng-attr-cx=\"{{ p.x }}\" ng-attr-cy=\"{{ p.y }}\" r=\"3.4\"\n                        fill=\"var(--am)\" data-chart-key=\"doAm\" data-chart-idx=\"{{ $index }}\"></circle>\n                <!-- Duong ke soc doc tu diem dang chon xuong day khung ve -->\n                <line ng-if=\"chon.doAm\" class=\"ke-chon\" ng-attr-x1=\"{{ chon.doAm.x }}\" ng-attr-y1=\"{{ chon.doAm.y }}\"\n                      ng-attr-x2=\"{{ chon.doAm.x }}\" ng-attr-y2=\"{{ caoDoThi - 4 }}\" stroke=\"var(--am)\"></line>\n                <circle ng-if=\"chon.doAm\" class=\"diem-chon\" ng-attr-cx=\"{{ chon.doAm.x }}\" ng-attr-cy=\"{{ chon.doAm.y }}\"\n                        r=\"5.5\" fill=\"var(--am)\"></circle>\n              </svg>\n              <div class=\"o-gia-tri\" ng-if=\"chon.doAm\"\n                   ng-style=\"{left: viTriTraiOGiaTri(chon.doAm) + 'px', top: viTriTrenOGiaTri(chon.doAm) + 'px'}\">\n                {{ chon.doAm.giaTri }}% · {{ chon.doAm.thoiGian }}\n              </div>\n              <div class=\"goi-y\" ng-if=\"duongDoAm && !chon.doAm\">Bấm vào một điểm để xem giá trị</div>\n            </div>\n          </div>\n\n        </div>\n      </div>\n\n      <!-- ---------- VUNG: 6 NUT NHAN DIEU KHIEN 3 LED (yeu cau muc do 3) ---------- -->\n      <div class=\"panel o-led\">\n        <div class=\"dau-panel\">\n          <span>Điều khiển LED</span><span class=\"gach\"></span>\n          <span class=\"ghi-chu\">6 nút · CT3 đọc mỗi 0,5s · phản hồi &lt;2s</span>\n        </div>\n        <div class=\"hang-thiet-bi\" ng-repeat=\"d in danhSachLed\" ng-class=\"{'dang-bat': mongMuon[d.ma]}\">\n          <div class=\"bieu-tuong\">💡</div>\n          <div class=\"ten-thiet-bi\">\n            <div class=\"ten\">{{ d.ten }}</div>\n            <div class=\"chan\">{{ d.chan }}</div>\n          </div>\n          <div class=\"nhan-trang-thai\">{{ mongMuon[d.ma] ? 'BẬT' : 'TẮT' }}</div>\n          <div class=\"cap-nut\">\n            <button class=\"nut bat\" ng-class=\"{'chon': mongMuon[d.ma]}\"  ng-click=\"datLed(d.ma, 1)\"\n                    ng-disabled=\"khoa.dangKhoa\" title=\"{{ khoa.dangKhoa ? 'Đang khoá, còn ' + khoa.conLai + 's' : 'Bật ' + d.ten }}\">Bật</button>\n            <button class=\"nut tat\" ng-class=\"{'chon': !mongMuon[d.ma]}\" ng-click=\"datLed(d.ma, 0)\"\n                    ng-disabled=\"khoa.dangKhoa\" title=\"{{ khoa.dangKhoa ? 'Đang khoá, còn ' + khoa.conLai + 's' : 'Tắt ' + d.ten }}\">Tắt</button>\n          </div>\n        </div>\n      </div>\n\n      <!-- ---------- VUNG: RELAY + HEN GIO (yeu cau nang cao) ---------- -->\n      <div class=\"panel o-relay\">\n        <div class=\"dau-panel\">\n          <span>Relay &amp; hẹn giờ</span><span class=\"gach\"></span>\n          <span class=\"ghi-chu\">CT4 đọc mỗi 2s</span>\n        </div>\n\n        <div class=\"hang-thiet-bi\" ng-class=\"{'dang-bat': relayDangDong()}\">\n          <div class=\"bieu-tuong\">🔌</div>\n          <div class=\"ten-thiet-bi\">\n            <div class=\"ten\">Relay</div>\n            <div class=\"chan\">GPIO24 · cổng D24</div>\n          </div>\n          <div class=\"nhan-trang-thai\">{{ relayDangDong() ? 'ĐÓNG' : 'NGẮT' }}</div>\n          <div class=\"cap-nut\">\n            <button class=\"nut bat\" ng-class=\"{'chon': mongMuon.relay}\"  ng-click=\"datRelay(1)\" ng-disabled=\"mongMuon.batLich || khoa.dangKhoa\">Bật</button>\n            <button class=\"nut tat\" ng-class=\"{'chon': !mongMuon.relay}\" ng-click=\"datRelay(0)\" ng-disabled=\"mongMuon.batLich || khoa.dangKhoa\">Tắt</button>\n          </div>\n        </div>\n\n        <div style=\"margin-top:13px\" class=\"cong-tac\" ng-class=\"{'mo': nhapLich.batLich}\" ng-click=\"doiCongTacLich()\">\n          <div class=\"o-truot\"></div>\n          <div>\n            <div style=\"font-size:13px;font-weight:600\">Hẹn giờ tự động</div>\n            <div style=\"font-size:10.5px;color:var(--chu-rat-mo)\">bật lịch thì 2 nút tay ở trên sẽ nhường quyền</div>\n          </div>\n        </div>\n\n        <div class=\"luoi-gio\">\n          <div class=\"o-nhap-gio\">\n            <label>⏰ Giờ bật</label>\n            <div class=\"cap-chon-gio\">\n              <select ng-model=\"nhapLich.batH\" ng-options=\"h as h for h in dsGio\" ng-disabled=\"!nhapLich.batLich\"></select>\n              <span class=\"hai-cham\">:</span>\n              <select ng-model=\"nhapLich.batM\" ng-options=\"m as m for m in dsPhut\" ng-disabled=\"!nhapLich.batLich\"></select>\n            </div>\n          </div>\n          <div class=\"o-nhap-gio\">\n            <label>⏱ Giờ tắt</label>\n            <div class=\"cap-chon-gio\">\n              <select ng-model=\"nhapLich.tatH\" ng-options=\"h as h for h in dsGio\" ng-disabled=\"!nhapLich.batLich\"></select>\n              <span class=\"hai-cham\">:</span>\n              <select ng-model=\"nhapLich.tatM\" ng-options=\"m as m for m in dsPhut\" ng-disabled=\"!nhapLich.batLich\"></select>\n            </div>\n          </div>\n        </div>\n\n        <div class=\"giai-thich-lich\" ng-if=\"nhapLich.batLich\">{{ moTaLich() }}</div>\n\n        <button class=\"nut chinh nut-lich\" style=\"margin-top:11px;width:100%\"\n                ng-click=\"guiLich()\" ng-class=\"{'mo-di': khoa.dangKhoa || !lichDaDoi()}\">\n          <span ng-if=\"khoa.dangGui\">⏳ Đang gửi lệnh trước…</span>\n          <span ng-if=\"!khoa.dangGui && khoa.dangKhoa\">🔒 Chờ {{ khoa.conLai }}s — nút LỊCH</span>\n          <span ng-if=\"!khoa.dangKhoa && lichDaDoi()\">⏰ ÁP DỤNG LỊCH hẹn giờ</span>\n          <span ng-if=\"!khoa.dangKhoa && !lichDaDoi()\">⏰ LỊCH đã khớp với server</span>\n        </button>\n      </div>\n\n      <!-- ---------- VUNG: TEXT 16x2 LEN LCD (yeu cau nang cao) ---------- -->\n      <div class=\"panel o-text\">\n        <div class=\"dau-panel\">\n          <span>Text lên LCD 16x2</span><span class=\"gach\"></span>\n          <span class=\"ghi-chu\">CT5 đọc mỗi 5s</span>\n        </div>\n\n        <div class=\"dong-nhap\">\n          <span class=\"so-thu-tu-dong\">1</span>\n          <input type=\"text\" maxlength=\"16\" ng-model=\"nhapDong1\" ng-change=\"doiText()\" placeholder=\"Tối đa 16 ký tự\">\n          <span class=\"dem-ky-tu\" ng-class=\"{'day': (nhapDong1 || '').length >= 16}\">{{ (nhapDong1 || '').length }}/16</span>\n        </div>\n        <div class=\"dong-nhap\">\n          <span class=\"so-thu-tu-dong\">2</span>\n          <input type=\"text\" maxlength=\"16\" ng-model=\"nhapDong2\" ng-change=\"doiText()\" placeholder=\"Tối đa 16 ký tự\">\n          <span class=\"dem-ky-tu\" ng-class=\"{'day': (nhapDong2 || '').length >= 16}\">{{ (nhapDong2 || '').length }}/16</span>\n        </div>\n\n        <div class=\"nhan-lcd\" style=\"margin-top:11px\">Xem trước trên LCD · chữ không dấu</div>\n        <div class=\"man-hinh-lcd\">{{ xemTruocLcd(1) }}\n{{ xemTruocLcd(2) }}</div>\n\n        <!-- Nhan nut PHAI noi ro vi sao khong bam duoc. Truoc day nut chi mo di\n             mot cach im lang: nguoi dung go text xong bam khong thay gi xay ra,\n             tuong LCD hong - trong khi thuc te dang trong 15 giay khoa. -->\n        <!-- KHONG dat ng-disabled: nut disabled thi bam vao trinh duyet khong\n             sinh su kien nao, nguoi dung tuong hong ma minh cung khong biet ho\n             da bam. De nut luon bam duoc, bam xong no tu noi vi sao khong gui. -->\n        <button class=\"nut chinh nut-text\" style=\"margin-top:11px;width:100%\" ng-click=\"guiText()\"\n                ng-class=\"{'mo-di': khoa.dangKhoa || !textDaDoi()}\">\n          <span ng-if=\"khoa.dangGui\">⏳ Đang gửi lệnh trước…</span>\n          <span ng-if=\"!khoa.dangGui && khoa.dangKhoa\">🔒 Chờ {{ khoa.conLai }}s — nút TEXT</span>\n          <span ng-if=\"!khoa.dangKhoa && textDaDoi()\">📤 GỬI TEXT lên LCD</span>\n          <span ng-if=\"!khoa.dangKhoa && !textDaDoi()\">📤 TEXT đã khớp với server</span>\n        </button>\n      </div>\n\n  </div>\n\n  <!-- Thong bao noi: hien giua man hinh duoi, tu tat sau vai giay -->\n  <div class=\"toast\" ng-if=\"toast\" ng-class=\"toast.kieu\">{{ toast.chu }}</div>\n\n  <!-- ================= THANH TRANG THAI ================= -->\n  <div class=\"thanh-duoi\">\n    <div class=\"muc\">\n      <span class=\"cham\" ng-class=\"{'cho': khoa.dangKhoa, 'song': !khoa.dangKhoa}\"></span>\n      <span ng-if=\"!khoa.dangKhoa\">Nút đang mở — bấm được 1 lệnh</span>\n      <span ng-if=\"khoa.dangKhoa\">Nút đang khoá — còn <b>{{ khoa.conLai }}s</b></span>\n    </div>\n    <div class=\"muc\">Ghi lệnh gần nhất: <b>{{ ghiCuoi || '--:--:--' }}</b><span ng-if=\"doTreGhi\"> ({{ doTreGhi }}ms)</span></div>\n    <div class=\"muc\">Đọc cảm biến: <b>{{ docCamBienCuoi || '--:--:--' }}</b></div>\n    <div class=\"muc\">Đọc lệnh: <b>{{ docLenhCuoi || '--:--:--' }}</b></div>\n    <div class=\"muc day-ra\" ng-if=\"thongBao\">{{ thongBao }}</div>\n  </div>\n</div>\n\n<script type=\"text/javascript\">\n(function (scope) {\n  'use strict';\n\n  // =========================================================================\n  // TRANG THAI GIAO DIEN\n  //\n  // mongMuon = trang thai NGUOI DUNG muon. Giao dien doi ngay khi bam nut\n  // (lac quan) roi moi gui len server - neu cho ThingSpeak xac nhan moi doi\n  // thi nut se tre 1-16 giay, bam xong tuong nhu khong an.\n  // Lan doc channel LENH ke tiep se dong bo lai neu co sai lech.\n  // =========================================================================\n  scope.mongMuon = {\n    led1: false, led2: false, led3: false,\n    relay: false,\n    batLich: false, gioBat: '18:00', gioTat: '22:00',\n    text: '|'                                  // \"dong1|dong2\", '|' = ca hai dong trong\n  };\n\n  scope.danhSachLed = [\n    { ma: 'led1', ten: 'LED 1', chan: 'GPIO5 · cổng D5' },\n    { ma: 'led2', ten: 'LED 2', chan: 'GPIO16 · cổng D16' },\n    { ma: 'led3', ten: 'LED 3', chan: 'GPIO18 · cổng D18' }\n  ];\n\n  // O NHAP TAM cua 2 panel co nut \"gui\" rieng. Tach khoi mongMuon de nguoi\n  // dung go xong moi gui - neu go den dau gui den do thi moi ky tu an mot\n  // suat ghi 15 giay.\n  scope.nhapLich  = { batLich: false, batH: '18', batM: '00', tatH: '22', tatM: '00' };\n\n  // Danh sach cho 4 the <select> gio/phut. Sinh du ca 24 gio va ca 60 phut -\n  // neu chi sinh phut theo buoc 5 thi lich doc ve tu server co phut la 07 se\n  // khong khop option nao va the select hien trong.\n  scope.dsGio  = [];\n  scope.dsPhut = [];\n  for (var i = 0; i < 24; i++) scope.dsGio.push(('0' + i).slice(-2));\n  for (var j = 0; j < 60; j++) scope.dsPhut.push(('0' + j).slice(-2));\n  scope.nhapDong1 = '';\n  scope.nhapDong2 = '';\n\n  // Doi moi lan sua giao dien - de doi chieu voi ban dang chay tren Pi.\n  scope.soHieuBan = '1537';\n\n  scope.moiNhat = { nhietDo: null, doAm: null, thoiGian: null, mocIso: null };\n  scope.soMau = 0;\n\n  // =========================================================================\n  // CANH BAO SO LIEU QUA HAN\n  //\n  // CT2 gui moi 20 giay. Neu qua 75 giay (lo 3 ky lien tiep) ma chua co ban\n  // ghi moi thi cam bien hoac mang dang co van de - con so tren the KHONG con\n  // la gia tri hien tai nua.\n  //\n  // Truoc day the van in \"26.6 °C\" to dung kem dong chu nho \"luc 14:59:19\".\n  // Nhin thoang qua tuong dang cap nhat, trong khi so do da cu 20 phut. Gio\n  // lam mo con so va doi vien sang mau canh bao de khong the nham.\n  // =========================================================================\n  var NGUONG_QUA_HAN_MS = 75 * 1000;\n\n  function tuoiSoLieuMs() {\n    if (!scope.moiNhat.mocIso) return null;\n    var t = new Date(scope.moiNhat.mocIso).getTime();\n    return isNaN(t) ? null : (Date.now() - t);\n  }\n\n  scope.soLieuQuaHan = function () {\n    var tuoi = tuoiSoLieuMs();\n    return tuoi !== null && tuoi > NGUONG_QUA_HAN_MS;\n  };\n\n  scope.moTaTuoiSoLieu = function () {\n    var tuoi = tuoiSoLieuMs();\n    if (tuoi === null) return '';\n    var giay = Math.floor(tuoi / 1000);\n    if (giay < 120) return giay + ' giây';\n    var phut = Math.floor(giay / 60);\n    if (phut < 60) return phut + ' phút';\n    return Math.floor(phut / 60) + ' giờ ' + (phut % 60) + ' phút';\n  };\n\n  // Trang thai khoa nut, do node DIEU PHOI GHI ben Node-RED bao sang.\n  // dangKhoa = true  -> ca 10 nut bi disable (yeu cau: moi lan chi bam 1 nut)\n  scope.khoa = { dangKhoa: false, dangGui: false, conLai: 0, ghiChu: '' };\n  scope.doTreGhi = null;\n  scope.ketNoi = 'cho';\n  scope.nhanKetNoi = 'Đang kết nối…';\n  scope.thongBao = '';\n  scope.ghiCuoi = null;\n  scope.docCamBienCuoi = null;\n  scope.docLenhCuoi = null;\n  scope.chon = { nhietDo: null, doAm: null };\n\n  scope.rongDoThi = 600;\n  scope.caoDoThi = 120;\n  scope.duongNhietDo = ''; scope.duongDoAm = '';\n  scope.diemNhietDo = []; scope.diemDoAm = [];\n  scope.luoiNhietDo = []; scope.luoiDoAm = [];\n  scope.nhietDoMin = null; scope.nhietDoMax = null;\n  scope.doAmMin = null; scope.doAmMax = null;\n\n  var lichSu = [];\n  var daNhanTrangThaiDau = false;\n\n  // =========================================================================\n  // DONG HO\n  // =========================================================================\n  function capNhatDongHo() {\n    var t = new Date();\n    scope.chuoiDongHo = t.toLocaleTimeString('vi-VN', { hour12: false });\n    scope.chuoiNgay = t.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });\n  }\n  capNhatDongHo();\n  setInterval(function () { scope.$apply(capNhatDongHo); }, 1000);\n\n  // =========================================================================\n  // GUI LENH  -  MOI LAN DUNG MOT NUT, ROI KHOA 15 GIAY\n  //\n  // Quy tac: nguoi dung bam 1 nut -> gui ngay -> ca 10 nut bi khoa 15 giay ->\n  // moi bam duoc nut tiep theo. Node DIEU PHOI GHI ben Node-RED giu dong ho\n  // khoa va bao nguoc lai day (message loai 'khoa').\n  //\n  // VAN GUI CA 6 FIELD trong mot request du chi doi 1 nut. Hai cai loi:\n  //   - Dong feed moi nhat tren ThingSpeak luon day du 6 field, Pi chi can\n  //     1 request la doc duoc toan bo trang thai.\n  //   - Neu co lenh nao truoc do roi mat thi lan ghi nay tu vá lai.\n  // =========================================================================\n  function goiLenhDayDu() {\n    return {\n      led1:  scope.mongMuon.led1 ? 1 : 0,\n      led2:  scope.mongMuon.led2 ? 1 : 0,\n      led3:  scope.mongMuon.led3 ? 1 : 0,\n      relay: scope.mongMuon.relay ? 1 : 0,\n      text:  scope.mongMuon.text || '|',\n      lich:  chuoiLich(scope.mongMuon)\n    };\n  }\n\n  // =========================================================================\n  // THONG BAO NOI\n  // Truoc day ly do \"khong gui duoc\" chi hien mot dong chu nho o thanh duoi\n  // cung - khong ai nhin thay. Gio hien giua man hinh, tu tat sau 5 giay.\n  // =========================================================================\n  scope.toast = null;\n  var henTatToast = null;\n  function baoToast(chu, kieu) {\n    scope.toast = { chu: chu, kieu: kieu || 'ok' };\n    clearTimeout(henTatToast);\n    henTatToast = setTimeout(function () {\n      scope.$apply(function () { scope.toast = null; });\n    }, 5000);\n  }\n\n  // Bao ve Node-RED moi lan nguoi dung BAM MA KHONG GUI DUOC. Khong co cai\n  // nay thi khi nguoi dung bao \"bam khong an\", log phia server trong tron -\n  // khong phan biet duoc \"ho chua bam\" voi \"ho bam ma bi chan\".\n  function baoNodeRed(moTa) {\n    scope.send({ topic: 'ghi_chu', payload: { moTa: moTa } });\n  }\n\n  function guiLenh(moTa) {\n    if (scope.khoa.dangKhoa) return false;\n    scope.send({ topic: 'lenh', payload: Object.assign(goiLenhDayDu(), { moTa: moTa }) });\n    // Khoa ngay tai giao dien, khong cho message xac nhan tu Node-RED ve moi\n    // khoa - trong khoang vai chuc mili giay do nguoi dung van bam duoc nut\n    // thu hai.\n    scope.khoa.dangKhoa = true;\n    scope.khoa.dangGui = true;\n    scope.thongBao = '⏳ Đang gửi: ' + moTa;\n    return true;\n  }\n\n  scope.datLed = function (ma, bat) {\n    var muon = !!bat;\n    if (scope.khoa.dangKhoa || scope.mongMuon[ma] === muon) return;\n    var cu = scope.mongMuon[ma];\n    scope.mongMuon[ma] = muon;                    // doi giao dien ngay (lac quan)\n    if (!guiLenh(ma.toUpperCase() + ' → ' + (muon ? 'BẬT' : 'TẮT'))) {\n      scope.mongMuon[ma] = cu;                    // bi khoa -> tra lai nhu cu\n    }\n  };\n\n  scope.datRelay = function (bat) {\n    var muon = !!bat;\n    if (scope.khoa.dangKhoa || scope.mongMuon.batLich) return;\n    if (scope.mongMuon.relay === muon) return;\n    var cu = scope.mongMuon.relay;\n    scope.mongMuon.relay = muon;\n    if (!guiLenh('RELAY → ' + (muon ? 'ĐÓNG' : 'NGẮT'))) scope.mongMuon.relay = cu;\n  };\n\n  // ---------- HEN GIO: go vao o nhap tam, bam nut moi gui ----------\n  function chuoiLich(o) {\n    return (o.batLich ? '1' : '0') + '|' + (o.gioBat || '00:00') + '|' + (o.gioTat || '00:00');\n  }\n\n  function chuoiLichNhap() {\n    return (scope.nhapLich.batLich ? '1' : '0') + '|' +\n           scope.nhapLich.batH + ':' + scope.nhapLich.batM + '|' +\n           scope.nhapLich.tatH + ':' + scope.nhapLich.tatM;\n  }\n\n  scope.doiCongTacLich = function () {\n    // KHONG kiem tra khoa: cong tac nay chi doi O NHAP TAM, chua gui gi len\n    // server. Trong 15 giay cho khoa nguoi dung van chuan bi duoc lich va go\n    // duoc text, den luc mo khoa thi bam \"Ap dung\" mot phat la xong - thay vi\n    // ngoi nhin man hinh dong bang.\n    scope.nhapLich.batLich = !scope.nhapLich.batLich;\n  };\n\n  scope.lichDaDoi = function () {\n    return chuoiLichNhap() !== chuoiLich(scope.mongMuon);\n  };\n\n  scope.guiLich = function () {\n    if (scope.khoa.dangKhoa) {\n      baoToast(scope.khoa.dangGui ? '⏳ Lệnh trước chưa có kết quả, đợi 1-2 giây'\n               : '🔒 Đang khoá — còn ' + scope.khoa.conLai + ' giây nữa mới gửi được', 'cho');\n      baoNodeRed('bam AP DUNG LICH nhung dang khoa, con ' + scope.khoa.conLai + 's');\n      return;\n    }\n    if (!scope.lichDaDoi()) {\n      baoToast('Lịch đang giống hệt trên server — chỉnh giờ rồi bấm lại', 'cho');\n      baoNodeRed('bam AP DUNG LICH nhung lich khong khac server');\n      return;\n    }\n    var cu = chuoiLich(scope.mongMuon);\n    var moi = chuoiLichNhap();\n    scope.mongMuon.batLich = scope.nhapLich.batLich;\n    scope.mongMuon.gioBat = scope.nhapLich.batH + ':' + scope.nhapLich.batM;\n    scope.mongMuon.gioTat = scope.nhapLich.tatH + ':' + scope.nhapLich.tatM;\n    if (!guiLenh('Lịch hẹn giờ → ' + moi)) {\n      var pc = cu.split('|');                    // bi khoa -> tra lai nhu cu\n      scope.mongMuon.batLich = (pc[0] === '1');\n      scope.mongMuon.gioBat = pc[1];\n      scope.mongMuon.gioTat = pc[2];\n    }\n  };\n\n  // Trang thai relay THUC TE: do lich quyet dinh neu lich dang bat, khong phai\n  // o nhap tam (nguoi dung co the dang go do dang ma chua bam Ap dung).\n  scope.relayDangDong = function () {\n    if (!scope.mongMuon.batLich) return scope.mongMuon.relay;\n    return trongKhungGio(scope.mongMuon);\n  };\n\n  function sangPhut(chuoi) {\n    var m = /^(\\d{1,2}):(\\d{2})$/.exec(chuoi || '');\n    return m ? (parseInt(m[1], 10) * 60 + parseInt(m[2], 10)) : null;\n  }\n\n  function trongKhungGio(o) {\n    var bat = sangPhut(o.gioBat), tat = sangPhut(o.gioTat);\n    if (bat === null || tat === null || bat === tat) return false;\n    var t = new Date(); var bayGio = t.getHours() * 60 + t.getMinutes();\n    return bat < tat ? (bayGio >= bat && bayGio < tat) : (bayGio >= bat || bayGio < tat);\n  }\n\n  scope.moTaLich = function () {\n    var bat = scope.nhapLich.batH + ':' + scope.nhapLich.batM;\n    var tat = scope.nhapLich.tatH + ':' + scope.nhapLich.tatM;\n    if (sangPhut(bat) === sangPhut(tat)) return '⚠️ Giờ bật trùng giờ tắt — relay sẽ luôn ngắt. Chọn 2 mốc khác nhau.';\n    var qua = sangPhut(bat) > sangPhut(tat);\n    return 'Relay tự đóng lúc ' + bat + ' và tự ngắt lúc ' + tat +\n           (qua ? ' hôm sau (khung giờ vắt qua nửa đêm).' : ' mỗi ngày.') +\n           ' Hiện đang ' + (trongKhungGio({ gioBat: bat, gioTat: tat }) ? 'TRONG' : 'NGOÀI') + ' khung giờ.';\n  };\n\n  // ---------- TEXT 16x2 ----------\n  function boDau(s) {\n    // LCD 16x2 khong co bang ky tu tieng Viet - bo dau de xem truoc dung voi\n    // cai LCD se hien (CT5 ben Pi cung bo dau y het bang unicodedata).\n    return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '')\n                    .replace(/đ/g, 'd').replace(/Đ/g, 'D')\n                    .replace(/[^\\x20-\\x7E]/g, '?');\n  }\n  function chuanHoaText() {\n    // Dau '|' la ky tu phan cach 2 dong khi gui len field5. Nguoi dung go\n    // dung ky tu do thi chuoi thanh \"a|b|c\" va CT5 se tach sai -> thay bang\n    // '/' ngay tai day. Ben CT5 cung chi lay 2 phan dau, coi nhu chot chan.\n    var d1 = (scope.nhapDong1 || '').replace(/\\|/g, '/').slice(0, 16);\n    var d2 = (scope.nhapDong2 || '').replace(/\\|/g, '/').slice(0, 16);\n    return d1 + '|' + d2;\n  }\n  scope.xemTruocLcd = function (dong) {\n    var tho = (dong === 1 ? scope.nhapDong1 : scope.nhapDong2) || '';\n    var s = boDau(tho.replace(/\\|/g, '/')).slice(0, 16);\n    return (s + '                ').slice(0, 16);\n  };\n  scope.textDaDoi = function () { return chuanHoaText() !== (scope.mongMuon.text || '|'); };\n  scope.doiText = function () { /* chi de Angular ve lai o xem truoc */ };\n  scope.guiText = function () {\n    if (scope.khoa.dangGui) {\n      baoToast('⏳ Lệnh trước chưa có kết quả, đợi 1-2 giây rồi bấm lại', 'cho');\n      baoNodeRed('bam GUI TEXT nhung lenh truoc chua xong');\n      return;\n    }\n    if (scope.khoa.dangKhoa) {\n      baoToast('🔒 Đang khoá — còn ' + scope.khoa.conLai + ' giây nữa mới gửi được', 'cho');\n      baoNodeRed('bam GUI TEXT nhung dang khoa, con ' + scope.khoa.conLai + 's');\n      return;\n    }\n    if (!scope.textDaDoi()) {\n      baoToast('Text đang giống hệt trên server — sửa nội dung rồi bấm lại', 'cho');\n      baoNodeRed('bam GUI TEXT nhung text khong khac server');\n      return;\n    }\n    var cu = scope.mongMuon.text;\n    scope.mongMuon.text = chuanHoaText();\n    if (guiLenh('Text LCD → \"' + chuanHoaText() + '\"')) {\n      baoToast('📤 Đang gửi text lên server…', 'ok');\n    } else {\n      scope.mongMuon.text = cu;\n    }\n  };\n\n  // =========================================================================\n  // DO THI SVG\n  // =========================================================================\n  function doKhungDoThi() {\n    var el = document.getElementById('khung-do-thi');\n    if (!el || !el.clientWidth) return false;\n    scope.rongDoThi = el.clientWidth;\n    scope.caoDoThi = Math.max(70, Math.floor((el.clientHeight - 38) / 2));\n    return true;\n  }\n\n  function dungChuoi(cacGiaTri, cacMoc) {\n    var chiSo = [], gt = [];\n    for (var i = 0; i < cacGiaTri.length; i++) {\n      if (cacGiaTri[i] !== null && cacGiaTri[i] !== undefined) { chiSo.push(i); gt.push(cacGiaTri[i]); }\n    }\n    if (!gt.length) return { duong: '', min: null, max: null, diem: [], luoi: [] };\n\n    var min = Math.min.apply(null, gt), max = Math.max.apply(null, gt);\n    if (min === max) { min -= 1; max += 1; }      // tranh chia cho 0 khi moi gia tri bang nhau\n    var bien = max - min;\n\n    var traiPad = 34, phaiPad = 6, trenPad = 8, duoiPad = 8;\n    var rongVe = scope.rongDoThi - traiPad - phaiPad;\n    var caoVe = scope.caoDoThi - trenPad - duoiPad;\n    var n = cacGiaTri.length;\n\n    var diem = [], toaDo = [];\n    for (var k = 0; k < chiSo.length; k++) {\n      var i2 = chiSo[k], v = cacGiaTri[i2];\n      var x = traiPad + (n <= 1 ? rongVe / 2 : (i2 / (n - 1)) * rongVe);\n      var y = trenPad + caoVe - ((v - min) / bien) * caoVe;\n      diem.push({ x: x.toFixed(1), y: y.toFixed(1), giaTri: v, thoiGian: gioTuIso(cacMoc[i2]) });\n      toaDo.push(x.toFixed(1) + ',' + y.toFixed(1));\n    }\n\n    var luoi = [];\n    [min, (min + max) / 2, max].forEach(function (v) {\n      var y = trenPad + caoVe - ((v - min) / bien) * caoVe;\n      luoi.push({ y: y.toFixed(1), yChu: (y + 3.4).toFixed(1), nhan: v.toFixed(1) });\n    });\n\n    return { duong: toaDo.join(' '), min: min.toFixed(1), max: max.toFixed(1), diem: diem, luoi: luoi };\n  }\n\n  function gioTuIso(iso) {\n    if (!iso) return '';\n    try { return new Date(iso).toLocaleTimeString('vi-VN', { hour12: false }); } catch (e) { return ''; }\n  }\n\n  function veLaiDoThi() {\n    doKhungDoThi();\n    var moc = lichSu.map(function (p) { return p.thoiGian; });\n    var t = dungChuoi(lichSu.map(function (p) { return p.nhietDo; }), moc);\n    var h = dungChuoi(lichSu.map(function (p) { return p.doAm; }), moc);\n\n    scope.duongNhietDo = t.duong; scope.diemNhietDo = t.diem; scope.luoiNhietDo = t.luoi;\n    scope.nhietDoMin = t.min; scope.nhietDoMax = t.max;\n    scope.duongDoAm = h.duong; scope.diemDoAm = h.diem; scope.luoiDoAm = h.luoi;\n    scope.doAmMin = h.min; scope.doAmMax = h.max;\n\n    // Toa do vua doi -> tim lai dung diem da chon theo moc thoi gian, neu\n    // khong tooltip se bien mat moi lan do thi ve lai.\n    ['nhietDo', 'doAm'].forEach(function (khoa) {\n      var cu = scope.chon[khoa];\n      if (!cu) return;\n      var ds = khoa === 'nhietDo' ? t.diem : h.diem;\n      scope.chon[khoa] = null;\n      for (var i = 0; i < ds.length; i++) {\n        if (ds[i].thoiGian === cu.thoiGian && ds[i].giaTri === cu.giaTri) { scope.chon[khoa] = ds[i]; break; }\n      }\n    });\n  }\n\n  scope.chonDiem = function (khoa, p) {\n    // Bam lai dung diem dang chon thi bo chon (an o gia tri di)\n    var cu = scope.chon[khoa];\n    scope.chon[khoa] = (cu && cu.x === p.x && cu.y === p.y) ? null : p;\n  };\n\n  // Dat o gia tri ngay canh diem vua bam, tu day sang trai/phai/xuong duoi\n  // neu diem nam sat mep khung ve.\n  var RONG_O_GIA_TRI = 136;\n  scope.viTriTraiOGiaTri = function (p) {\n    var trai = parseFloat(p.x) - RONG_O_GIA_TRI / 2;\n    if (trai < 0) trai = 0;\n    if (trai + RONG_O_GIA_TRI > scope.rongDoThi) trai = scope.rongDoThi - RONG_O_GIA_TRI;\n    return Math.round(trai);\n  };\n  scope.viTriTrenOGiaTri = function (p) {\n    var y = parseFloat(p.y);\n    var tren = y - 26;             // mac dinh dat PHIA TREN diem\n    if (tren < 0) tren = y + 12;   // diem sat mep tren -> lat xuong duoi\n    return Math.round(tren);\n  };\n\n  // =========================================================================\n  // BAT CLICK TREN DIEM DO THI\n  //\n  // TUYET DOI KHONG dung ng-click tren phan tu SVG: node-red-dashboard nap\n  // AngularJS Material CUNG VOI module ngTouch (console in ra canh bao\n  // \"You are using the ngTouch module\"). Hai cai nay xung dot, ng-click gan\n  // tren <circle> KHONG BAO GIO kich hoat - bam vao diem khong co gi xay ra.\n  //\n  // Thay bang addEventListener native + UY QUYEN tren #iot-root: phan tu goc\n  // nay ton tai xuyen suot, con cac <circle> thi bi ng-repeat ve lai moi lan\n  // co du lieu moi nen khong gan truc tiep vao tung cham duoc.\n  // =========================================================================\n  var goc = document.getElementById('iot-root');\n  if (goc) {\n    goc.addEventListener('click', function (ev) {\n      var t = ev.target;\n      if (!t || t.tagName !== 'circle') return;\n      var khoa = t.getAttribute('data-chart-key');\n      if (!khoa) return;\n      var i = parseInt(t.getAttribute('data-chart-idx'), 10);\n      var ds = (khoa === 'nhietDo') ? scope.diemNhietDo : scope.diemDoAm;\n      var p = ds && ds[i];\n      if (!p) return;\n      scope.$apply(function () { scope.chonDiem(khoa, p); });\n    });\n  }\n\n  // Vai nhip dau Angular chua render xong nen khung ve con rong 0 - do lai vai\n  // lan cho den khi bo cuc on dinh, va do lai moi khi doi kich thuoc man hinh.\n  var soLanDo = 0;\n  var henDo = setInterval(function () {\n    soLanDo++;\n    if (doKhungDoThi()) scope.$apply(veLaiDoThi);\n    if (soLanDo >= 12) clearInterval(henDo);\n  }, 200);\n\n  var henResize = null;\n  window.addEventListener('resize', function () {\n    clearTimeout(henResize);\n    henResize = setTimeout(function () { if (doKhungDoThi()) scope.$apply(veLaiDoThi); }, 150);\n  });\n\n  // =========================================================================\n  // NHAN DU LIEU TU NODE-RED\n  // =========================================================================\n  scope.$watch('msg', function (msg) {\n    if (!msg || !msg.payload) return;\n    var p = msg.payload;\n\n    if (p.loai === 'du_lieu_cam_bien') {\n      lichSu = p.lichSu || [];\n      scope.soMau = lichSu.length;\n      scope.moiNhat = p.moiNhat || scope.moiNhat;\n      scope.docCamBienCuoi = gioTuIso(new Date().toISOString());\n      datKetNoi(p.ok);\n      veLaiDoThi();\n\n    } else if (p.loai === 'trang_thai_server') {\n      scope.docLenhCuoi = gioTuIso(new Date().toISOString());\n      datKetNoi(p.ok);\n      dongBoTuServer(p.giaTri);\n\n    } else if (p.loai === 'khoa') {\n      // Node-RED giu dong ho khoa (khong giu o trinh duyet) de mo 2 tab hay\n      // 2 may cung luc thi ca hai deu thay dung mot dong ho.\n      scope.khoa.dangKhoa = !!p.dangKhoa;\n      scope.khoa.dangGui = !!p.dangGui;\n      scope.khoa.conLai = p.conLai || 0;\n      if (p.ghiChu) scope.thongBao = p.ghiChu;\n\n    } else if (p.loai === 'ket_qua_ghi') {\n      scope.khoa.dangGui = false;\n      scope.khoa.conLai = p.conLai || 0;\n      scope.khoa.dangKhoa = (p.conLai || 0) > 0;\n      scope.doTreGhi = p.doTreGhi || null;\n      if (p.ok) {\n        scope.ghiCuoi = gioTuIso(new Date().toISOString());\n        scope.thongBao = '✅ ' + (p.moTa || 'Đã ghi') + ' — entry #' + p.entryId +\n                         ' (' + p.doTreGhi + 'ms)';\n        baoToast('✅ Đã gửi lên server — ' + (p.moTa || '') + ' (entry #' + p.entryId + ')', 'ok');\n      } else {\n        baoToast('⚠️ ' + (p.thongBao || 'Ghi lên ThingSpeak thất bại'), 'loi');\n        // Lenh khong len duoc server -> trang thai lac quan dang hien tren\n        // giao dien la SAI. Xoa moc da-dong-bo de lan doc channel LENH ke\n        // tiep (toi da 5 giay nua) keo giao dien ve dung gia tri that.\n        daNhanTrangThaiDau = false;\n        scope.thongBao = '⚠️ ' + (p.thongBao || 'Ghi lên ThingSpeak thất bại') +\n                         ' — giao diện sẽ tự đồng bộ lại sau vài giây';\n      }\n    }\n  });\n\n  function datKetNoi(ok) {\n    scope.ketNoi = ok ? 'ok' : 'loi';\n    scope.nhanKetNoi = ok ? 'ThingSpeak online' : 'Mất kết nối ThingSpeak';\n  }\n\n  // Dong bo giao dien theo gia tri THAT tren server.\n  //\n  // QUAN TRONG: chi ghi de khi hang doi RANH. Dang cho gui ma ghi de thi nut\n  // vua bam se bat lai ve gia tri cu (server chua kip nhan) - nguoi dung thay\n  // nut \"tu nhay nguoc\", tuong la hong.\n  //\n  // Cung khong duoc thay ca object: field nao server tra ve null (chua bao gio\n  // duoc ghi) ma thay tuot thi se xoa mat cac field dang dung.\n  function dongBoTuServer(gt) {\n    if (!gt) return;\n\n    // Dang gui do -> KHONG ghi de. Neu ghi de thi nut vua bam se nhay nguoc\n    // ve gia tri cu (server chua kip nhan), nguoi dung tuong bam hong.\n    if (scope.khoa.dangGui) return;\n\n    var lanDau = !daNhanTrangThaiDau;\n\n    // Khong duoc thay ca object: field nao server tra ve null (chua bao gio\n    // duoc ghi) ma thay tuot thi se xoa mat cac field dang dung.\n    ['led1', 'led2', 'led3', 'relay'].forEach(function (k) {\n      if (gt[k] !== null && gt[k] !== undefined) scope.mongMuon[k] = (Number(gt[k]) >= 1);\n    });\n\n    if (gt.text !== null && gt.text !== undefined) {\n      scope.mongMuon.text = String(gt.text);\n      // Chi do vao 2 o nhap LAN DAU. Cac lan sau ma do de thi nguoi dung dang\n      // go dang do se bi xoa chu moi 5 giay.\n      if (lanDau) {\n        var phan = String(gt.text).split('|');\n        scope.nhapDong1 = phan[0] || '';\n        scope.nhapDong2 = phan[1] || '';\n      }\n    }\n\n    if (gt.lich) {\n      var l = String(gt.lich).split('|');\n      if (l.length === 3) {\n        var lichCuDaKhop = !scope.lichDaDoi();   // do TRUOC khi doi mongMuon\n        scope.mongMuon.batLich = (Number(l[0]) >= 1);\n        if (/^\\d{1,2}:\\d{2}$/.test(l[1])) scope.mongMuon.gioBat = l[1];\n        if (/^\\d{1,2}:\\d{2}$/.test(l[2])) scope.mongMuon.gioTat = l[2];\n        // Keo o nhap tam theo server CHI KHI nguoi dung chua sua gi do dang.\n        if (lanDau || lichCuDaKhop) {\n          scope.nhapLich.batLich = scope.mongMuon.batLich;\n          var pb = scope.mongMuon.gioBat.split(':');\n          var pt = scope.mongMuon.gioTat.split(':');\n          scope.nhapLich.batH = ('0' + pb[0]).slice(-2);\n          scope.nhapLich.batM = ('0' + pb[1]).slice(-2);\n          scope.nhapLich.tatH = ('0' + pt[0]).slice(-2);\n          scope.nhapLich.tatM = ('0' + pt[1]).slice(-2);\n        }\n      }\n    }\n    daNhanTrangThaiDau = true;\n  }\n})(scope);\n</script>\n",
+    "storeOutMessages": true,
+    "fwdInMessages": false,
+    "resendOnRefresh": true,
+    "templateScope": "local",
+    "className": "",
+    "x": 1000,
+    "y": 240,
+    "wires": [
+      [
+        "b6k_dieuphoi"
+      ]
+    ]
+  },
+  {
+    "id": "b6k_tick_ghi",
+    "type": "inject",
+    "z": "b6k_flow",
+    "g": "b6k_g4",
+    "name": "nhip 1s (dem nguoc)",
+    "props": [
+      {
+        "p": "topic",
+        "v": "tick",
+        "vt": "str"
+      }
+    ],
+    "repeat": "1",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "4",
+    "topic": "tick",
+    "payload": "",
+    "payloadType": "date",
+    "x": 140,
+    "y": 460,
+    "wires": [
+      [
+        "b6k_dieuphoi"
+      ]
+    ]
+  },
+  {
+    "id": "b6k_dieuphoi",
+    "type": "function",
+    "z": "b6k_flow",
+    "name": "DIEU PHOI GHI (khoa 15s/lenh)",
+    "func": "// ===========================================================================\n// DIEU PHOI GHI LENH LEN THINGSPEAK  -  MOI LAN MOT NUT, KHOA 15 GIAY\n// ===========================================================================\n// HAI RANG BUOC PHAI DAP UNG CUNG LUC:\n//\n//   (1) Nguoi dung chi duoc bam 1 nut, roi phai cho 15 giay moi bam nut tiep.\n//   (2) Tu luc BAM NUT den luc Pi bat den phai DUOI 2 GIAY.\n//\n// Hai cai nay do hai quang KHAC NHAU nen khong he mau thuan:\n//\n//     bam ─┬────────────── duoi 2 giay ──────────────┐\n//          │  POST ~0.5s   ThingSpeak   CT3 poll 0.5s│\n//          └─────────────────────────────────────────┘\n//          └────────────── khoa 15 giay ─────────────────────┤ moi bam tiep\n//\n// VI SAO KHONG CAN HANG DOI: channel LENH chi co Web ghi, ma Web tu khoa 15\n// giay giua 2 lan ghi, nen khong bao gio cham gioi han cua ThingSpeak ->\n// khong bi tu choi -> khong can xep hang, khong can thu lai.\n//\n// VI SAO PHAI BAN POST NGAY (khong cho nhip tick): neu de nhip tick 1 giay\n// bat len roi moi gui thi mat oan toi 1 giay trong ngan sach 2 giay. Nhip\n// tick o day CHI de cap nhat dong ho dem nguoc tren giao dien.\n//\n// Ba loai message di vao, phan biet bang msg.topic:\n//   'lenh'    tu dashboard   - nguoi dung vua bam nut\n//   'ket_qua' tu node kiem tra ket qua HTTP\n//   'tick'    tu inject 1s   - chi de dem nguoc\n//\n// Hai duong ra:\n//   [0] -> node \"http request\" POST update.json\n//   [1] -> dashboard (khoa/mo nut, dem nguoc, ket qua ghi)\n// ===========================================================================\n\nconst c = flow.get('cauHinh') || {};\nconst KHOA_OK   = c.khoaSauKhiGhiMs  || 15000;\nconst KHOA_HONG = c.khoaSauKhiHongMs || 5000;\n\nlet dangGui  = flow.get('dangGui')  || null;   // lenh dang bay tren mang\nlet moKhoaLuc = flow.get('moKhoaLuc') || 0;    // moc ms duoc phep gui tiep\n\nconst bayGio = Date.now();\nconst gioMs  = (t) => new Date(t).toLocaleTimeString('vi-VN', { hour12: false })\n                    + '.' + String(new Date(t).getMilliseconds()).padStart(3, '0');\n\nfunction conLai() { return Math.max(0, Math.ceil((moKhoaLuc - bayGio) / 1000)); }\nfunction baoKhoa(ghiChu) {\n    return { payload: { loai: 'khoa',\n                        dangKhoa: !!dangGui || conLai() > 0,\n                        dangGui: !!dangGui,\n                        conLai: conLai(),\n                        ghiChu: ghiChu || '' } };\n}\n\n// ------------------------------- ghi chu tu giao dien (KHONG phai lenh gui di)\n// Dashboard bao sang moi khi nguoi dung BAM MA KHONG GUI DUOC (dang khoa, hoac\n// noi dung khong khac server). Khong co nhanh nay thi khi nguoi dung keu \"bam\n// khong an\", log phia server trong tron - khong phan biet duoc \"ho chua he bam\"\n// voi \"ho co bam nhung bi chan\". Da mat mot luc lau moi truy ra dung chuyen do.\nif (msg.topic === 'ghi_chu') {\n    node.warn(`GIAO DIEN luc ${gioMs(bayGio)}: ${msg.payload.moTa}`);\n    return [null, null];\n}\n\n// --------------------------------------------------- nguoi dung vua bam nut\nif (msg.topic === 'lenh') {\n    // Giao dien KHONG con disable nut nua (nut disabled thi bam vao trinh duyet\n    // khong sinh su kien, khong biet nguoi dung da bam hay chua). No tu chan va\n    // bao ly do. Hai dieu kien duoi day la chot chan cuoi - phong khi mo 2\n    // trinh duyet cung luc.\n    if (dangGui) {\n        return [null, baoKhoa('Lenh truoc chua co ket qua, cho mot chut')];\n    }\n    if (conLai() > 0) {\n        return [null, baoKhoa(`Con ${conLai()}s nua moi duoc gui lenh tiep`)];\n    }\n    if (!c.lenhWriteKey) {\n        node.error('Chua dien lenhWriteKey trong node CAU HINH THINGSPEAK');\n        return [null, { payload: { loai: 'ket_qua_ghi', ok: false,\n                                   thongBao: 'Chua dien Write API key cua channel LENH' } }];\n    }\n\n    dangGui = Object.assign({}, msg.payload, { tNhan: bayGio });\n    flow.set('dangGui', dangGui);\n\n    // MOC THOI GIAN DAU de do do tre that. Doi chieu voi moc \"DA AP DUNG XONG\"\n    // trong ~/iot_buoi6/logs/ct3_led.log - ca hai cung dong ho cua Pi.\n    node.warn(`NHAN LENH TU WEB luc ${gioMs(bayGio)} | ${msg.payload.moTa || ''}`);\n\n    // Ban POST di NGAY trong chinh message nay, khong cho nhip nao ca.\n    return [{\n        url: 'https://api.thingspeak.com/update.json',\n        payload: {\n            api_key: c.lenhWriteKey,\n            field1: msg.payload.led1,\n            field2: msg.payload.led2,\n            field3: msg.payload.led3,\n            field4: msg.payload.relay,\n            field5: msg.payload.text,\n            field6: msg.payload.lich\n        }\n    }, baoKhoa('Dang gui len ThingSpeak...')];\n}\n\n// ------------------------------------------------------------ ket qua ghi ve\nif (msg.topic === 'ket_qua') {\n    const kq = msg.payload;\n    const moTa = dangGui ? (dangGui.moTa || '') : '';\n    const doTreGhi = dangGui ? (bayGio - dangGui.tNhan) : null;\n\n    if (kq.ok) {\n        moKhoaLuc = bayGio + KHOA_OK;\n        node.warn(`GHI THANH CONG luc ${gioMs(bayGio)} | entry_id=${kq.entryId} `\n                + `| POST mat ${doTreGhi}ms | khoa nut ${KHOA_OK / 1000}s`);\n    } else {\n        // Bam lai NGAY cung se bi tu choi tiep (ThingSpeak van dang trong cua\n        // so 15 giay), nen cho 5 giay roi moi mo nut - do la khoang du de lan\n        // sau gan nhu chac chan qua duoc.\n        moKhoaLuc = bayGio + KHOA_HONG;\n        node.warn(`GHI THAT BAI luc ${gioMs(bayGio)} | ${kq.thongBao} `\n                + `| cho ${KHOA_HONG / 1000}s roi cho bam lai`);\n    }\n\n    dangGui = null;\n    flow.set('dangGui', null);\n    flow.set('moKhoaLuc', moKhoaLuc);\n\n    return [null, { payload: Object.assign({ loai: 'ket_qua_ghi', moTa,\n                                             doTreGhi, conLai: conLai() }, kq) }];\n}\n\n// ------------------------------------- nhip tick: chi cap nhat dong ho dem nguoc\nreturn [null, baoKhoa()];\n",
+    "outputs": 2,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 340,
+    "y": 420,
+    "wires": [
+      [
+        "b6k_post_lenh"
+      ],
+      [
+        "b6k_dashboard"
+      ]
+    ],
+    "g": "b6k_g4"
+  },
+  {
+    "id": "b6k_post_lenh",
+    "type": "http request",
+    "z": "b6k_flow",
+    "g": "b6k_g4",
+    "name": "POST update.json",
+    "method": "POST",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "insecureHTTPParser": false,
+    "authType": "",
+    "senderr": true,
+    "headers": [
+      {
+        "keyType": "other",
+        "keyValue": "Content-Type",
+        "valueType": "other",
+        "valueValue": "application/json"
+      }
+    ],
+    "x": 560,
+    "y": 420,
+    "wires": [
+      [
+        "b6k_kiemtra"
+      ]
+    ]
+  },
+  {
+    "id": "b6k_kiemtra",
+    "type": "function",
+    "z": "b6k_flow",
+    "name": "kiem tra ket qua",
+    "func": "// ===========================================================================\n// KIEM TRA KET QUA GHI\n// ===========================================================================\n// BAY: khi tu choi vi chua du 15 giay, ThingSpeak KHONG tra loi HTTP - no tra\n// ve 200 OK kem noi dung la so 0 (hoac {\"entry_id\":0}). Chi nhin statusCode\n// se tuong da ghi thanh cong trong khi thuc te lenh roi mat.\nlet ok = false, entryId = 0, thongBao = '';\n\nif (msg.statusCode === 200) {\n    const p = msg.payload;\n    if (p && typeof p === 'object' && Number(p.entry_id) > 0) {\n        ok = true;\n        entryId = p.entry_id;\n    } else {\n        thongBao = 'ThingSpeak tu choi (chua du ~15 giay ke tu lan ghi truoc)';\n    }\n} else {\n    thongBao = `Loi HTTP ${msg.statusCode || '(khong ket noi duoc)'}`;\n}\n\nmsg.topic = 'ket_qua';\nmsg.payload = { ok, entryId, thongBao };\nreturn msg;\n",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 740,
+    "y": 420,
+    "wires": [
+      [
+        "b6k_dieuphoi"
+      ]
+    ],
+    "g": "b6k_g4"
+  },
+  {
+    "id": "b6k_ui_base",
+    "type": "ui_base",
+    "theme": {
+      "name": "theme-dark",
+      "lightTheme": {
+        "default": "#0094CE",
+        "baseColor": "#0094CE",
+        "baseFont": "-apple-system,Helvetica Neue,Helvetica,Arial",
+        "edited": false,
+        "reset": false
+      },
+      "darkTheme": {
+        "default": "#22d3ee",
+        "baseColor": "#22d3ee",
+        "baseFont": "-apple-system,Helvetica Neue,Helvetica,Arial",
+        "edited": true
+      },
+      "customTheme": {
+        "name": "Untitled Theme 1",
+        "default": "#4B7930",
+        "baseColor": "#4B7930",
+        "baseFont": "-apple-system,Helvetica Neue,Helvetica,Arial"
+      },
+      "themeState": {
+        "base-color": {
+          "value": "#22d3ee",
+          "edited": true
+        },
+        "page-titlebar-backgroundColor": {
+          "value": "#0c1424",
+          "edited": true
+        },
+        "page-backgroundColor": {
+          "value": "#080c17",
+          "edited": true
+        },
+        "page-sidebar-backgroundColor": {
+          "value": "#101827",
+          "edited": true
+        },
+        "group-textColor": {
+          "value": "#e8eef9",
+          "edited": true
+        },
+        "group-borderColor": {
+          "value": "#1f2c45",
+          "edited": true
+        },
+        "group-backgroundColor": {
+          "value": "#101827",
+          "edited": true
+        },
+        "widget-textColor": {
+          "value": "#e8eef9",
+          "edited": true
+        },
+        "widget-backgroundColor": {
+          "value": "#22d3ee",
+          "edited": true
+        },
+        "widget-borderColor": {
+          "value": "#1f2c45",
+          "edited": true
+        },
+        "base-font": {
+          "value": "-apple-system,Helvetica Neue,Helvetica,Arial"
+        }
+      },
+      "angularTheme": {
+        "primary": "indigo",
+        "accents": "blue",
+        "warn": "red",
+        "background": "grey",
+        "palette": "dark"
+      }
+    },
+    "site": {
+      "name": "IoT Buoi 6 - Muc 15 diem",
+      "hideToolbar": "true",
+      "allowSwipe": "false",
+      "lockMenu": "true",
+      "allowTempTheme": "false",
+      "dateFormat": "DD/MM/YYYY",
+      "sizes": {
+        "sx": 48,
+        "sy": 48,
+        "gx": 6,
+        "gy": 6,
+        "cx": 6,
+        "cy": 6,
+        "px": 0,
+        "py": 0
+      }
+    }
+  },
+  {
+    "id": "b6k_ui_tab",
+    "type": "ui_tab",
+    "name": "Dieu khien",
+    "icon": "dashboard",
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "b6k_ui_group",
+    "type": "ui_group",
+    "name": "Bang dieu khien",
+    "tab": "b6k_ui_tab",
+    "order": 1,
+    "disp": false,
+    "width": "6",
+    "collapse": false
+  }
+]
