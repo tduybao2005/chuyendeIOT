@@ -12,3 +12,7 @@ mqtt_credentials*.txt
 # Thu muc lam viec cua Claude Code / Playwright (khong thuoc bai lam)
 .claude/
 .playwright-mcp/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
