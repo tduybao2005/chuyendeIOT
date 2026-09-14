@@ -49,9 +49,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import protocol as proto
 
 # ---------------------------------------------------------------------------
-# Cau hinh mang - DIEN THONG TIN THAT VAO DAY TRUOC KHI CHAY THAT
+# Cau hinh mang
 # ---------------------------------------------------------------------------
-MASTER_IP = "DIEN_IP_MAY_TINH_MASTER_VAO_DAY"
+MASTER_IP = "192.168.44.206"  # May tinh dong vai tro Master, da test thuc te (2026-09-14).
+                              # Neu doi sang may khac lam Master, doi lai IP nay.
 MASTER_PORT = 6001          # Slave gui du lieu cam bien den cong nay ben Master
 SLAVE_LISTEN_PORT = 6002    # Slave lang nghe lenh dieu khien LED tu Master o cong nay
 
@@ -236,7 +237,6 @@ def main():
 
             temp, humi = read_temp_humi()
             show_lcd(temp, humi)
-            print(f"Nhiet do:{temp} Do am:{humi}")
 
             frame = proto.encode_sensor_data(
                 seq, temp, humi, temp is not None, humi is not None)

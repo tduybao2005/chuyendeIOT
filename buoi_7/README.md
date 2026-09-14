@@ -60,9 +60,9 @@ Giải thích đầy đủ ý nghĩa từng trường (để đưa vào báo cá
      (IP LAN của Pi `pi4-tdbao`, đã test thực tế 2026-09-14). Nếu Pi đổi IP
      (DHCP) hoặc máy Master ở mạng khác, đổi thành `pi4-tdbao.local` hoặc IP
      Tailscale `100.116.157.59`.
-   - `slave/chuong_trinh_slave_pi.py`: `MASTER_IP` vẫn để placeholder vì máy
-     tính đóng vai trò Master khi chạy thật có thể khác máy đã test — điền IP
-     máy đó vào trước khi chạy.
+   - `slave/chuong_trinh_slave_pi.py`: `MASTER_IP` đã điền sẵn `192.168.44.206`
+     (máy tính đã dùng để test thực tế 2026-09-14). Nếu đổi sang máy khác làm
+     Master, đổi lại IP này cho đúng máy đó.
    - Cổng UDP mặc định: Slave→Master là `6001`, Master→Slave là `6002` (2 file
      đã khớp nhau sẵn, chỉ cần đổi cả 2 nếu muốn đổi cổng).
 2. **ThingSpeak:** điền `THINGSPEAK_CHANNEL_ID` + `THINGSPEAK_WRITE_API_KEY`
