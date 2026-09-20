@@ -8,6 +8,12 @@ web-build/
 mqtt_credentials*.txt
 *.env
 .env*
+# ...nhung file MAU thi phai commit: no chi chua cho trong, khong co gia tri
+# that, va la thu nguoi khac can de biet phai dien nhung gi.
+!.env.example
+
+# Thu muc ao Python (buoi_8) - tai ve duoc tu requirements.txt, khong commit
+.venv/
 
 # Thu muc lam viec cua Claude Code / Playwright (khong thuoc bai lam)
 .claude/

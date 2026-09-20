@@ -1,0 +1,19 @@
+# Thu vien cho chuong trinh chay tren RASPBERRY PI.
+#
+# Cai dat tren Pi:
+#     pip3 install -r requirements.txt --break-system-packages
+#
+# (Raspberry Pi OS Bookworm chan pip cai vao he thong; co thu muc ao thi
+#  tot hon, nhung --break-system-packages nhanh va du cho bai thuc hanh.)
+
+requests>=2.31          # goi HTTP len server
+
+# Hai thu vien duoi day CHI cai duoc tren Raspberry Pi (can phan cung that).
+# Tren may tinh thi chay `python3 chuong_trinh_pi.py --gia-lap`, che do do
+# khong dung den chung.
+#
+#   gpiozero    - dieu khien 3 LED. Raspberry Pi OS da cai san.
+#   seeed-python-dht - doc cam bien DHT11 tren Grove Base Hat.
+#       Cai theo huong dan cua Seeed (xem GROVE-INSTALL.md o goc repo):
+#           git clone https://github.com/Seeed-Studio/Seeed_Python_DHT.git
+#           cd Seeed_Python_DHT && sudo pip3 install . --break-system-packages
