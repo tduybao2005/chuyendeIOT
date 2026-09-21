@@ -23,6 +23,10 @@ lam chet han tien trinh dang chay nhieu gio.
 
 from typing import Any, Optional, Sequence
 
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
 # Dai gia tri hop le cua cam bien - loai gia tri rac TRUOC khi gui len.
 #
 # Co y lap lai gia tri nay o ca hai phia (server co DAI_NHIET_DO/DAI_DO_AM
@@ -188,3 +192,64 @@ def kiem_tra_phan_hoi(phan_hoi):
     if 400 <= ma < 500 and ma not in (408, 429):
         raise LoiCauHinh(thong_bao)
     raise LoiTamThoi(thong_bao)
+
+
+# =========================================================================
+# PHIEN HTTP CHIU DUOC KET NOI KEEP-ALIVE BI ROT
+#
+# LOI THAT DA GAP (2026-09-21, chay tren pi4-tdbao qua WiFi):
+#
+#   Nhip gui cua Pi la 5 giay, ma timeout_keep_alive MAC DINH cua uvicorn
+#   cung dung 5 giay. Giua hai chu ky, ket noi TCP nam khong dung 5 giay:
+#   server dong no dung luc requests.Session dinh dung lai. Client gui
+#   request vao mot socket vua chet -> server dong ma khong tra byte nao ->
+#   RemoteDisconnected.
+#
+#   Do thuc te tu Pi:  nhip 1s -> 0/12 loi  |  nhip 5s -> 5/12 loi.
+#   Chay tren loopback cua may tinh thi KHONG tai hien duoc - cua so race
+#   qua hep. Phai do qua WiFi moi thay.
+#
+# SUA O HAI TANG:
+#   1. Goc re - chay_server.py dat timeout_keep_alive = 65 giay, dai hon
+#      han moi nhip client, nen ket noi khong con bi dong giua chung.
+#   2. Phong tuyen 2 - ham duoi day. Server khong phai luc nao cung do minh
+#      cau hinh (may ban cung lop, server mau cua thay), nen client tu lo
+#      duoc cho minh thi chac hon.
+# =========================================================================
+SO_LAN_THU_LAI = 2
+
+# CHI thu lai cac phuong thuc DOC. POST tuyet doi khong duoc tu thu lai:
+# ket noi rot TRUOC khi server doc request thi thu lai an toan, nhung rot
+# SAU khi server da ghi xong ban ghi thi thu lai se ghi them mot ban nua.
+# urllib3 khong phan biet duoc hai truong hop do. Mat mot mau do (chu ky sau
+# gui lai) con hon co hai ban ghi trung trong Database.
+CAC_PHUONG_THUC_THU_LAI = frozenset({"GET", "HEAD", "OPTIONS"})
+
+
+def tao_phien(api_key: str) -> "requests.Session":
+    """Tao phien HTTP dung chung cho moi request len server.
+
+    Session dung lai mot ket noi TCP cho nhieu request - khong co no thi
+    moi lan goi phai bat tay TCP lai tu dau, tren Pi qua WiFi ton them
+    khoang 30-80ms moi request.
+
+    API_KEY gan vao HEADER cua phien, khong bao gio nam trong than goi tin
+    (yeu cau de bai: khong luu API vao Database).
+    """
+    phien = requests.Session()
+    phien.headers.update({"X-API-Key": api_key})
+
+    bo_thu_lai = Retry(
+        total=SO_LAN_THU_LAI,
+        connect=SO_LAN_THU_LAI,
+        read=SO_LAN_THU_LAI,
+        status=0,                 # khong thu lai theo ma HTTP - 401/422 thu
+                                  # lai vo ich, con 5xx da co vong lap chinh lo
+        allowed_methods=CAC_PHUONG_THUC_THU_LAI,
+        backoff_factor=0.2,       # cho 0.2s roi 0.4s giua cac lan thu
+        raise_on_status=False,
+    )
+    bo_noi = HTTPAdapter(max_retries=bo_thu_lai)
+    phien.mount("http://", bo_noi)
+    phien.mount("https://", bo_noi)
+    return phien

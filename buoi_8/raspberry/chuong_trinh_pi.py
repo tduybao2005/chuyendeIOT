@@ -5,20 +5,22 @@ CHUONG TRINH RASPBERRY PI - buoi 8 muc do 3 (10 diem).
 =========================================================================
 MOT CHU KY LAM GI
 =========================================================================
-    1. Doc DHT11 (cong D5) lay nhiet do + do am.
-    2. Loai gia tri rac (cam_bien_hop_le trong giao_tiep.py).
-    3. Pi TU quyet dinh bat den theo nhiet do (logic_led.py) va bat GPIO:
-           < 28 C  -> LED xanh (D24)
-         28-32 C   -> LED vang (D22)
-        >= 32 C    -> LED do   (D16)
+MOI CHU KY DUNG 1 GIAY, lam tron ven 5 viec:
+
+    1. Tien mot buoc vong den SANG DUOI (logic_led.py), luon chi 1 den sang:
+           buoc 0 -> LED do   (D16)
+           buoc 1 -> LED vang (D22)
+           buoc 2 -> LED xanh (D24)   roi quay lai buoc 0
+    2. Doc DHT11 (cong D5) lay nhiet do + do am.
+    3. Loai gia tri rac (cam_bien_hop_le trong giao_tiep.py).
     4. GUI len server: nhiet do, do am va trang thai ca 3 den.
     5. DOC NGUOC TU SERVER ve roi in ra terminal.
 
 =========================================================================
 VI SAO BUOC 5 PHAI DOC TU SERVER
 =========================================================================
-Terminal KHONG in bien cuc bo vua doc duoc tu cam bien, ma in du lieu LAY
-VE TU SERVER. Lam vong nhu vay chung minh ca duong di lan duong ve deu song:
+Terminal KHONG in bien cuc bo (nhiet do vua doc duoc, hay bien `led` vua
+tinh ra), ma in du lieu LAY VE TU SERVER - ke ca nhan mau den. Lam vong nhu vay chung minh ca duong di lan duong ve deu song:
 
     Pi -> HTTP -> FastAPI -> MongoDB Atlas -> FastAPI -> HTTP -> Pi
 
@@ -54,8 +56,9 @@ import requests
 import cau_hinh_pi as cfg
 from giao_tiep import (LoiCauHinh, LoiTamThoi, cam_bien_hop_le,
                        dinh_dang_ban_ghi, dinh_dang_danh_sach,
-                       dung_goi_tin, kiem_tra_phan_hoi)
-from logic_led import mo_ta_muc_nhiet, quyet_dinh_led
+                       dung_goi_tin, kiem_tra_phan_hoi, tao_phien)
+from logic_led import den_dang_sang, mo_ta_den
+from nhat_ky_csv import NhatKyCsv
 
 
 # =========================================================================
@@ -108,9 +111,8 @@ class PhanCungGiaLap:
         self._trang_thai = (0, 0, 0)
 
     def doc_cam_bien(self):
-        # Dao quanh vung 26-34 C de di qua ca ba muc nguong (28 va 32), nho
-        # vay chay thu la thay duoc ca ba mau den doi.
-        return round(random.uniform(55, 85), 1), round(random.uniform(26, 34), 1)
+        # So quanh vung nhiet do phong, du de thay du lieu doi tung chu ky.
+        return round(random.uniform(55, 85), 1), round(random.uniform(24, 32), 1)
 
     def bat_led(self, trang_thai):
         self._trang_thai = tuple(trang_thai)
@@ -129,11 +131,10 @@ class MayChu:
     def __init__(self, dia_chi, api_key, timeout):
         self._goc = dia_chi.rstrip("/") + "/api/v1/du-lieu"
         self._timeout = timeout
-        # requests.Session dung lai mot ket noi TCP cho moi request. Khong
-        # dung Session thi moi lan goi phai bat tay TCP lai tu dau, tren Pi
-        # qua Wi-Fi ton them khoang 30-80ms moi request.
-        self._phien = requests.Session()
-        self._phien.headers.update({"X-API-Key": api_key})
+        # tao_phien() (trong giao_tiep.py) gan san header X-API-Key va cau
+        # hinh thu lai khi ket noi keep-alive bi rot - xem giai thich day du
+        # ve loi do o cuoi giao_tiep.py.
+        self._phien = tao_phien(api_key)
 
     # -- GUI: ba duong, de bai bat "ho tro ca 2 giao thuc POST/GET" ---------
     def gui_json(self, goi_tin):
@@ -273,14 +274,25 @@ def doc_tham_so():
 
 
 def mot_chu_ky(so_vong, phan_cung, may_chu, suc_khoe, ham_gui,
-               ham_doc_lich_su, tham_so):
+               ham_doc_lich_su, tham_so, nhat_ky):
     """Doc cam bien -> bat den -> gui len server -> doc nguoc ve -> in.
 
     Tach thanh ham rieng (thay vi viet thang trong vong while) de cho nao bo
     qua chu ky thi dung `return`. Viet trong vong while thi phai dung
     `continue`, ma `continue` nhay qua luon dong kiem tra --so-vong.
     """
-    # --- 1. Doc cam bien ------------------------------------------------
+    # --- 1. Tien mot buoc vong duoi -------------------------------------
+    #
+    # BAT DEN TRUOC KHI DOC CAM BIEN, khong phai sau. Doc DHT ton 0.22 giay
+    # (do thuc te tren pi4-tdbao); neu bat den sau thi thoi diem den chuyen
+    # bi xe dich theo do tre cua cam bien va vong duoi nhin giat cuc. Bat
+    # ngay dau chu ky thi den chuyen dung nhip 1 giay deu tam tap.
+    #
+    # `so_vong` bat dau tu 1 nen tru 1 de buoc dau tien la 0 (den do).
+    led = den_dang_sang(so_vong - 1)
+    phan_cung.bat_led(led)
+
+    # --- 2. Doc cam bien ------------------------------------------------
     try:
         do_am, nhiet_do = phan_cung.doc_cam_bien()
     except Exception as loi:
@@ -292,10 +304,6 @@ def mot_chu_ky(so_vong, phan_cung, may_chu, suc_khoe, ham_gui,
             f"gia tri ngoai dai hop le (nhiet do={nhiet_do}, do am={do_am})")
         return
     suc_khoe.cam_bien_ok()
-
-    # --- 2. Pi TU quyet dinh va bat den ---------------------------------
-    led = quyet_dinh_led(nhiet_do)
-    phan_cung.bat_led(led)
 
     # --- 3. Gui len server ----------------------------------------------
     #
@@ -320,8 +328,16 @@ def mot_chu_ky(so_vong, phan_cung, may_chu, suc_khoe, ham_gui,
         return
     suc_khoe.mang_ok()
 
-    print(f"[{so_vong:>4}] {mo_ta_muc_nhiet(nhiet_do):<4} | "
+    # Ca nhan den cung lay tu ban ghi SERVER tra ve, khong lay bien `led`
+    # cuc bo o tren. De bai doi terminal hien du lieu DOC VE TU SERVER -
+    # lay bien cuc bo thi man hinh van dep y het ke ca khi server ghi sai.
+    led_tu_server = tuple(tu_server.get(f"led{so}", 0) for so in (1, 2, 3))
+    print(f"[{so_vong:>4}] {mo_ta_den(led_tu_server):<12} | "
           f"{dinh_dang_ban_ghi(tu_server)}")
+    try:
+        nhat_ky.ghi(tu_server)
+    except OSError as loi:
+        print(f"  [!] Ghi log CSV that bai: {loi}")
 
     # --- 5. Dinh ky doc N ban ghi gan nhat ------------------------------
     # De bai: "co the chon doc N du lieu gan nhat".
@@ -346,6 +362,7 @@ def main():
     phan_cung = PhanCungGiaLap() if tham_so.gia_lap else PhanCung()
     may_chu = MayChu(cfg.SERVER_URL, cfg.API_KEY, cfg.HTTP_TIMEOUT)
     suc_khoe = TheoDoiSucKhoe(phan_cung)
+    nhat_ky = NhatKyCsv()
 
     ham_gui = {"json": may_chu.gui_json, "form": may_chu.gui_form,
                "get": may_chu.gui_get}[tham_so.kieu_gui]
@@ -360,7 +377,8 @@ def main():
     print(f"  Kieu gui      : {tham_so.kieu_gui}"
           f"{'  (POST)' if tham_so.kieu_gui in ('json', 'form') else '  (GET)'}")
     print(f"  Kieu doc      : {tham_so.kieu_doc.upper()}")
-    print(f"  Nhip          : {cfg.NHIP_GUI} giay/lan")
+    print(f"  Nhip          : {cfg.NHIP_GUI} giay/lan "
+          f"(sang duoi + doc + gui + in, tat ca cung nhip nay)")
     if tham_so.gia_lap:
         print("  Che do        : GIA LAP (khong cham GPIO, so lieu la so gia)")
     else:
@@ -385,7 +403,7 @@ def main():
             # thu voi API_KEY sai.
             with nhip:
                 mot_chu_ky(so_vong, phan_cung, may_chu, suc_khoe,
-                           ham_gui, ham_doc_lich_su, tham_so)
+                           ham_gui, ham_doc_lich_su, tham_so, nhat_ky)
 
             if tham_so.so_vong and so_vong >= tham_so.so_vong:
                 break

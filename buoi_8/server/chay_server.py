@@ -81,6 +81,23 @@ def main() -> None:
         # gioi han so ket noi, sua file vai chuc lan la cham tran.
         reload=False,
         log_level="info",
+        # ==============================================================
+        # KEEP-ALIVE PHAI DAI HON NHIP GUI CUA CLIENT
+        #
+        # Mac dinh cua uvicorn la 5 GIAY, ma nhip gui cua Pi cung dung 5
+        # giay (NHIP_GUI trong cau_hinh_pi.py). Hai con so trung nhau nen
+        # giua hai chu ky, ket noi nam khong dung bang thoi gian cho phep:
+        # server dong no dung luc Pi dinh dung lai -> Pi nhan
+        # RemoteDisconnected.
+        #
+        # Da do thuc te tu pi4-tdbao qua WiFi ngay 2026-09-21:
+        #     nhip 1s -> 0/12 loi        nhip 5s -> 5/12 loi
+        #
+        # Dat 65 giay: dai hon han moi nhip client hop ly, nen ket noi
+        # khong con bi dong giua chung. Doi lai server giu socket lau hon
+        # mot chut - khong dang ke voi vai thiet bi trong phong hoc.
+        # ==============================================================
+        timeout_keep_alive=65,
     )
 
 

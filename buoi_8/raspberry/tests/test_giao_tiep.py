@@ -190,3 +190,108 @@ def test_phan_hoi_loi_khong_phai_json_van_bao_duoc():
     from giao_tiep import LoiTamThoi, kiem_tra_phan_hoi
     with pytest.raises(LoiTamThoi, match="502"):
         kiem_tra_phan_hoi(_PhanHoiGia(502, du_lieu=None, text="<html>Bad Gateway</html>"))
+
+
+# ---------------------------------------------------------------------------
+# tao_phien - phien HTTP chiu duoc ket noi keep-alive bi rot
+#
+# LOI THAT DA GAP (2026-09-21, chay tren pi4-tdbao):
+#   Nhip gui cua Pi la 5 giay, ma timeout_keep_alive mac dinh cua uvicorn
+#   CUNG la 5 giay. Giua hai chu ky, ket noi nam khong dung 5 giay - server
+#   dong no dung luc requests.Session dinh dung lai -> server dong ma khong
+#   tra loi gi -> RemoteDisconnected.
+#
+#   Do duoc tu Pi qua WiFi: nhip 1s -> 0/12 loi, nhip 5s -> 5/12 loi.
+#
+# Sua o HAI tang:
+#   - Goc re: server dat timeout_keep_alive dai hon han moi nhip client
+#     (chay_server.py).
+#   - Phong tuyen 2: phien cua client tu mo ket noi moi va thu lai - dung
+#     duoc voi bat ky server nao, ke ca server nguoi khac dung.
+# ---------------------------------------------------------------------------
+import json as _json
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+
+class _MayChuRotKetNoiLanDau(BaseHTTPRequestHandler):
+    """Dong phang ket noi o request dau, tra loi binh thuong tu request sau.
+
+    Mo phong dung hanh vi cua uvicorn khi ket noi keep-alive qua han: dong
+    ma KHONG tra ve byte nao.
+    """
+
+    so_lan = 0
+
+    def do_GET(self):
+        type(self).so_lan += 1
+        if type(self).so_lan == 1:
+            self.close_connection = True
+            return
+        than = _json.dumps({"ok": True}).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(than)))
+        self.end_headers()
+        self.wfile.write(than)
+
+    def log_message(self, *_):
+        pass        # khong in log ra man hinh test
+
+
+def _may_chu_thu():
+    may = HTTPServer(("127.0.0.1", 0), _MayChuRotKetNoiLanDau)
+    threading.Thread(target=may.serve_forever, daemon=True).start()
+    return may
+
+
+def test_phien_tu_thu_lai_khi_ket_noi_keep_alive_bi_rot():
+    from giao_tiep import tao_phien
+    _MayChuRotKetNoiLanDau.so_lan = 0
+    may = _may_chu_thu()
+    try:
+        phien = tao_phien("khoa-test-du-dai-32-ky-tu-abcdef")
+        phan_hoi = phien.get(f"http://127.0.0.1:{may.server_port}/", timeout=3)
+        assert phan_hoi.status_code == 200
+        assert _MayChuRotKetNoiLanDau.so_lan == 2   # lan 1 rot, lan 2 thanh cong
+    finally:
+        may.shutdown()
+        may.server_close()
+
+
+def test_phien_thuong_KHONG_chiu_duoc_loi_nay():
+    """Chung minh bo khung test tren that su tai hien duoc loi.
+
+    Neu test nay cung pass thi test o tren khong chung minh duoc gi - no se
+    pass ca khi tao_phien() quen cau hinh thu lai.
+    """
+    import requests
+    _MayChuRotKetNoiLanDau.so_lan = 0
+    may = _may_chu_thu()
+    try:
+        with requests.Session() as phien:
+            with pytest.raises(requests.RequestException):
+                phien.get(f"http://127.0.0.1:{may.server_port}/", timeout=3)
+    finally:
+        may.shutdown()
+        may.server_close()
+
+
+def test_phien_gan_san_api_key_vao_header():
+    from giao_tiep import tao_phien
+    assert tao_phien("khoa-bi-mat").headers["X-API-Key"] == "khoa-bi-mat"
+
+
+def test_phien_KHONG_tu_thu_lai_POST():
+    """POST khong duoc tu thu lai - se tao ban ghi TRUNG trong Database.
+
+    Ket noi rot truoc khi server doc request thi thu lai an toan, nhung rot
+    SAU khi server da ghi xong ban ghi thi thu lai se ghi them mot ban nua.
+    urllib3 khong phan biet duoc hai truong hop do, nen chi thu lai cac
+    phuong thuc doc (GET/HEAD/...). POST hong thi bo qua chu ky, chu ky sau
+    gui lai - mat mot mau do con hon co hai ban ghi ma.
+    """
+    from giao_tiep import tao_phien
+    bo_thu_lai = tao_phien("khoa").get_adapter("http://x/").max_retries
+    assert "GET" in bo_thu_lai.allowed_methods
+    assert "POST" not in bo_thu_lai.allowed_methods

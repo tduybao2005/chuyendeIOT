@@ -12,9 +12,9 @@ SO DO NOI DAY (Grove Base Hat tren Raspberry Pi 4)
     Linh kien              Cong Grove      Chan BCM      Ghi chu
     ---------------------------------------------------------------------
     Cam bien DHT11         D5              GPIO5         nhiet do + do am
-    LED do                 D16             GPIO16        bao "NONG"  (>=32 C)
-    LED vang               D22             GPIO22        bao "AM"    (28-32 C)
-    LED xanh               D24             GPIO24        bao "MAT"   (<28 C)
+    LED do                 D16             GPIO16        buoc 0 cua vong duoi
+    LED vang               D22             GPIO22        buoc 1
+    LED xanh               D24             GPIO24        buoc 2
 
 Bo chan nay lay theo buoi_7/slave/chuong_trinh_slave_pi.py - da chay thuc te
 tren Pi 'pi4-tdbao' ngay 2026-09-14, khong phai doan tu so do.
@@ -77,33 +77,49 @@ LOAI_DHT = "11"        # "11" cho DHT11, "22" cho DHT22 - PHAI khop module
                        # o buoi 6: cam bien van "doc duoc" nhung ra so vo
                        # nghia. cam_bien_hop_le() trong giao_tiep.py chan
                        # duoc, nhung sua cho dung ngay tu day van hon.
-CHAN_LED_DO = 16       # cong D16 - LED1, bao muc NONG
-CHAN_LED_VANG = 22     # cong D22 - LED2, bao muc AM
-CHAN_LED_XANH = 24     # cong D24 - LED3, bao muc MAT
+CHAN_LED_DO = 16       # cong D16 - LED1, buoc 0 cua vong duoi
+CHAN_LED_VANG = 22     # cong D22 - LED2, buoc 1
+CHAN_LED_XANH = 24     # cong D24 - LED3, buoc 2
 
 # =========================================================================
 # 3. NHIP THOI GIAN (giay)
 # =========================================================================
-# Moi chu ky: doc cam bien -> bat den -> gui len server -> doc nguoc ve -> in.
+# MOT chu ky lam tron ven ca 5 viec:
+#     tien mot buoc vong duoi  ->  doc DHT  ->  gui len server
+#         ->  doc nguoc tu server  ->  in ra terminal
 #
-# VI SAO 5 GIAY, KHONG PHAI 1 GIAY:
-#   - DHT11 chi lay mau moi ~2 giay mot lan, goi nhanh hon thi no tra lai
-#     dung gia tri cu -> ton request ma khong co so lieu moi.
-#   - Moi chu ky ton 2 luot goi mang (1 gui + 1 doc). Nhip 1 giay -> 172
-#     nghin luot/ngay, goi free M0 cua Atlas se cham tran.
-#   - Terminal in 5 giay mot dong thi doc kip; 1 giay mot dong thi troi qua
-#     qua nhanh, khong theo doi duoc luc demo.
-NHIP_GUI = 5
+# Nen NHIP_GUI vua la nhip sang duoi, vua la nhip doc, vua la nhip in - de
+# bai yeu cau ca ba deu 1 giay nen chi can mot con so.
+#
+# MOT GIAY CO KIP KHONG? Da do thuc te tren pi4-tdbao ngay 2026-09-21:
+#     DHT.read()            0.22 s  (thi thoang 0.44 s)
+#     POST gui len server    ~0.1 s  (LAN)
+#     GET doc nguoc ve       ~0.1 s
+#     -------------------------------------
+#     tong                  ~0.4 - 0.7 s     -> con du cho trong 1 giay
+#
+# VongLapDinhNhip tru di thoi gian vua ton nen chu ky luon dung 1 giay. Neu
+# mang cham bat thuong lam mot chu ky vuot qua 1 giay thi vong duoi cho
+# nhip do bi tre mot chut roi bat lai ngay - khong dồn tich luy.
+NHIP_GUI = 1
+
+# LUU Y VE SO LUONG BAN GHI: nhip 1 giay nghia la 3600 ban ghi moi gio. Goi
+# free M0 cua Atlas co 512 MB, moi ban ghi cua ta ~150 byte nen chua duoc
+# khoang 3 trieu ban ghi (~800 gio chay lien tuc). Du xa cho bai thuc hanh,
+# nhung dung de chay quen ca tuan.
 
 # Timeout cho moi request HTTP (giay).
 #
-# Phai NHO HON NHIP_GUI: neu de lon hon, mot request treo se an sang chu ky
-# ke tiep va nhip gui bi troi dan. 4 giay van du rong cho duong LAN.
-HTTP_TIMEOUT = 4
+# Phai NHO HON NHIP_GUI thi moi khong troi nhip... nhung 1 giay la qua ngan
+# cho mot timeout (mang chop mot cai la hong). Nen o day chap nhan timeout
+# DAI HON nhip: mot request cham se lam tre dung chu ky do thoi, chu ky sau
+# VongLapDinhNhip keo lai ngay. Danh doi nay tot hon la bao loi lien tuc.
+HTTP_TIMEOUT = 3
 
 # Cu moi bao nhieu chu ky thi doc ve N ban ghi gan nhat de in bang tong ket.
 # De bai: "co the chon doc N du lieu gan nhat" - day la cho minh hoa no.
-SO_CHU_KY_MOI_LAN_XEM_LICH_SU = 6      # 6 x 5s = 30 giay mot lan
+# Nhip 1 giay nen 15 chu ky = 15 giay mot lan, du thua de doc kip.
+SO_CHU_KY_MOI_LAN_XEM_LICH_SU = 15
 SO_BAN_GHI_XEM_LICH_SU = 5
 
 # =========================================================================
@@ -116,4 +132,4 @@ SO_BAN_GHI_XEM_LICH_SU = 5
 # bi ngat quang khong bao gio cong don den nguong.
 # =========================================================================
 NGUONG_LOI_CAM_BIEN = 20   # 20 lan lien tiep khong doc duoc cam bien
-NGUONG_LOI_MANG = 15       # 15 lan lien tiep goi server that bai (~75 giay)
+NGUONG_LOI_MANG = 15       # 15 lan lien tiep goi server that bai (~15 giay)

@@ -1,55 +1,58 @@
 """
-LOGIC LED - phan THUAN TINH TOAN cua chuong trinh Pi.
+LOGIC LED - den sang DUOI.
 
 Tach rieng khoi chuong_trinh_pi.py de test duoc tren may tinh: file nay
 khong import gpiozero, khong import seeed_dht, khong goi mang. Chay
-`pytest raspberry/tests` la kiem tra duoc toan bo luat bat den ma khong can
-cam Pi vao dau ca.
-
-Nguoc lai, phan cham GPIO va doc cam bien DHT thi nam het trong
-chuong_trinh_pi.py va phai kiem tra bang tay tren phan cung that.
+`pytest raspberry/tests` la kiem tra duoc toan bo luat sang duoi ma khong
+can cam Pi vao dau ca.
 
 =========================================================================
-LUAT BAT DEN
+LUAT SANG DUOI
 =========================================================================
-Pi TU quyet dinh bat den theo nhiet do doc duoc (khong cho lenh tu server),
-roi gui trang thai 3 den do len server cung voi nhiet do va do am.
+Ba den sang duoi nhau, moi 1 giay chuyen sang den ke tiep, vong tron:
 
-    nhiet do < 28 C        ->  LED XANH   (mat)
-    28 <= nhiet do < 32    ->  LED VANG   (am)
-    nhiet do >= 32 C       ->  LED DO     (nong)
+    buoc 0   ->  [DO]  vang  xanh        (1, 0, 0)
+    buoc 1   ->   do  [VANG] xanh        (0, 1, 0)
+    buoc 2   ->   do   vang [XANH]       (0, 0, 1)
+    buoc 3   ->  [DO]  vang  xanh        quay lai tu dau
+    ...
 
-LUON CHI MOT DEN SANG: nhin bang den la doc duoc ngay muc nhiet, khong phai
-giai ma to hop. Va khi demo thi ha hoi vao cam bien la thay den doi ngay -
-chung minh duoc ca chuoi cam bien -> LED -> server -> doc nguoc ve.
+LUON CHI MOT DEN SANG. Neu co luc hai den cung sang, hoac khong den nao
+sang, thi khong con la "duoi" nua - nhin vao khong biet diem sang dang o
+dau. Co test rieng khang dinh dieu nay cho 12 buoc lien tiep.
+
+Trang thai ba den nay duoc DAY LEN SERVER cung nhiet do va do am; terminal
+thi in lai gia tri DOC VE TU SERVER, khong in bien cuc bo (xem giai thich
+day du trong giao_tiep.py).
 """
 
-# Hai nguong chia ba muc. Dat quanh nhiet do phong o Viet Nam de khi ha hoi
-# vao cam bien (hoi tho ~34 C, do am gan 100%) la den doi mau ngay - khong
-# phai cho troi nong len moi thay duoc.
-NGUONG_AM = 28.0    # tu day tro len: het mat, sang vang
-NGUONG_NONG = 32.0  # tu day tro len: nong, sang do
+# So den trong day duoi. Doi so nay thi ca vong duoi tu dai ra, nhung con
+# phai them chan GPIO trong cau_hinh_pi.py va them truong ledN ben server -
+# khong phai sua mot cho la xong.
+SO_DEN = 3
+
+# Ten tung den, theo dung thu tu (led1, led2, led3) = (D16, D22, D24).
+TEN_DEN = ("DO", "VANG", "XANH")
 
 
-def quyet_dinh_led(nhiet_do: float) -> tuple[int, int, int]:
-    """Tu nhiet do ra trang thai 3 LED: (led1_do, led2_vang, led3_xanh).
+def den_dang_sang(buoc: int) -> tuple[int, ...]:
+    """Tu so buoc ra trang thai 3 den: (led1_do, led2_vang, led3_xanh).
 
-    Dung dung nguong thi tinh la DA LEN muc tren (>= chu khong phai >). Neu
-    dinh nghia mo ho o diem ranh gioi thi se co gia tri nhiet do ma khong
-    LED nao sang, va loi do chi lo ra dung luc nhiet do roi vao so do - rat
-    kho gap luc thu, rat de gap luc dang cham bai.
+    Dung phep chia lay du (%) de vong lai tu dau thay vi dem roi tu dat ve
+    0: khong can bien nho trang thai, va so buoc cua chuong trinh chinh co
+    tang den bao nhieu cung khong tran.
     """
-    if nhiet_do >= NGUONG_NONG:
-        return (1, 0, 0)
-    if nhiet_do >= NGUONG_AM:
-        return (0, 1, 0)
-    return (0, 0, 1)
+    vi_tri = buoc % SO_DEN
+    return tuple(1 if i == vi_tri else 0 for i in range(SO_DEN))
 
 
-def mo_ta_muc_nhiet(nhiet_do: float) -> str:
-    """Chu in kem ra terminal cho de doc, vi du 'NONG'."""
-    if nhiet_do >= NGUONG_NONG:
-        return "NONG"
-    if nhiet_do >= NGUONG_AM:
-        return "AM"
-    return "MAT"
+def mo_ta_den(trang_thai) -> str:
+    """Chu in kem ra terminal, vi du 'VANG'.
+
+    Chiu duoc moi to hop chu khong chi ba to hop cua vong duoi: ham nay con
+    dung de in ban ghi DOC VE TU SERVER, ma du lieu tren server co the do
+    chuong trinh khac gui len voi to hop bat ky (ca 3 den cung sang, hay
+    khong den nao sang).
+    """
+    dang_sang = [TEN_DEN[i] for i, bat in enumerate(trang_thai) if bat]
+    return "+".join(dang_sang) if dang_sang else "TAT"
