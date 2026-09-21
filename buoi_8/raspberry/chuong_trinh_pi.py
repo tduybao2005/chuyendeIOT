@@ -44,18 +44,9 @@ class MayChu:
     def gui_post_json(self, du_lieu):
         return self._json(self.session.post(self.url, json=du_lieu, timeout=cfg.HTTP_TIMEOUT))
 
-    def gui_get(self, du_lieu):
-        return self._json(self.session.get(self.url + "/gui", params=du_lieu, timeout=cfg.HTTP_TIMEOUT))
-
     def doc_get(self, n, tu=None, den=None):
         return self._json(self.session.get(
             self.url, params=self._tham_so_doc(n, tu, den), timeout=cfg.HTTP_TIMEOUT,
-        ))["ban_ghi"]
-
-    def doc_post_json(self, n, tu=None, den=None):
-        return self._json(self.session.post(
-            self.url + "/doc", json=self._tham_so_doc(n, tu, den),
-            timeout=cfg.HTTP_TIMEOUT,
         ))["ban_ghi"]
 
     @staticmethod
@@ -80,10 +71,6 @@ class MayChu:
 
 def doc_tham_so():
     parser = argparse.ArgumentParser(description="Gui va doc du lieu IoT qua HTTP")
-    parser.add_argument("--gui", choices=("post", "get"), default="post",
-                        help="Giao thuc gui: POST JSON hoac GET")
-    parser.add_argument("--doc", choices=("get", "post"), default="get",
-                        help="Giao thuc doc: GET hoac POST JSON")
     parser.add_argument("--n", type=int, default=5,
                         help="So ban ghi gan nhat can doc")
     parser.add_argument("--tu", help="Thoi diem bat dau, vi du 2026-09-21T08:00:00")
@@ -114,7 +101,7 @@ def main():
     phan_cung = PhanCung()
     may_chu = MayChu()
     print(f"Server: {cfg.SERVER_URL}")
-    print(f"Gui: {args.gui.upper()} | Doc: {args.doc.upper()} | Nhip: {cfg.NHIP_GUI}s")
+    print(f"Gui: POST JSON | Doc: GET | Nhip: {cfg.NHIP_GUI}s")
     print("Nhan Ctrl+C de dung.\n")
 
     try:
@@ -132,15 +119,8 @@ def main():
                 "led2": led[1],
                 "led3": led[2],
             }
-            if args.gui == "post":
-                may_chu.gui_post_json(du_lieu)
-            else:
-                may_chu.gui_get(du_lieu)
-
-            if args.doc == "get":
-                ban_ghi = may_chu.doc_get(args.n, args.tu, args.den)
-            else:
-                ban_ghi = may_chu.doc_post_json(args.n, args.tu, args.den)
+            may_chu.gui_post_json(du_lieu)
+            ban_ghi = may_chu.doc_get(args.n, args.tu, args.den)
             print(f"[{vong}] Den cuc bo: {mo_ta_den(led)} | Du lieu doc tu server:")
             in_ban_ghi(ban_ghi)
             sleep(cfg.NHIP_GUI)

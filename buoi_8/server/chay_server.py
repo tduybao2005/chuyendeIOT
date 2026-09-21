@@ -1,4 +1,16 @@
 #!/usr/bin/env python3
+"""Khoi dong server IoT."""
+
+import uvicorn
+
+from main import HOST, PORT
+
+
+if __name__ == "__main__":
+    print(f"Server: http://{HOST}:{PORT}")
+    print(f"API docs: http://localhost:{PORT}/docs")
+    uvicorn.run("main:app", host=HOST, port=PORT, timeout_keep_alive=65)
+#!/usr/bin/env python3
 """
 CHAY SERVER - diem khoi dong cho nguoi dung.
 
