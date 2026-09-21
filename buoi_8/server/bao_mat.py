@@ -16,7 +16,7 @@ duoc chuyen tiep xuong tang kho du lieu.
 import secrets
 from typing import Optional
 
-from fastapi import Header, HTTPException, Query, Request, status
+from fastapi import HTTPException, Request, status
 
 TEN_HEADER = "X-API-Key"
 TEN_THAM_SO_QUERY = "api_key"
@@ -60,15 +60,7 @@ def lay_khoa_tu_request(header: Optional[str], query: Optional[str]) -> Optional
     return header or query
 
 
-async def kiem_tra_api_key(
-    request: Request,
-    x_api_key: Optional[str] = Header(default=None, alias=TEN_HEADER),
-    api_key: Optional[str] = Query(
-        default=None,
-        description="Khoa API (dung khi test tren trinh duyet; nen dung "
-                    "header X-API-Key khi goi tu chuong trinh)",
-    ),
-) -> None:
+async def kiem_tra_api_key(request: Request) -> None:
     """Dependency cua FastAPI - gan vao route nao thi route do duoc bao ve.
 
     Doc khoa that tu request.app.state chu khong doc tu bien toan cuc: nho
@@ -78,7 +70,11 @@ async def kiem_tra_api_key(
     thieu/sai khoa.
     """
     khoa_that = getattr(request.app.state, "api_key", None)
-    if khoa_hop_le(lay_khoa_tu_request(x_api_key, api_key), khoa_that):
+    khoa_nhan_duoc = lay_khoa_tu_request(
+        request.headers.get(TEN_HEADER),
+        request.query_params.get(TEN_THAM_SO_QUERY),
+    )
+    if khoa_hop_le(khoa_nhan_duoc, khoa_that):
         return
 
     raise HTTPException(
