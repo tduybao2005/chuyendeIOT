@@ -1,16 +1,21 @@
 """
 Buoi 8 - Bai tap muc do 3: chuong trinh Raspberry Pi.
 
-Doc DHT11 (nhiet do, do am), bat 3 LED theo nguong nhiet do, roi gui ca 5
-gia tri do len HTTP Server (server/server.py) va doc lai ban ghi vua luu de
-in ra terminal - chung minh duong di GUI va duong DOC toi Database deu chay
-duoc that.
+Vong lap: dieu khien 3 LED chay duoi (khong lien quan nhiet do), doc DHT11,
+POST ca 5 gia tri len HTTP Server (server/server.py), roi GET doc lai dung
+ban ghi vua luu de in ra terminal va ghi vao file log.
+
+QUAN TRONG: gia tri in ra terminal va ghi vao file log la gia tri DOC VE TU
+SERVER (qua GET), khong phai bien cuc bo Pi vua dung de dieu khien LED. Lam
+vong nhu vay moi chung minh duoc ca hai chieu API (GUI bang POST, DOC bang
+GET) deu chay that - in bien cuc bo thi man hinh van dep y het ke ca khi
+server/Atlas dang chet.
 
 So do noi day (Grove Base Hat tren Raspberry Pi 4):
     DHT11     -> D5   (GPIO5)   nhiet do + do am
-    LED do    -> D16  (GPIO16)  sang khi nhiet do >= NGUONG_NONG (NONG)
-    LED vang  -> D22  (GPIO22)  sang khi NGUONG_AM <= nhiet do < NGUONG_NONG (AM)
-    LED xanh  -> D24  (GPIO24)  sang khi nhiet do < NGUONG_AM (MAT)
+    LED do    -> D16  (GPIO16)  buoc 0 cua vong duoi
+    LED vang  -> D22  (GPIO22)  buoc 1
+    LED xanh  -> D24  (GPIO24)  buoc 2
 
 Truoc khi chay, dien dia chi server va khoa API (giong het server/.env)
 bang bien moi truong:
@@ -20,8 +25,10 @@ bang bien moi truong:
     python3 chuong_trinh_pi.py
 """
 
+import csv
 import os
 from datetime import datetime
+from pathlib import Path
 from time import sleep
 
 import requests
@@ -40,18 +47,17 @@ CHAN_LED_DO = 16
 CHAN_LED_VANG = 22
 CHAN_LED_XANH = 24
 
-NGUONG_AM = 28  # do C - duoi nguong nay la MAT (LED xanh)
-NGUONG_NONG = 32  # do C - tu nguong nay tro len la NONG (LED do)
+NHIP_GIAY = 1  # dieu khien den + doc cam bien + gui + doc lai moi 1 giay
 
-NHIP_GIAY = 5  # doc cam bien + gui + doc lai moi 5 giay
+FILE_LOG = Path(__file__).with_name("nhat_ky.csv")
+COT_LOG = ["id", "thoi_gian_gui", "ten_thiet_bi", "nhiet_do", "do_am", "led1", "led2", "led3"]
 
 # ---------------------------------------------------------------------------
 # Phan cung
 # ---------------------------------------------------------------------------
 cam_bien = DHT("11", CHAN_DHT)
-led_do = LED(CHAN_LED_DO)
-led_vang = LED(CHAN_LED_VANG)
-led_xanh = LED(CHAN_LED_XANH)
+den = (LED(CHAN_LED_DO), LED(CHAN_LED_VANG), LED(CHAN_LED_XANH))
+TEN_DEN = ("DO", "VANG", "XANH")
 
 
 def doc_cam_bien():
@@ -63,19 +69,19 @@ def doc_cam_bien():
         return None, None
 
 
-def cap_nhat_led(nhiet_do):
-    """Bat/tat 3 LED theo nguong nhiet do, tra ve trang thai (0/1) de gui len server."""
-    nong = nhiet_do is not None and nhiet_do >= NGUONG_NONG
-    am = nhiet_do is not None and NGUONG_AM <= nhiet_do < NGUONG_NONG
-    mat = nhiet_do is not None and nhiet_do < NGUONG_AM
-    led_do.on() if nong else led_do.off()
-    led_vang.on() if am else led_vang.off()
-    led_xanh.on() if mat else led_xanh.off()
-    return int(nong), int(am), int(mat)
+def den_dang_sang(buoc):
+    """Den duoi: moi buoc chi mot den sang, xoay vong qua 3 den."""
+    vi_tri = buoc % len(den)
+    return tuple(1 if i == vi_tri else 0 for i in range(len(den)))
+
+
+def cap_nhat_den(trang_thai):
+    for bong, bat in zip(den, trang_thai):
+        bong.on() if bat else bong.off()
 
 
 def gui_va_doc_lai(nhiet_do, do_am, led1, led2, led3):
-    """POST du lieu len server, roi GET doc lai ban ghi vua luu."""
+    """POST du lieu len server, roi GET doc lai chinh ban ghi vua luu."""
     du_lieu = {
         "ten_thiet_bi": TEN_THIET_BI,
         "nhiet_do": nhiet_do,
@@ -93,35 +99,68 @@ def gui_va_doc_lai(nhiet_do, do_am, led1, led2, led3):
     return ban_ghi[0] if ban_ghi else None
 
 
+def mo_ta_den(ban_ghi):
+    dang_sang = [TEN_DEN[i] for i in range(3) if ban_ghi.get(f"led{i + 1}")]
+    return "+".join(dang_sang) if dang_sang else "TAT"
+
+
+def gio_de_doc(chuoi_thoi_gian):
+    """'2026-09-20T10:00:00+07:00' -> '2026-09-20 10:00:00'."""
+    return str(chuoi_thoi_gian).replace("T", " ").split("+")[0].split(".")[0]
+
+
+def in_ra_terminal(vong, ban_ghi):
+    """In MOT dong ra terminal - toan bo gia tri lay tu ban_ghi (ket qua GET), khong
+    dung bien cuc bo led1/led2/led3 ma Pi vua dung de dieu khien phan cung."""
+    print(
+        f"[{vong:4}] {mo_ta_den(ban_ghi):<4} | "
+        f"[{gio_de_doc(ban_ghi['thoi_gian_gui'])}] {ban_ghi['ten_thiet_bi']:<12} "
+        f"nhiet do {ban_ghi['nhiet_do']:>5} C | do am {ban_ghi['do_am']:>5} % | "
+        f"LED(do,vang,xanh) {ban_ghi['led1']}{ban_ghi['led2']}{ban_ghi['led3']} | "
+        f"ID {ban_ghi['id']}"
+    )
+
+
+def ghi_log(ban_ghi):
+    """Ghi THEM mot dong vao file CSV - cung tu ban_ghi (ket qua GET), y het du
+    lieu vua in ra terminal, khong phai gia tri cuc bo cua Pi."""
+    can_tao_header = not FILE_LOG.exists() or FILE_LOG.stat().st_size == 0
+    with FILE_LOG.open("a", newline="", encoding="utf-8") as tep:
+        writer = csv.writer(tep)
+        if can_tao_header:
+            writer.writerow(COT_LOG)
+        writer.writerow([ban_ghi.get(cot, "") for cot in COT_LOG])
+
+
 def main():
     if not API_KEY:
         print("Thieu IOT_API_KEY")
         return
-    print(f"Server: {SERVER_URL} | thiet bi: {TEN_THIET_BI} | nhip {NHIP_GIAY}s")
+    print(f"Server: {SERVER_URL} | thiet bi: {TEN_THIET_BI} | nhip {NHIP_GIAY}s | log: {FILE_LOG}")
 
+    vong = 0
     try:
         while True:
-            nhiet_do, do_am = doc_cam_bien()
-            led1, led2, led3 = cap_nhat_led(nhiet_do)
+            vong += 1
+            led1, led2, led3 = den_dang_sang(vong - 1)
+            cap_nhat_den((led1, led2, led3))
 
+            nhiet_do, do_am = doc_cam_bien()
             if nhiet_do is not None and do_am is not None:
-                gio = datetime.now().strftime("%H:%M:%S")
                 try:
                     ban_ghi = gui_va_doc_lai(nhiet_do, do_am, led1, led2, led3)
-                    print(
-                        f"[{gio}] gui {nhiet_do} C, {do_am}% LED(do,vang,xanh)="
-                        f"{led1}{led2}{led3} -> server tra ve: {ban_ghi}"
-                    )
+                    if ban_ghi:
+                        in_ra_terminal(vong, ban_ghi)
+                        ghi_log(ban_ghi)
                 except requests.RequestException as loi:
-                    print(f"[{gio}] Loi goi server:", loi)
+                    print(f"[{vong:4}] Loi goi server:", loi)
 
             sleep(NHIP_GIAY)
     except KeyboardInterrupt:
         print("\nDa dung chuong trinh.")
     finally:
-        led_do.off()
-        led_vang.off()
-        led_xanh.off()
+        for bong in den:
+            bong.off()
 
 
 if __name__ == "__main__":

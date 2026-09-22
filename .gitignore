@@ -22,3 +22,6 @@ mqtt_credentials*.txt
 # Python bytecode
 __pycache__/
 *.py[cod]
+
+# File log Raspberry Pi (buoi_8) - sinh ra luc chay, khong phai code
+buoi_8/raspberry/nhat_ky.csv
