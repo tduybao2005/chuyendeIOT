@@ -34,6 +34,7 @@ from typing import Optional
 
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi.security import APIKeyHeader, APIKeyQuery
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
@@ -108,9 +109,21 @@ class ThamSoDoc(BaseModel):
 
 # ---------------------------------------------------------------------------
 # Bao mat - API_KEY qua header X-API-Key hoac query ?api_key=
+#
+# Dung APIKeyHeader/APIKeyQuery (thay vi tu doc request.headers) de FastAPI
+# nhan ra day la security scheme va ve nut "Authorize" tren /docs - khong co
+# no thi trang /docs khong co cho nao de nhap khoa, bam "Try it out" luon bi
+# 401 ma khong biet vi sao.
 # ---------------------------------------------------------------------------
-async def kiem_tra_api_key(request: Request) -> None:
-    khoa = request.headers.get("X-API-Key") or request.query_params.get("api_key")
+_khoa_qua_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+_khoa_qua_query = APIKeyQuery(name="api_key", auto_error=False)
+
+
+async def kiem_tra_api_key(
+    tu_header: Optional[str] = Depends(_khoa_qua_header),
+    tu_query: Optional[str] = Depends(_khoa_qua_query),
+) -> None:
+    khoa = tu_header or tu_query
     if not API_KEY or not khoa or not secrets.compare_digest(khoa, API_KEY):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Thieu hoac sai API_KEY")
 
