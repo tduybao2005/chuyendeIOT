@@ -1,138 +1,128 @@
-#!/usr/bin/env python3
-"""Client Pi toi gian cho API IoT buoi 8."""
+"""
+Buoi 8 - Bai tap muc do 3: chuong trinh Raspberry Pi.
 
-import argparse
-import sys
+Doc DHT11 (nhiet do, do am), bat 3 LED theo nguong nhiet do, roi gui ca 5
+gia tri do len HTTP Server (server/server.py) va doc lai ban ghi vua luu de
+in ra terminal - chung minh duong di GUI va duong DOC toi Database deu chay
+duoc that.
+
+So do noi day (Grove Base Hat tren Raspberry Pi 4):
+    DHT11     -> D5   (GPIO5)   nhiet do + do am
+    LED do    -> D16  (GPIO16)  sang khi nhiet do >= NGUONG_NONG (NONG)
+    LED vang  -> D22  (GPIO22)  sang khi NGUONG_AM <= nhiet do < NGUONG_NONG (AM)
+    LED xanh  -> D24  (GPIO24)  sang khi nhiet do < NGUONG_AM (MAT)
+
+Truoc khi chay, dien dia chi server va khoa API (giong het server/.env)
+bang bien moi truong:
+
+    export IOT_SERVER="http://<ip-may-chay-server>:8000"
+    export IOT_API_KEY="khoa-giong-het-server/.env"
+    python3 chuong_trinh_pi.py
+"""
+
+import os
+from datetime import datetime
 from time import sleep
 
 import requests
+from gpiozero import LED
+from seeed_dht import DHT
 
-import cau_hinh_pi as cfg
-from logic_led import den_dang_sang, mo_ta_den
+# ---------------------------------------------------------------------------
+# Cau hinh
+# ---------------------------------------------------------------------------
+SERVER_URL = os.environ.get("IOT_SERVER", "http://192.168.1.100:8000").rstrip("/") + "/du-lieu"
+API_KEY = os.environ.get("IOT_API_KEY", "")
+TEN_THIET_BI = os.environ.get("IOT_TEN_THIET_BI", os.uname().nodename)
 
+CHAN_DHT = 5
+CHAN_LED_DO = 16
+CHAN_LED_VANG = 22
+CHAN_LED_XANH = 24
 
-class PhanCung:
-    def __init__(self):
-        from gpiozero import LED
-        from seeed_dht import DHT
+NGUONG_AM = 28  # do C - duoi nguong nay la MAT (LED xanh)
+NGUONG_NONG = 32  # do C - tu nguong nay tro len la NONG (LED do)
 
-        self.cam_bien = DHT(cfg.LOAI_DHT, cfg.CHAN_DHT)
-        self.den = (
-            LED(cfg.CHAN_LED_DO, initial_value=False),
-            LED(cfg.CHAN_LED_VANG, initial_value=False),
-            LED(cfg.CHAN_LED_XANH, initial_value=False),
-        )
+NHIP_GIAY = 5  # doc cam bien + gui + doc lai moi 5 giay
 
-    def doc(self):
-        return self.cam_bien.read()
-
-    def bat_den(self, trang_thai):
-        for den, bat in zip(self.den, trang_thai):
-            den.on() if bat else den.off()
-
-    def tat_den(self):
-        for den in self.den:
-            den.off()
-
-
-class MayChu:
-    def __init__(self):
-        self.url = cfg.SERVER_URL.rstrip("/") + "/api/v1/du-lieu"
-        self.session = requests.Session()
-        self.session.headers.update({"X-API-Key": cfg.API_KEY})
-
-    def gui_post_json(self, du_lieu):
-        return self._json(self.session.post(self.url, json=du_lieu, timeout=cfg.HTTP_TIMEOUT))
-
-    def doc_get(self, n, tu=None, den=None):
-        return self._json(self.session.get(
-            self.url, params=self._tham_so_doc(n, tu, den), timeout=cfg.HTTP_TIMEOUT,
-        ))["ban_ghi"]
-
-    @staticmethod
-    def _tham_so_doc(n, tu, den):
-        tham_so = {"n": n, "ten_thiet_bi": cfg.TEN_THIET_BI}
-        if tu:
-            tham_so["tu"] = tu
-        if den:
-            tham_so["den"] = den
-        return tham_so
-
-    @staticmethod
-    def _json(phan_hoi):
-        if phan_hoi.status_code >= 400:
-            try:
-                ly_do = phan_hoi.json().get("detail", phan_hoi.text)
-            except ValueError:
-                ly_do = phan_hoi.text
-            raise RuntimeError(f"HTTP {phan_hoi.status_code}: {ly_do}")
-        return phan_hoi.json()
+# ---------------------------------------------------------------------------
+# Phan cung
+# ---------------------------------------------------------------------------
+cam_bien = DHT("11", CHAN_DHT)
+led_do = LED(CHAN_LED_DO)
+led_vang = LED(CHAN_LED_VANG)
+led_xanh = LED(CHAN_LED_XANH)
 
 
-def doc_tham_so():
-    parser = argparse.ArgumentParser(description="Gui va doc du lieu IoT qua HTTP")
-    parser.add_argument("--n", type=int, default=5,
-                        help="So ban ghi gan nhat can doc")
-    parser.add_argument("--tu", help="Thoi diem bat dau, vi du 2026-09-21T08:00:00")
-    parser.add_argument("--den", help="Thoi diem ket thuc, vi du 2026-09-21T09:00:00")
-    parser.add_argument("--so-vong", type=int, default=0,
-                        help="So lan gui (0 = chay lien tuc)")
-    return parser.parse_args()
+def doc_cam_bien():
+    try:
+        do_am, nhiet_do = cam_bien.read()
+        return float(nhiet_do), float(do_am)
+    except Exception as loi:
+        print("Loi doc DHT11:", loi)
+        return None, None
 
 
-def in_ban_ghi(ban_ghi):
-    for dong in ban_ghi:
-        leds = "".join(str(dong.get(f"led{i}", "?")) for i in (1, 2, 3))
-        print(
-            f"  [{dong.get('thoi_gian_gui', '?')}] "
-            f"{dong.get('ten_thiet_bi', '?')} | "
-            f"nhiet do {dong.get('nhiet_do', '?')} C | "
-            f"do am {dong.get('do_am', '?')} % | LED {leds} | "
-            f"ID {dong.get('id', '?')}"
-        )
+def cap_nhat_led(nhiet_do):
+    """Bat/tat 3 LED theo nguong nhiet do, tra ve trang thai (0/1) de gui len server."""
+    nong = nhiet_do is not None and nhiet_do >= NGUONG_NONG
+    am = nhiet_do is not None and NGUONG_AM <= nhiet_do < NGUONG_NONG
+    mat = nhiet_do is not None and nhiet_do < NGUONG_AM
+    led_do.on() if nong else led_do.off()
+    led_vang.on() if am else led_vang.off()
+    led_xanh.on() if mat else led_xanh.off()
+    return int(nong), int(am), int(mat)
+
+
+def gui_va_doc_lai(nhiet_do, do_am, led1, led2, led3):
+    """POST du lieu len server, roi GET doc lai ban ghi vua luu."""
+    du_lieu = {
+        "ten_thiet_bi": TEN_THIET_BI,
+        "nhiet_do": nhiet_do,
+        "do_am": do_am,
+        "led1": led1,
+        "led2": led2,
+        "led3": led3,
+    }
+    header = {"X-API-Key": API_KEY}
+    requests.post(SERVER_URL, json=du_lieu, headers=header, timeout=5).raise_for_status()
+
+    phan_hoi = requests.get(SERVER_URL, params={"n": 1}, headers=header, timeout=5)
+    phan_hoi.raise_for_status()
+    ban_ghi = phan_hoi.json()["ban_ghi"]
+    return ban_ghi[0] if ban_ghi else None
 
 
 def main():
-    args = doc_tham_so()
-    if not cfg.API_KEY:
-        print("Thieu IOT_BUOI8_API_KEY")
-        return 2
-
-    phan_cung = PhanCung()
-    may_chu = MayChu()
-    print(f"Server: {cfg.SERVER_URL}")
-    print(f"Gui: POST JSON | Doc: GET | Nhip: {cfg.NHIP_GUI}s")
-    print("Nhan Ctrl+C de dung.\n")
+    if not API_KEY:
+        print("Thieu IOT_API_KEY")
+        return
+    print(f"Server: {SERVER_URL} | thiet bi: {TEN_THIET_BI} | nhip {NHIP_GIAY}s")
 
     try:
-        vong = 0
-        while not args.so_vong or vong < args.so_vong:
-            vong += 1
-            led = den_dang_sang(vong - 1)
-            phan_cung.bat_den(led)
-            do_am, nhiet_do = phan_cung.doc()
-            du_lieu = {
-                "ten_thiet_bi": cfg.TEN_THIET_BI,
-                "nhiet_do": nhiet_do,
-                "do_am": do_am,
-                "led1": led[0],
-                "led2": led[1],
-                "led3": led[2],
-            }
-            may_chu.gui_post_json(du_lieu)
-            ban_ghi = may_chu.doc_get(args.n, args.tu, args.den)
-            print(f"[{vong}] Den cuc bo: {mo_ta_den(led)} | Du lieu doc tu server:")
-            in_ban_ghi(ban_ghi)
-            sleep(cfg.NHIP_GUI)
+        while True:
+            nhiet_do, do_am = doc_cam_bien()
+            led1, led2, led3 = cap_nhat_led(nhiet_do)
+
+            if nhiet_do is not None and do_am is not None:
+                gio = datetime.now().strftime("%H:%M:%S")
+                try:
+                    ban_ghi = gui_va_doc_lai(nhiet_do, do_am, led1, led2, led3)
+                    print(
+                        f"[{gio}] gui {nhiet_do} C, {do_am}% LED(do,vang,xanh)="
+                        f"{led1}{led2}{led3} -> server tra ve: {ban_ghi}"
+                    )
+                except requests.RequestException as loi:
+                    print(f"[{gio}] Loi goi server:", loi)
+
+            sleep(NHIP_GIAY)
     except KeyboardInterrupt:
         print("\nDa dung chuong trinh.")
-    except (requests.RequestException, RuntimeError, TypeError) as loi:
-        print(f"LOI: {loi}")
-        return 1
     finally:
-        phan_cung.tat_den()
-    return 0
+        led_do.off()
+        led_vang.off()
+        led_xanh.off()
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

@@ -8,3 +8,4 @@ fastapi>=0.115          # framework HTTP + tu sinh tai lieu API o /docs
 uvicorn[standard]>=0.30 # may chu ASGI chay FastAPI
 motor>=3.6              # driver MongoDB bat dong bo (dung chung voi async cua FastAPI)
 pydantic>=2.9           # validate du lieu vao/ra
+python-multipart>=0.0.9 # can de FastAPI doc duoc request.form() (form-urlencoded)
