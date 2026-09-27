@@ -1,0 +1,10 @@
+# Thu vien cho MQTT Server (chay tren MAY TINH, khong phai tren Pi).
+#
+# Cai dat:
+#     python3 -m venv .venv
+#     .venv/bin/pip install -r server/requirements.txt
+#
+# Con can Mosquitto (MQTT broker) cai o muc he thong - xem README.md.
+
+paho-mqtt>=2.1    # ket noi toi Mosquitto, subscribe/publish
+pymongo>=4.9      # driver MongoDB (dong bo - hop voi vong lap paho-mqtt)
