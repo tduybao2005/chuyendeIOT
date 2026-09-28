@@ -136,6 +136,11 @@ def ghi_log(topic, du_lieu):
 
 
 def on_message(client, userdata, msg):
+    # Van subscribe ca 4 topic "doc" (tung + toanbo) - dung yeu cau de bai.
+    # Nhung chi IN RA TERMINAL / GHI LOG phan "toan bo" cho do roi mat, vi
+    # "tung" phat rieng 5 tin/chu ky lam terminal qua nhieu dong.
+    if "/toanbo/" not in msg.topic:
+        return
     dinh_dang = "json" if msg.topic.endswith("/json") else "form"
     try:
         du_lieu = giai_ma(msg.payload, dinh_dang)
