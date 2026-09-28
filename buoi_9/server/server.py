@@ -28,7 +28,7 @@ Chay:
 
 import json
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode
 
@@ -69,6 +69,8 @@ MQTT_PORT = int(_cau_hinh("MQTT_PORT", "1883"))
 if not MONGODB_URI:
     raise RuntimeError("Thieu MONGODB_URI - dien trong server/.env")
 
+VN = timezone(timedelta(hours=7))  # DB luu UTC, ban tin publish/hien thi theo gio Viet Nam
+
 # ---------------------------------------------------------------------------
 # Topic - 8 topic = {gui, doc} x {tung, toanbo} x {json, form}
 #
@@ -103,10 +105,15 @@ bo_suu_tap = _mongo[MONGODB_DB][MONGODB_COLLECTION]
 trang_thai_hien_tai: dict[str, dict] = {}
 
 
-def luu_db(ban_ghi: dict) -> None:
+def luu_db(ban_ghi: dict) -> dict:
+    """Luu 1 document vao Mongo, tra ve chinh document do (co _id/thoi_gian_gui)
+    de ham goi con dua id + thoi gian nay vao ban tin publish len topic "doc" -
+    terminal/log phai hien dung ID/thoi gian nhu da luu Database, khong bia ra."""
     tai_lieu = dict(ban_ghi)
     tai_lieu["thoi_gian_gui"] = datetime.now(timezone.utc)
-    bo_suu_tap.insert_one(tai_lieu)
+    ket_qua = bo_suu_tap.insert_one(tai_lieu)
+    tai_lieu["_id"] = ket_qua.inserted_id
+    return tai_lieu
 
 
 # ---------------------------------------------------------------------------
@@ -135,17 +142,23 @@ def xu_ly_tung(client: mqtt.Client, du_lieu: dict) -> None:
         raise ValueError(f"ten_truong khong hop le: {ten_truong}")
     gia_tri = float(du_lieu["gia_tri"])
 
-    luu_db({"loai": "tung", "ten_thiet_bi": ten_thiet_bi, "ten_truong": ten_truong, "gia_tri": gia_tri})
+    ban_ghi = luu_db({"loai": "tung", "ten_thiet_bi": ten_thiet_bi, "ten_truong": ten_truong, "gia_tri": gia_tri})
+    id_va_thoi_gian = {
+        "id": str(ban_ghi["_id"]),
+        "thoi_gian_gui": ban_ghi["thoi_gian_gui"].astimezone(VN).isoformat(),
+    }
 
     trang_thai = trang_thai_hien_tai.setdefault(ten_thiet_bi, {})
     trang_thai[ten_truong] = gia_tri
 
-    tung = {"ten_thiet_bi": ten_thiet_bi, "ten_truong": ten_truong, "gia_tri": gia_tri}
+    tung = {**id_va_thoi_gian, "ten_thiet_bi": ten_thiet_bi, "ten_truong": ten_truong, "gia_tri": gia_tri}
     client.publish(DOC_TUNG_JSON, ma_hoa(tung, "json"), retain=True)
     client.publish(DOC_TUNG_FORM, ma_hoa(tung, "form"), retain=True)
 
-    # Luu y bat buoc: gui TUNG cung phai kich hoat topic doc TOAN BO.
-    toan_bo = {"ten_thiet_bi": ten_thiet_bi, **trang_thai}
+    # Luu y bat buoc: gui TUNG cung phai kich hoat topic doc TOAN BO. ID/thoi
+    # gian dinh kem la cua LAN CAP NHAT GAN NHAT (tung), vi trang thai toan bo
+    # o day la ghep tu nhieu lan gui tung khac nhau, khong phai 1 document rieng.
+    toan_bo = {**id_va_thoi_gian, "ten_thiet_bi": ten_thiet_bi, **trang_thai}
     client.publish(DOC_TOANBO_JSON, ma_hoa(toan_bo, "json"), retain=True)
     client.publish(DOC_TOANBO_FORM, ma_hoa(toan_bo, "form"), retain=True)
 
@@ -154,17 +167,22 @@ def xu_ly_toanbo(client: mqtt.Client, du_lieu: dict) -> None:
     ten_thiet_bi = str(du_lieu["ten_thiet_bi"])
     cac_gia_tri = {truong: float(du_lieu[truong]) for truong in CAC_TRUONG_TOANBO}
 
-    luu_db({"loai": "toanbo", "ten_thiet_bi": ten_thiet_bi, **cac_gia_tri})
+    ban_ghi = luu_db({"loai": "toanbo", "ten_thiet_bi": ten_thiet_bi, **cac_gia_tri})
+    id_va_thoi_gian = {
+        "id": str(ban_ghi["_id"]),
+        "thoi_gian_gui": ban_ghi["thoi_gian_gui"].astimezone(VN).isoformat(),
+    }
     trang_thai_hien_tai[ten_thiet_bi] = dict(cac_gia_tri)
 
-    toan_bo = {"ten_thiet_bi": ten_thiet_bi, **cac_gia_tri}
+    toan_bo = {**id_va_thoi_gian, "ten_thiet_bi": ten_thiet_bi, **cac_gia_tri}
     client.publish(DOC_TOANBO_JSON, ma_hoa(toan_bo, "json"), retain=True)
     client.publish(DOC_TOANBO_FORM, ma_hoa(toan_bo, "form"), retain=True)
 
     # Luu y bat buoc: gui TOAN BO cung phai kich hoat topic doc TUNG (phat
-    # rieng le tung truong mot).
+    # rieng le tung truong mot). Ca 5 truong nay cung xuat phat tu 1 document
+    # vua luu o tren nen dung chung 1 id/thoi_gian_gui la dung.
     for ten_truong, gia_tri in cac_gia_tri.items():
-        tung = {"ten_thiet_bi": ten_thiet_bi, "ten_truong": ten_truong, "gia_tri": gia_tri}
+        tung = {**id_va_thoi_gian, "ten_thiet_bi": ten_thiet_bi, "ten_truong": ten_truong, "gia_tri": gia_tri}
         client.publish(DOC_TUNG_JSON, ma_hoa(tung, "json"), retain=True)
         client.publish(DOC_TUNG_FORM, ma_hoa(tung, "form"), retain=True)
 

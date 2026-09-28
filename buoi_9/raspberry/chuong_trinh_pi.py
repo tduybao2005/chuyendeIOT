@@ -66,7 +66,20 @@ DOC_TOPICS = (
 )
 
 FILE_LOG = Path(__file__).with_name("nhat_ky.csv")
-COT_LOG = ["thoi_gian", "topic", "ten_thiet_bi", "ten_truong", "gia_tri", "nhiet_do", "do_am", "led1", "led2", "led3"]
+COT_LOG = [
+    "thoi_gian_nhan",  # luc Pi nhan duoc (dong ho cua Pi)
+    "topic",
+    "id",  # _id cua document trong MongoDB (server dinh kem trong ban tin)
+    "thoi_gian_gui",  # thoi gian SERVER gan luc luu Database (khac voi thoi_gian_nhan)
+    "ten_thiet_bi",
+    "ten_truong",
+    "gia_tri",
+    "nhiet_do",
+    "do_am",
+    "led1",
+    "led2",
+    "led3",
+]
 
 # ---------------------------------------------------------------------------
 # Phan cung
@@ -124,9 +137,9 @@ def ghi_log(topic, du_lieu):
     (lay tu tin nhan subscribe duoc), khong phai bien cuc bo cua Pi."""
     can_tao_header = not FILE_LOG.exists() or FILE_LOG.stat().st_size == 0
     dong = {
-        "thoi_gian": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "thoi_gian_nhan": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "topic": topic,
-        **{cot: du_lieu.get(cot, "") for cot in COT_LOG if cot not in ("thoi_gian", "topic")},
+        **{cot: du_lieu.get(cot, "") for cot in COT_LOG if cot not in ("thoi_gian_nhan", "topic")},
     }
     with FILE_LOG.open("a", newline="", encoding="utf-8") as tep:
         writer = csv.DictWriter(tep, fieldnames=COT_LOG)
