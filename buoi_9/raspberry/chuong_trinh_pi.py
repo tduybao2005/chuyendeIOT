@@ -140,7 +140,7 @@ def gui_toanbo(client, dinh_dang, nhiet_do, do_am, led1, led2, led3):
 
 
 def main():
-    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=TEN_THIET_BI)
     client.on_connect = on_connect
     client.on_message = on_message
     client.connect(MQTT_HOST, MQTT_PORT)
