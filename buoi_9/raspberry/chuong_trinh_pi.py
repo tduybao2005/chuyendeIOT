@@ -8,8 +8,9 @@ xen ke moi chu ky de bai qua het ca 4 to hop {tung,toanbo}x{json,form}.
 
 Dong thoi SUBSCRIBE san 4 topic "doc" (tung/toanbo x json/form) - moi khi
 co du lieu moi (do server phat lai sau khi luu Database), on_message() in
-ra terminal. Day la dữ liệu THAT SU doc duoc tu server (qua broker), khong
-phai bien cuc bo Pi vua dung de dieu khien phan cung.
+ra terminal VA ghi them 1 dong vao file nhat_ky.csv. Ca hai (terminal + file
+log) deu lay du lieu THAT SU doc duoc tu server (qua broker), khong phai
+bien cuc bo Pi vua dung de dieu khien phan cung.
 
 So do noi day (Grove Base Hat tren Raspberry Pi 4) - giong buoi 8:
     DHT11     -> D5   (GPIO5)   nhiet do + do am
@@ -23,8 +24,11 @@ Truoc khi chay, dien dia chi broker (may chay server buoi_9):
     python3 chuong_trinh_pi.py
 """
 
+import csv
 import json
 import os
+from datetime import datetime
+from pathlib import Path
 from time import sleep
 from urllib.parse import parse_qsl, urlencode
 
@@ -60,6 +64,9 @@ DOC_TOPICS = (
     "buoi9/doc/toanbo/json",
     "buoi9/doc/toanbo/form",
 )
+
+FILE_LOG = Path(__file__).with_name("nhat_ky.csv")
+COT_LOG = ["thoi_gian", "topic", "ten_thiet_bi", "ten_truong", "gia_tri", "nhiet_do", "do_am", "led1", "led2", "led3"]
 
 # ---------------------------------------------------------------------------
 # Phan cung
@@ -112,6 +119,22 @@ def on_connect(client, userdata, connect_flags, reason_code, properties=None):
         client.subscribe(topic, qos=1)
 
 
+def ghi_log(topic, du_lieu):
+    """Ghi THEM 1 dong vao file CSV - dung y het du lieu vua in ra terminal
+    (lay tu tin nhan subscribe duoc), khong phai bien cuc bo cua Pi."""
+    can_tao_header = not FILE_LOG.exists() or FILE_LOG.stat().st_size == 0
+    dong = {
+        "thoi_gian": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "topic": topic,
+        **{cot: du_lieu.get(cot, "") for cot in COT_LOG if cot not in ("thoi_gian", "topic")},
+    }
+    with FILE_LOG.open("a", newline="", encoding="utf-8") as tep:
+        writer = csv.DictWriter(tep, fieldnames=COT_LOG)
+        if can_tao_header:
+            writer.writeheader()
+        writer.writerow(dong)
+
+
 def on_message(client, userdata, msg):
     dinh_dang = "json" if msg.topic.endswith("/json") else "form"
     try:
@@ -120,6 +143,7 @@ def on_message(client, userdata, msg):
         print(f"[doc] {msg.topic}: khong giai ma duoc ({loi})")
         return
     print(f"[doc] {msg.topic}: {du_lieu}")
+    ghi_log(msg.topic, du_lieu)
 
 
 # ---------------------------------------------------------------------------
@@ -151,7 +175,7 @@ def main():
     client.connect(MQTT_HOST, MQTT_PORT)
     client.loop_start()  # luong nen: nhan tin nhan "doc" chay song song vong lap gui
 
-    print(f"Broker: {MQTT_HOST}:{MQTT_PORT} | thiet bi: {TEN_THIET_BI} | nhip {NHIP_GIAY}s")
+    print(f"Broker: {MQTT_HOST}:{MQTT_PORT} | thiet bi: {TEN_THIET_BI} | nhip {NHIP_GIAY}s | log: {FILE_LOG}")
 
     vong = 0
     try:
