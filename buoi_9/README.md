@@ -20,12 +20,19 @@ Raspberry Pi với Grove Base Hat. Mỗi phía chỉ **một file Python duy nh�
 
 8 topic = `{gui, doc} × {tung, toanbo} × {json, form}`:
 
-| Topic | Vai trò |
-|---|---|
-| `buoi9/gui/tung/json`, `buoi9/gui/tung/form` | Pi **gửi từng** giá trị (nhiệt độ / độ ẩm / 1 LED) lên server |
-| `buoi9/gui/toanbo/json`, `buoi9/gui/toanbo/form` | Pi **gửi toàn bộ** (nhiệt độ + độ ẩm + cả 3 LED) lên server |
-| `buoi9/doc/tung/json`, `buoi9/doc/tung/form` | server phát lại từng giá trị mới nhất — subscribe để **đọc từng** |
-| `buoi9/doc/toanbo/json`, `buoi9/doc/toanbo/form` | server phát lại toàn bộ trạng thái mới nhất — subscribe để **đọc toàn bộ** |
+> **Lưu ý tên gọi:** "gui"/"doc" đặt theo đúng nguyên văn đề bài ("Topic dùng
+> để **gửi**... lên Server" / "Topic dùng để **đọc**... từ Server") — tức là
+> đặt theo **công dụng của topic**, KHÔNG PHẢI theo thiết bị nào đang publish.
+> Vì vậy **Server mới là bên publish lên topic "đọc"** (Pi subscribe để lấy
+> về), còn **Pi là bên publish lên topic "gửi"** (Server subscribe để nhận) —
+> dễ nhầm lẫn ngược lại nếu đọc lướt.
+
+| Topic | Ai publish | Ai subscribe | Retain? |
+|---|---|---|---|
+| `buoi9/gui/tung/json`, `buoi9/gui/tung/form` | **Pi** (gửi từng giá trị: nhiệt độ / độ ẩm / 1 LED) | Server | Không |
+| `buoi9/gui/toanbo/json`, `buoi9/gui/toanbo/form` | **Pi** (gửi toàn bộ: nhiệt độ + độ ẩm + cả 3 LED) | Server | Không |
+| `buoi9/doc/tung/json`, `buoi9/doc/tung/form` | **Server** (phát lại từng giá trị mới nhất) | Pi | **Có** |
+| `buoi9/doc/toanbo/json`, `buoi9/doc/toanbo/form` | **Server** (phát lại toàn bộ trạng thái mới nhất) | Pi | **Có** |
 
 | Yêu cầu của đề | Thực hiện ở đâu |
 |---|---|

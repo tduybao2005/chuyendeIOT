@@ -47,6 +47,11 @@ CHAN_LED_XANH = 24
 NHIP_GIAY = 1  # dieu khien den + doc cam bien + gui moi 1 giay
 
 # 8 topic = {gui, doc} x {tung, toanbo} x {json, form} - giong het server.py
+#
+# "gui"/"doc" la ten theo CONG DUNG (dung nguyen van de bai), KHONG PHAI ten
+# thiet bi dang publish:
+#   topic GUI  -> PI PUBLISH o day, server subscribe (server la noi nhan)
+#   topic DOC  -> Pi SUBSCRIBE o day (server moi la ben publish, co retain)
 GUI_TUNG = {"json": "buoi9/gui/tung/json", "form": "buoi9/gui/tung/form"}
 GUI_TOANBO = {"json": "buoi9/gui/toanbo/json", "form": "buoi9/gui/toanbo/form"}
 DOC_TOPICS = (

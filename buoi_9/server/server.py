@@ -71,6 +71,13 @@ if not MONGODB_URI:
 
 # ---------------------------------------------------------------------------
 # Topic - 8 topic = {gui, doc} x {tung, toanbo} x {json, form}
+#
+# "gui"/"doc" la TEN GOI THEO CONG DUNG cua topic (dung nguyen van de bai:
+# "Topic dung de GUI... len Server" / "Topic dung de DOC... tu Server"),
+# KHONG PHAI ten thiet bi nao dang publish. De khong nham:
+#
+#   topic GUI  -> Pi PUBLISH, SERVER SUBSCRIBE (server la noi NHAN du lieu)
+#   topic DOC  -> SERVER PUBLISH (retain=True), Pi SUBSCRIBE (Pi la noi DOC)
 # ---------------------------------------------------------------------------
 GUI_TUNG_JSON = "buoi9/gui/tung/json"
 GUI_TUNG_FORM = "buoi9/gui/tung/form"
