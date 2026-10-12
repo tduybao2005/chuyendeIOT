@@ -1,0 +1,176 @@
+"""
+Buoi 11+12 - SLAVE 2 (Pi nhom 3): LED3 + Buzzer + Relay + cam bien anh sang
++ LCD, va USB LoRa noi toi IoT node 3 (Light / Alarm Light, giong buoi 10).
+
+3 luong:
+  - chinh (moi 1 giay): doc anh sang + trang thai LED3/Buzzer/Relay + Light/
+    Alarm (lan doc LoRa gan nhat) -> UDP {"loai":"trang_thai",...} toi gateway,
+    hien len LCD; du 20 mau -> UDP {"loai":"trung_binh","anh_sang",...}.
+  - vong_nhan_lenh: UDP cong 5005 tu gateway -> bat/tat LED3/Buzzer/Relay
+    ngay, ghi nho lenh Light/Alarm cho luong LoRa.
+  - vong_lora: ghi Light (reg 9) / Alarm (reg 8) khi lenh doi, doc lai 2
+    reg nay lien tuc. Rieng 1 luong vi moi lan doc loi cho toi 3 giay - khong
+    duoc lam tre vong 1 giay.
+
+Cam day (Grove Base Hat):
+    LED 3              -> D18  (GPIO18)
+    Buzzer             -> D24  (GPIO24)
+    Relay              -> D26  (GPIO26)
+    Cam bien anh sang  -> A0   (ADC kenh 0)
+    LCD 16x2 JHD1802   -> I2C
+    USB LoRa           -> cong USB (/dev/ttyUSB0)
+
+Chay (cung thu muc voi trung_binh.py, IoT_Driver_USB.py):
+    IOT_GATEWAY_HOST=192.168.44.211 python3 slave2.py
+"""
+
+import json
+import os
+import socket
+import threading
+import time
+
+from gpiozero import LED, Buzzer, OutputDevice
+from grove.adc import ADC
+from grove.display.jhd1802 import JHD1802
+
+from IoT_Driver_USB import LORA_USB
+from trung_binh import CuaSoTrungBinh
+
+GATEWAY_HOST = os.environ.get("IOT_GATEWAY_HOST", "192.168.44.211")
+CONG_SLAVE2 = 5005
+CONG_GATEWAY = 5006
+LORA_COM = os.environ.get("IOT_LORA_COM", "/dev/ttyUSB0")
+NODE = 3
+REG_DEN = {"light": 9, "alarm": 8}  # giong buoi 10: reg 9 = Light, reg 8 = Alarm Light
+
+thiet_bi = {"led3": LED(18), "buzzer": Buzzer(24), "relay": OutputDevice(26)}
+adc = ADC(0x08)
+khoa = threading.Lock()
+node = {"light": None, "alarm": None, "lora_ok": False}  # lan doc LoRa gan nhat
+muon_node = {"light": None, "alarm": None}  # lenh master muon cho node 3
+
+try:
+    lcd = JHD1802()
+except OSError as loi:  # chua cam LCD -> van chay, chi khong hien thi
+    print("Khong thay LCD:", loi)
+    lcd = None
+
+
+def doc_anh_sang():
+    try:
+        return adc.read(0)  # 0-999 (phan nghin cua 3.3 V), cang sang cang lon
+    except Exception as loi:
+        print("Loi doc anh sang:", loi)
+        return None
+
+
+def hien_lcd(trang_thai, anh_sang):
+    if lcd is None:
+        return
+    dong1 = f"L3:{trang_thai['led3']} BZ:{trang_thai['buzzer']} RL:{trang_thai['relay']}"
+    dong2 = f"Anh sang:{'--' if anh_sang is None else anh_sang}"
+    try:
+        lcd.setCursor(0, 0)
+        lcd.write(dong1.ljust(16)[:16])
+        lcd.setCursor(1, 0)
+        lcd.write(dong2.ljust(16)[:16])
+    except OSError as loi:
+        print("Loi LCD:", loi)
+
+
+def vong_nhan_lenh():
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.bind(("0.0.0.0", CONG_SLAVE2))
+    while True:
+        goi, _ = sock.recvfrom(1024)
+        try:
+            lenh = json.loads(goi)
+            for ten, tb in thiet_bi.items():
+                if ten in lenh:
+                    tb.on() if lenh[ten] else tb.off()
+            with khoa:
+                for ten in REG_DEN:
+                    if ten in lenh:
+                        muon_node[ten] = int(lenh[ten])
+        except Exception as loi:
+            print("Lenh UDP hong:", loi, goi)
+
+
+def vong_lora():
+    try:
+        lora = LORA_USB(COM=LORA_COM, address=0)
+    except Exception as loi:
+        print("Khong mo duoc USB LoRa:", loi)
+        return
+    da_ghi = {"light": None, "alarm": None}
+    while True:
+        with khoa:
+            muon = dict(muon_node)
+        for ten, reg in REG_DEN.items():
+            if muon[ten] is not None and muon[ten] != da_ghi[ten]:
+                lora.write_data(NODE, reg, muon[ten])
+                da_ghi[ten] = muon[ten]
+                time.sleep(0.3)
+        for ten, reg in REG_DEN.items():
+            lora.ser.reset_input_buffer()
+            gia_tri = lora.read_data(NODE, reg)
+            with khoa:
+                node["lora_ok"] = gia_tri != -1
+                if gia_tri != -1:
+                    node[ten] = 1 if gia_tri else 0
+            if gia_tri != -1 and muon[ten] is not None and (1 if gia_tri else 0) != muon[ten]:
+                da_ghi[ten] = None  # node chua theo lenh (mat goi / node khoi dong lai) -> ghi lai
+            time.sleep(0.3)
+
+
+def main():
+    threading.Thread(target=vong_nhan_lenh, daemon=True).start()
+    threading.Thread(target=vong_lora, daemon=True).start()
+    udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    def gui(goi):
+        try:
+            udp.sendto(json.dumps(goi).encode(), (GATEWAY_HOST, CONG_GATEWAY))
+        except OSError as loi:
+            print("Khong gui duoc toi gateway:", loi)
+
+    if lcd:
+        lcd.clear()
+    print(f"Slave 2 -> gateway {GATEWAY_HOST}:{CONG_GATEWAY} | nghe lenh UDP :{CONG_SLAVE2} | LoRa {LORA_COM}")
+    cua_so = CuaSoTrungBinh()
+    nhip = time.monotonic()
+    try:
+        while True:
+            anh_sang = doc_anh_sang()
+            trang_thai = {ten: int(bool(tb.value)) for ten, tb in thiet_bi.items()}
+            with khoa:
+                trang_thai.update(node)
+            gui({"loai": "trang_thai", **trang_thai})
+            trung_binh = cua_so.them({"anh_sang": anh_sang})
+            if trung_binh:
+                gui({"loai": "trung_binh", **trung_binh})
+                print("[GUI TRUNG BINH 20s]", trung_binh)
+            hien_lcd(trang_thai, anh_sang)
+            print(f"anh sang {anh_sang} | {trang_thai}")
+
+            nhip += 1
+            con_lai = nhip - time.monotonic()
+            if con_lai > 0:
+                time.sleep(con_lai)
+            else:
+                nhip = time.monotonic()
+    except KeyboardInterrupt:
+        print("\nDa dung slave 2.")
+    finally:
+        for tb in thiet_bi.values():
+            tb.off()
+        if lcd:
+            try:
+                lcd.clear()
+            except OSError:
+                pass
+
+
+if __name__ == "__main__":
+    main()
