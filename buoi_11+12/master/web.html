@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IoT buổi 11+12</title>
+<style>
+body{font-family:sans-serif;max-width:640px;margin:1em auto;padding:0 1em}
+.o{border:1px solid #ccc;border-radius:8px;padding:.6em 1em;margin:.7em 0}
+button{padding:.5em 1em;margin:.2em;border:1px solid #888;border-radius:6px;background:#ddd;cursor:pointer}
+button.on{background:#4c4}button:disabled{opacity:.5;cursor:default}
+.mat{color:#c00}input[type=number]{width:5em}
+</style></head><body>
+<h2>IoT - Buổi 11+12</h2>
+<p id="loi" class="mat"></p>
+<div class="o"><b>Slave 1 (pi4-tdbao)</b> <span id="kn_slave1" class="mat"></span><br>
+Nhiệt độ: <span id="nhiet_do">-</span> °C &nbsp; Độ ẩm: <span id="do_am">-</span> %<br>
+Biến trở: <span id="bien_tro">-</span> V &nbsp; Khoảng cách: <span id="khoang_cach">-</span> cm<br>
+<small>Trung bình 20 giây - lúc <span id="luc_slave1">-</span></small><br>
+<button id="led1" onclick="bam('led1')">LED 1</button><button id="led2" onclick="bam('led2')">LED 2</button></div>
+<div class="o"><b>Slave 2 (Pi nhóm 3)</b> <span id="kn_slave2" class="mat"></span><br>
+Ánh sáng: <span id="anh_sang">-</span> <small>(trung bình 20 giây - lúc <span id="luc_slave2">-</span>)</small><br>
+<button id="led3" onclick="bam('led3')">LED 3</button><button id="buzzer" onclick="bam('buzzer')">Buzzer</button><button id="relay" onclick="bam('relay')">Relay</button></div>
+<div class="o"><b>Node 3 (LoRa)</b> <span id="kn_lora" class="mat"></span><br>
+<button id="light" onclick="bam('light')">Light</button><button id="alarm" onclick="bam('alarm')">Alarm Light</button><br>
+<label><input type="radio" name="che_do" value="tay"> Thủ công</label>
+<label><input type="radio" name="che_do" value="tu_dong"> Tự động</label><br>
+Light: bật <input type="time" id="light_bat"> tắt <input type="time" id="light_tat"><br>
+Alarm Light: bật <input type="time" id="alarm_bat"> tắt <input type="time" id="alarm_tat"><br>
+<button onclick="setLich()">Set</button> <span id="kq_lich"></span></div>
+<div class="o"><b>Ngưỡng</b> - vượt 1 trong 2 thì bật các đèn đã chọn<br>
+Nhiệt độ ≥ <input type="number" id="ng_nhiet_do" step="0.1"> °C &nbsp;
+Độ ẩm ≥ <input type="number" id="ng_do_am" step="0.1"> %<br>
+<label><input type="checkbox" id="ng_led1"> LED 1</label>
+<label><input type="checkbox" id="ng_led2"> LED 2</label>
+<label><input type="checkbox" id="ng_led3"> LED 3</label><br>
+<button onclick="setNguong()">Set</button> <span id="kq_nguong"></span><br>
+<small>Đang vượt ngưỡng: <span id="vuot">-</span></small></div>
+<script>
+const $ = id => document.getElementById(id);
+const TEN = {led1: "LED 1", led2: "LED 2", led3: "LED 3", buzzer: "Buzzer", relay: "Relay", light: "Light", alarm: "Alarm Light"};
+const bt = v => v == null ? "?" : v ? "BẬT" : "TẮT";
+let tt = null;
+
+async function gui(url, du_lieu) {
+  const r = await fetch(url, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(du_lieu)});
+  const kq = await r.json();
+  if (!r.ok) throw new Error(kq.loi);
+  return kq;
+}
+function dienLich(l) {
+  document.querySelector(`input[name=che_do][value=${l.che_do}]`).checked = true;
+  for (const d of ["light", "alarm"]) { $(d + "_bat").value = l[d].bat; $(d + "_tat").value = l[d].tat; }
+}
+function dienNguong(n) {
+  $("ng_nhiet_do").value = n.nhiet_do ?? ""; $("ng_do_am").value = n.do_am ?? "";
+  for (const k of ["led1", "led2", "led3"]) $("ng_" + k).checked = n.den[k];
+}
+async function lam() {
+  try {
+    const moi = await (await fetch("/api/trang_thai", {cache: "no-store"})).json();
+    // Form chi dien 1 lan khi mo trang: vong 1 giay KHONG ghi de len thu dang go
+    if (!tt) { dienLich(moi.lich); dienNguong(moi.nguong); }
+    tt = moi; $("loi").textContent = "";
+  } catch (e) { $("loi").textContent = "Không kết nối được master"; return; }
+  for (const k of ["nhiet_do", "do_am", "bien_tro", "khoang_cach"]) $(k).textContent = tt.slave1.trung_binh[k] ?? "-";
+  $("anh_sang").textContent = tt.slave2.trung_binh.anh_sang ?? "-";
+  for (const s of ["slave1", "slave2"]) {
+    $("luc_" + s).textContent = tt[s].luc_trung_binh ?? "-";
+    $("kn_" + s).textContent = tt[s].ket_noi ? "" : "(mất kết nối)";
+  }
+  $("kn_lora").textContent = tt.slave2.trang_thai.lora_ok ? "" : "(LoRa không phản hồi)";
+  const doc = {...tt.slave1.trang_thai, ...tt.slave2.trang_thai};  // gia tri slave doc that moi giay
+  for (const k in TEN) { $(k).textContent = `${TEN[k]}: ${bt(doc[k])}`; $(k).className = doc[k] ? "on" : ""; }
+  $("light").disabled = $("alarm").disabled = tt.lich.che_do === "tu_dong";
+  $("vuot").textContent = tt.vuot_nguong ? "CÓ" : "không";
+}
+function bam(ten) {
+  if (!tt) return;
+  gui("/api/nut", {ten, gia_tri: 1 - tt.thu_cong[ten]}).then(lam).catch(e => { $("loi").textContent = e.message; });
+}
+async function setLich() {
+  try {
+    const l = await gui("/api/lich", {
+      che_do: document.querySelector("input[name=che_do]:checked").value,
+      light: {bat: $("light_bat").value, tat: $("light_tat").value},
+      alarm: {bat: $("alarm_bat").value, tat: $("alarm_tat").value},
+    });
+    dienLich(l);
+    $("kq_lich").textContent = `Đã lưu lúc ${l.luc}`;
+  } catch (e) { $("kq_lich").textContent = "Lỗi: " + e.message; }
+  lam();
+}
+async function setNguong() {
+  try {
+    const n = await gui("/api/nguong", {
+      nhiet_do: $("ng_nhiet_do").value, do_am: $("ng_do_am").value,
+      den: {led1: $("ng_led1").checked, led2: $("ng_led2").checked, led3: $("ng_led3").checked},
+    });
+    dienNguong(n);
+    $("kq_nguong").textContent = `Đã lưu lúc ${n.luc}`;
+  } catch (e) { $("kq_nguong").textContent = "Lỗi: " + e.message; }
+  lam();
+}
+setInterval(lam, 1000); lam();
+</script></body></html>
