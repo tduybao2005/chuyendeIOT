@@ -8,9 +8,8 @@ Buoi 11+12 - SLAVE 2 (Pi nhom 3): LED3 + Buzzer + Relay + cam bien anh sang
     hien len LCD; du 20 mau -> UDP {"loai":"trung_binh","anh_sang",...}.
   - vong_nhan_lenh: UDP cong 5005 tu gateway -> bat/tat LED3/Buzzer/Relay
     ngay, ghi nho lenh Light/Alarm cho luong LoRa.
-  - vong_lora: ghi Light (reg 9) / Alarm (reg 8) khi lenh doi, doc lai 2
-    reg nay lien tuc. Rieng 1 luong vi moi lan doc loi cho toi 3 giay - khong
-    duoc lam tre vong 1 giay.
+  - vong_lora: ghi Light (reg 9) / Alarm (reg 8), ghi lai moi ~2 giay. Rieng
+    1 luong de ghi LoRa cham/loi khong lam tre vong 1 giay.
 
 Cam day (Grove Base Hat):
     LED 3              -> D18  (GPIO18)
@@ -103,25 +102,26 @@ def vong_lora():
     except Exception as loi:
         print("Khong mo duoc USB LoRa:", loi)
         return
-    da_ghi = {"light": None, "alarm": None}
+    # Node 3 NHAN lenh ghi nhung khong tra loi lenh doc (do: 0 byte voi reg 4-9)
+    # -> khong doc lai duoc den that. Bao gia tri vua ghi, va GHI LAI moi ~2 giay
+    # de bu goi LoRa bi mat / node khoi dong lai. lora_ok = cong serial dang ghi
+    # duoc (khong co xac nhan tu node).
     while True:
         with khoa:
             muon = dict(muon_node)
-        for ten, reg in REG_DEN.items():
-            if muon[ten] is not None and muon[ten] != da_ghi[ten]:
-                lora.write_data(NODE, reg, muon[ten])
-                da_ghi[ten] = muon[ten]
-                time.sleep(0.3)
-        for ten, reg in REG_DEN.items():
-            lora.ser.reset_input_buffer()
-            gia_tri = lora.read_data(NODE, reg)
-            with khoa:
-                node["lora_ok"] = gia_tri != -1
-                if gia_tri != -1:
-                    node[ten] = 1 if gia_tri else 0
-            if gia_tri != -1 and muon[ten] is not None and (1 if gia_tri else 0) != muon[ten]:
-                da_ghi[ten] = None  # node chua theo lenh (mat goi / node khoi dong lai) -> ghi lai
-            time.sleep(0.3)
+        try:
+            for ten, reg in REG_DEN.items():
+                if muon[ten] is not None:
+                    lora.write_data(NODE, reg, muon[ten])
+                    time.sleep(0.3)
+            ok = True
+        except Exception as loi:
+            print("Loi ghi LoRa:", loi)
+            ok = False
+        with khoa:
+            node["lora_ok"] = ok and any(v is not None for v in muon.values())
+            node.update({ten: muon[ten] for ten in REG_DEN})
+        time.sleep(1.4)
 
 
 def main():
