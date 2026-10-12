@@ -1,0 +1,6 @@
+# Thu vien cho MASTER (laptop). Cai:
+#     python3 -m venv buoi_11+12/.venv
+#     buoi_11+12/.venv/bin/pip install -r buoi_11+12/requirements.txt
+paho-mqtt>=2.1    # ket noi EMQX
+pymongo>=4.9      # MongoDB Atlas
+pytest>=8         # chay tests/
