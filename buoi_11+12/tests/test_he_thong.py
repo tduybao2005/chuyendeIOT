@@ -16,8 +16,6 @@ from he_thong import (
 
 
 class Gia:
-    """Gia lap MQTT publish + Database + dong ho cho HeThong."""
-
     def __init__(self):
         self.da_publish = []
         self.db = []
@@ -57,7 +55,6 @@ def nhan_tb(ht, nhiet_do, do_am):
     ht.nhan_mqtt(SLAVE1_TRUNG_BINH, json.dumps(goi).encode())
 
 
-# --- lich ---------------------------------------------------------------
 def test_trong_khung():
     assert trong_khung("18:00", "06:00", "23:00")
     assert trong_khung("18:00", "06:00", "05:59")
@@ -125,7 +122,6 @@ def test_lich_sai_bi_tu_choi_giu_nguyen_cu(ht):
     assert lich["che_do"] == "tu_dong" and lich["light"]["bat"] == "18:00"
 
 
-# --- nut bam ------------------------------------------------------------
 def test_bam_nut_publish_dieu_khien(ht, gia):
     ht.bam_nut("led1", 1)
     assert dk_cuoi(gia)["led1"] == 1
@@ -157,7 +153,6 @@ def test_gui_lai_publish_du_khong_doi(ht, gia):
     assert len(gia.da_publish) == n + 1
 
 
-# --- nguong -------------------------------------------------------------
 def test_nguong_vuot_nhiet_do_bat_den_da_chon(ht, gia):
     ht.luu_nguong(NGUONG)
     nhan_tb(ht, 31, 50)
@@ -224,7 +219,6 @@ def test_trung_binh_co_none_khong_loi(ht, gia):
     assert dk_cuoi(gia)["led1"] == 0
 
 
-# --- nhan du lieu tu slave ----------------------------------------------
 def test_nhan_trang_thai_luu_db_kem_thoi_gian_master(ht, gia):
     goi = {"led3": 1, "buzzer": 0, "relay": 1, "light": 0, "alarm": None, "lora_ok": False}
     ht.nhan_mqtt(SLAVE2_TRANG_THAI, json.dumps(goi).encode())
@@ -233,7 +227,7 @@ def test_nhan_trang_thai_luu_db_kem_thoi_gian_master(ht, gia):
     assert ban_ghi["led3"] == 1 and ban_ghi["thoi_gian"] == gia.luc
     chup = ht.anh_chup()
     assert chup["slave2"]["trang_thai"]["relay"] == 1
-    json.dumps(chup)  # web nhan duoc: khong con datetime trong anh chup
+    json.dumps(chup)
 
 
 def test_moi_goi_trang_thai_la_1_ban_ghi(ht, gia):
@@ -270,7 +264,6 @@ def test_mat_ket_noi_sau_5_giay(ht, gia):
     assert ht.anh_chup()["slave2"]["ket_noi"] is False
 
 
-# --- nap cai dat tu Database khi khoi dong ------------------------------
 def test_nap_cai_dat_tu_db(ht):
     ht.nap_cai_dat(
         {"_id": "x", "loai": "lich", **LICH, "luc": "10:00:00"},

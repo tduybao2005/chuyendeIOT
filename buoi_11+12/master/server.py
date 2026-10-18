@@ -1,17 +1,3 @@
-"""
-Buoi 11+12 - MASTER (laptop): MQTT (EMQX) + web HTTP + MongoDB Atlas.
-
-- Subscribe 4 topic du lieu cua 2 slave -> HeThong (luu Database, tinh lai).
-- Publish (retain) buoi11/dieu_khien moi khi lenh 7 dau ra thay doi.
-- Web: http://localhost:8000 (poll /api/trang_thai moi giay).
-- Ghi Mongo o 1 luong rieng qua hang doi: Atlas cham / mat mang khong lam
-  dung web hay lenh dieu khien.
-
-Chay:
-    cd buoi_11+12/master && cp .env.example .env    # dien MONGODB_URI
-    ../.venv/bin/python server.py
-"""
-
 import json
 import os
 import queue
@@ -91,13 +77,13 @@ def on_connect(client, userdata, connect_flags, reason_code, properties=None):
 def on_message(client, userdata, msg):
     try:
         he_thong.nhan_mqtt(msg.topic, msg.payload)
-    except Exception as loi:  # paho 2: loi lot ra callback se lam chet luong MQTT
+    except Exception as loi:
         print(f"[{msg.topic}] LOI: {loi} | {msg.payload!r}")
 
 
 def vong_1_giay():
     while True:
-        he_thong.tinh_lai()  # che do tu dong: Light/Alarm doi theo gio
+        he_thong.tinh_lai()
         sleep(1)
 
 
@@ -144,7 +130,7 @@ class Handler(BaseHTTPRequestHandler):
                 ket_qua = he_thong.luu_nguong(du_lieu)
             else:
                 return self.tra(404, '{"loi": "khong co API nay"}')
-        except ValueError as loi:  # LoiDuLieu + JSON hong
+        except ValueError as loi:
             return self.tra(400, json.dumps({"loi": str(loi)}))
         self.tra(200, json.dumps(ket_qua))
 

@@ -56,7 +56,6 @@ function dienNguong(n) {
 async function lam() {
   try {
     const moi = await (await fetch("/api/trang_thai", {cache: "no-store"})).json();
-    // Form chi dien 1 lan khi mo trang: vong 1 giay KHONG ghi de len thu dang go
     if (!tt) { dienLich(moi.lich); dienNguong(moi.nguong); }
     tt = moi; $("loi").textContent = "";
   } catch (e) { $("loi").textContent = "Không kết nối được master"; return; }
@@ -67,7 +66,7 @@ async function lam() {
     $("kn_" + s).textContent = tt[s].ket_noi ? "" : "(mất kết nối)";
   }
   $("kn_lora").textContent = tt.slave2.trang_thai.lora_ok ? "" : "(LoRa không phản hồi)";
-  const doc = {...tt.slave1.trang_thai, ...tt.slave2.trang_thai};  // gia tri slave doc that moi giay
+  const doc = {...tt.slave1.trang_thai, ...tt.slave2.trang_thai};
   for (const k in TEN) { $(k).textContent = `${TEN[k]}: ${bt(doc[k])}`; $(k).className = doc[k] ? "on" : ""; }
   $("light").disabled = $("alarm").disabled = tt.lich.che_do === "tu_dong";
   $("vuot").textContent = tt.vuot_nguong ? "CÓ" : "không";

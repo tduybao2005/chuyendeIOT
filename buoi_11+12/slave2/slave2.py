@@ -1,28 +1,3 @@
-"""
-Buoi 11+12 - SLAVE 2 (Pi nhom 3): LED3 + Buzzer + Relay + cam bien anh sang
-+ LCD, va USB LoRa noi toi IoT node 3 (Light / Alarm Light, giong buoi 10).
-
-3 luong:
-  - chinh (moi 1 giay): doc anh sang + trang thai LED3/Buzzer/Relay + Light/
-    Alarm (lan doc LoRa gan nhat) -> UDP {"loai":"trang_thai",...} toi gateway,
-    hien len LCD; du 20 mau -> UDP {"loai":"trung_binh","anh_sang",...}.
-  - vong_nhan_lenh: UDP cong 5005 tu gateway -> bat/tat LED3/Buzzer/Relay
-    ngay, ghi nho lenh Light/Alarm cho luong LoRa.
-  - vong_lora: ghi Light (reg 9) / Alarm (reg 8), ghi lai moi ~2 giay. Rieng
-    1 luong de ghi LoRa cham/loi khong lam tre vong 1 giay.
-
-Cam day (Grove Base Hat):
-    LED 3              -> D18  (GPIO18)
-    Buzzer             -> D24  (GPIO24)
-    Relay              -> D26  (GPIO26)
-    Cam bien anh sang  -> A0   (ADC kenh 0)
-    LCD 16x2 JHD1802   -> I2C
-    USB LoRa           -> cong USB (/dev/ttyUSB0)
-
-Chay (cung thu muc voi trung_binh.py, IoT_Driver_USB.py):
-    IOT_GATEWAY_HOST=192.168.44.211 python3 slave2.py
-"""
-
 import json
 import os
 import socket
@@ -35,19 +10,17 @@ from grove.adc import ADC
 try:
     from grove.display.jhd1802 import JHD1802
 except ImportError:
-    # grove.py ban cu (0.6) khong co grove.display -> tu gui lenh I2C cho LCD,
-    # giong het grove/display/jhd1802.py ban moi.
     import smbus2
 
     class JHD1802:
         def __init__(self, address=0x3E):
             self._bus = smbus2.SMBus(1)
             self._addr = address
-            self._bus.write_byte(address, 0)  # chua cam LCD -> OSError
+            self._bus.write_byte(address, 0)
             self._lenh(0x02)
             time.sleep(0.1)
-            self._lenh(0x08 | 0x04)  # bat man hinh, khong hien con tro
-            self._lenh(0x28)  # 2 dong
+            self._lenh(0x08 | 0x04)
+            self._lenh(0x28)
 
         def _lenh(self, ma):
             self._bus.write_byte_data(self._addr, 0x80, ma)
@@ -72,25 +45,25 @@ CONG_SLAVE2 = 5005
 CONG_GATEWAY = 5006
 LORA_COM = os.environ.get("IOT_LORA_COM", "/dev/ttyUSB0")
 NODE = 3
-REG_DEN = {"light": 9, "alarm": 8}  # giong buoi 10: reg 9 = Light, reg 8 = Alarm Light
+REG_DEN = {"light": 9, "alarm": 8}
 
 thiet_bi = {"led3": LED(18), "buzzer": Buzzer(24), "relay": OutputDevice(26)}
 adc = ADC(0x08)
 khoa = threading.Lock()
-node = {"light": None, "alarm": None, "lora_ok": False}  # lan doc LoRa gan nhat
-muon_node = {"light": None, "alarm": None}  # lenh master muon cho node 3
-co_lenh_moi = threading.Event()  # danh thuc vong_lora ngay khi Light/Alarm doi
+node = {"light": None, "alarm": None, "lora_ok": False}
+muon_node = {"light": None, "alarm": None}
+co_lenh_moi = threading.Event()
 
 try:
     lcd = JHD1802()
-except OSError as loi:  # chua cam LCD -> van chay, chi khong hien thi
+except OSError as loi:
     print("Khong thay LCD:", loi)
     lcd = None
 
 
 def doc_anh_sang():
     try:
-        return adc.read(0)  # 0-999 (phan nghin cua 3.3 V), cang sang cang lon
+        return adc.read(0)
     except Exception as loi:
         print("Loi doc anh sang:", loi)
         return None
@@ -135,10 +108,6 @@ def vong_lora():
     except Exception as loi:
         print("Khong mo duoc USB LoRa:", loi)
         return
-    # Node 3 NHAN lenh ghi nhung khong tra loi lenh doc (do: 0 byte voi reg 4-9)
-    # -> khong doc lai duoc den that. Bao gia tri vua ghi, va GHI LAI moi ~2 giay
-    # de bu goi LoRa bi mat / node khoi dong lai. lora_ok = cong serial dang ghi
-    # duoc (khong co xac nhan tu node).
     while True:
         with khoa:
             muon = dict(muon_node)

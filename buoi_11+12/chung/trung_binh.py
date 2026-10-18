@@ -1,12 +1,3 @@
-"""
-Buoi 11+12 - cua so trung binh dung chung cho 2 slave (copy file nay len ca 2 Pi).
-
-Moi giay goi them() 1 lan voi 1 mau {ten_cam_bien: gia_tri hoac None}. Du
-SO_MAU lan (20 lan = 20 giay) thi tra ve trung binh tung cam bien de gui 1
-goi tin ve master - giong buoi 5 gom 20 giay roi moi gui ThingSpeak. Lan doc
-loi (None) khong tinh vao trung binh; ca 20 lan deu loi thi ra None.
-"""
-
 SO_MAU = 20
 
 

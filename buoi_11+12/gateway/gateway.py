@@ -1,16 +1,3 @@
-"""
-Buoi 11+12 - GATEWAY (pi4-tdbao): cau noi MQTT (master) <-> UDP (slave 2).
-
-- Subscribe buoi11/dieu_khien -> gui lenh led3/buzzer/relay/light/alarm cho
-  slave 2 qua UDP (cong 5005) ngay khi co lenh moi, va NHAC LAI moi 1 giay:
-  UDP co the mat goi, lenh la TRANG THAI (0/1) nen gui lap lai khong sao.
-- Nhan UDP tu slave 2 (cong 5006) {"loai": "trang_thai"|"trung_binh", ...}
-  -> publish len buoi11/slave2/<loai> cho master.
-
-Chay:
-    IOT_MQTT_HOST=192.168.44.179 IOT_SLAVE2_HOST=192.168.44.176 python3 gateway.py
-"""
-
 import json
 import os
 import socket
@@ -22,13 +9,13 @@ import paho.mqtt.client as mqtt
 MQTT_HOST = os.environ.get("IOT_MQTT_HOST", "192.168.44.179")
 MQTT_PORT = int(os.environ.get("IOT_MQTT_PORT", "1883"))
 SLAVE2_HOST = os.environ.get("IOT_SLAVE2_HOST", "192.168.44.176")
-CONG_SLAVE2 = 5005  # slave 2 nghe lenh
-CONG_GATEWAY = 5006  # gateway nghe du lieu slave 2
+CONG_SLAVE2 = 5005
+CONG_GATEWAY = 5006
 DIEU_KHIEN = "buoi11/dieu_khien"
 LENH_SLAVE2 = ("led3", "buzzer", "relay", "light", "alarm")
 LOAI_HOP_LE = ("trang_thai", "trung_binh")
 
-lenh = {}  # rong cho toi khi master gui lenh dau tien
+lenh = {}
 khoa = threading.Lock()
 udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp.bind(("0.0.0.0", CONG_GATEWAY))

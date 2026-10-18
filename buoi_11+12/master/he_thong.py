@@ -1,14 +1,3 @@
-"""
-Buoi 11+12 - LOGIC cua MASTER, tach rieng khoi MQTT/HTTP/Mongo de test duoc.
-
-HeThong giu: du lieu doc ve tu 2 slave, nut bam tren web (thu_cong), lich
-Light/Alarm Light, bang nguong. Moi khi co thay doi thi tinh lai lenh cho 7
-dau ra va publish (chi khi khac lan truoc) len buoi11/dieu_khien.
-
-"Set" tren web = THAY TOAN BO cai dat cu bang ban moi (khong tron voi ban
-cu, o trong / bo tick deu co nghia) -> khong bao gio "ket o lan luu truoc".
-"""
-
 import copy
 import json
 import re
@@ -32,18 +21,18 @@ TOPIC_NHAN = {
 DAU_RA = ("led1", "led2", "led3", "buzzer", "relay", "light", "alarm")
 DEN_NODE = ("light", "alarm")
 LED_NGUONG = ("led1", "led2", "led3")
-MAT_KET_NOI_GIAY = 5  # qua 5 giay khong nhan trang_thai -> web bao mat ket noi
+MAT_KET_NOI_GIAY = 5
 _GIO = re.compile(r"([01]\d|2[0-3]):[0-5]\d")
 
 
 class LoiDuLieu(ValueError):
-    """Du lieu gui len sai -> web nhan HTTP 400, cai dat cu giu nguyen."""
+    pass
 
 
 def trong_khung(bat, tat, bay_gio):
     if bat <= tat:
         return bat <= bay_gio < tat
-    return bay_gio >= bat or bay_gio < tat  # khung qua dem, vd 18:00 -> 06:00
+    return bay_gio >= bat or bay_gio < tat
 
 
 def kiem_tra_lich(du_lieu):
@@ -63,7 +52,7 @@ def kiem_tra_lich(du_lieu):
 
 def _so_hoac_none(gia_tri, ten):
     if gia_tri is None or (isinstance(gia_tri, str) and not gia_tri.strip()):
-        return None  # o trong = bo dieu kien nay
+        return None
     try:
         so = float(gia_tri)
     except (TypeError, ValueError):
@@ -80,7 +69,7 @@ def kiem_tra_nguong(du_lieu):
     return {
         "nhiet_do": _so_hoac_none(du_lieu.get("nhiet_do"), "nhiet_do"),
         "do_am": _so_hoac_none(du_lieu.get("do_am"), "do_am"),
-        "den": {ten: den.get(ten) is True for ten in LED_NGUONG},  # khong tick / thieu = khong chon
+        "den": {ten: den.get(ten) is True for ten in LED_NGUONG},
     }
 
 
@@ -94,8 +83,8 @@ def vuot_nguong(nguong, trung_binh):
 
 class HeThong:
     def __init__(self, publish, luu_db, bay_gio=lambda: datetime.now(VN)):
-        self._publish = publish  # publish(topic, chuoi_json)
-        self._luu_db = luu_db  # luu_db(ten_collection, document)
+        self._publish = publish
+        self._luu_db = luu_db
         self._bay_gio = bay_gio
         self._khoa = threading.RLock()
         self._da_gui = None
@@ -113,7 +102,6 @@ class HeThong:
         }
         self.dieu_khien = dict.fromkeys(DAU_RA, 0)
 
-    # --- du lieu tu slave -------------------------------------------------
     def nhan_mqtt(self, topic, payload):
         if topic not in TOPIC_NHAN:
             return
@@ -121,15 +109,14 @@ class HeThong:
         if not isinstance(du_lieu, dict):
             raise LoiDuLieu("payload phai la JSON object")
         nguon, loai = TOPIC_NHAN[topic]
-        luc = self._bay_gio()  # gio master - dong ho Pi nhom 3 bi sai
+        luc = self._bay_gio()
         with self._khoa:
             self.slave[nguon][loai] = du_lieu
             self.slave[nguon]["luc_" + loai] = luc
         self._luu_db(loai, {**du_lieu, "nguon": nguon, "thoi_gian": luc})
         if topic == SLAVE1_TRUNG_BINH:
-            self.tinh_lai()  # nhiet do/do am moi -> xet lai nguong
+            self.tinh_lai()
 
-    # --- tu web -----------------------------------------------------------
     def bam_nut(self, ten, gia_tri):
         if ten not in DAU_RA:
             raise LoiDuLieu(f"khong co thiet bi '{ten}'")
@@ -140,7 +127,7 @@ class HeThong:
         return self.tinh_lai()
 
     def luu_lich(self, du_lieu):
-        moi = kiem_tra_lich(du_lieu)  # sai thi raise truoc khi dung vao cai dat cu
+        moi = kiem_tra_lich(du_lieu)
         return self._luu_cai_dat("lich", moi)
 
     def luu_nguong(self, du_lieu):
@@ -157,7 +144,6 @@ class HeThong:
         return copy.deepcopy(moi)
 
     def nap_cai_dat(self, lich, nguong):
-        """Lay lai lan Set cuoi cung (doc tu Database luc khoi dong). Hong thi bo qua."""
         with self._khoa:
             try:
                 self.lich = {**kiem_tra_lich(lich), "luc": lich.get("luc")}
@@ -168,7 +154,6 @@ class HeThong:
             except LoiDuLieu:
                 pass
 
-    # --- tinh lenh dieu khien ------------------------------------------------
     def tinh_dieu_khien(self):
         with self._khoa:
             ra = dict(self.thu_cong)
@@ -193,12 +178,10 @@ class HeThong:
             return dict(ra)
 
     def gui_lai(self):
-        """Publish lai du khong doi (vd vua ket noi lai broker)."""
         with self._khoa:
             self._da_gui = None
             return self.tinh_lai()
 
-    # --- cho web ------------------------------------------------------------
     def anh_chup(self):
         bay_gio = self._bay_gio()
         with self._khoa:
