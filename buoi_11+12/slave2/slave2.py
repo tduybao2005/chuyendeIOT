@@ -31,7 +31,38 @@ import time
 
 from gpiozero import LED, Buzzer, OutputDevice
 from grove.adc import ADC
-from grove.display.jhd1802 import JHD1802
+
+try:
+    from grove.display.jhd1802 import JHD1802
+except ImportError:
+    # grove.py ban cu (0.6) khong co grove.display -> tu gui lenh I2C cho LCD,
+    # giong het grove/display/jhd1802.py ban moi.
+    import smbus2
+
+    class JHD1802:
+        def __init__(self, address=0x3E):
+            self._bus = smbus2.SMBus(1)
+            self._addr = address
+            self._bus.write_byte(address, 0)  # chua cam LCD -> OSError
+            self._lenh(0x02)
+            time.sleep(0.1)
+            self._lenh(0x08 | 0x04)  # bat man hinh, khong hien con tro
+            self._lenh(0x28)  # 2 dong
+
+        def _lenh(self, ma):
+            self._bus.write_byte_data(self._addr, 0x80, ma)
+
+        def clear(self):
+            self._lenh(0x01)
+            time.sleep(0.002)
+
+        def setCursor(self, dong, cot):
+            self._lenh(0x40 * dong + cot % 0x10 + 0x80)
+
+        def write(self, chuoi):
+            for ky_tu in chuoi:
+                self._bus.write_byte_data(self._addr, 0x40, ord(ky_tu))
+
 
 from IoT_Driver_USB import LORA_USB
 from trung_binh import CuaSoTrungBinh
@@ -48,6 +79,7 @@ adc = ADC(0x08)
 khoa = threading.Lock()
 node = {"light": None, "alarm": None, "lora_ok": False}  # lan doc LoRa gan nhat
 muon_node = {"light": None, "alarm": None}  # lenh master muon cho node 3
+co_lenh_moi = threading.Event()  # danh thuc vong_lora ngay khi Light/Alarm doi
 
 try:
     lcd = JHD1802()
@@ -90,8 +122,9 @@ def vong_nhan_lenh():
                     tb.on() if lenh[ten] else tb.off()
             with khoa:
                 for ten in REG_DEN:
-                    if ten in lenh:
+                    if ten in lenh and muon_node[ten] != int(lenh[ten]):
                         muon_node[ten] = int(lenh[ten])
+                        co_lenh_moi.set()
         except Exception as loi:
             print("Lenh UDP hong:", loi, goi)
 
@@ -121,7 +154,8 @@ def vong_lora():
         with khoa:
             node["lora_ok"] = ok and any(v is not None for v in muon.values())
             node.update({ten: muon[ten] for ten in REG_DEN})
-        time.sleep(1.4)
+        co_lenh_moi.wait(1.4)
+        co_lenh_moi.clear()
 
 
 def main():
