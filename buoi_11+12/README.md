@@ -55,4 +55,39 @@ LoRa node 3 (giống buổi 10): reg 9 = Light, reg 8 = Alarm Light.
 - Ngưỡng: nhiệt độ TB ≥ T **hoặc** độ ẩm TB ≥ H → các LED đã tick bị ép BẬT; hết vượt → theo nút. Ô trống = bỏ điều kiện đó.
 - Mỗi lần **Set** thay toàn bộ cài đặt cũ (lưu vào collection `cai_dat`, khởi động lại master sẽ nạp bản cuối).
 - Thời gian bản ghi do master gán (đồng hồ Pi nhóm 3 bị sai).
+- Node 3 nhận lệnh ghi LoRa nhưng **không trả lời lệnh đọc** → Light / Alarm Light trên web là giá trị vừa ghi (slave 2 ghi lại mỗi ~2 s để bù gói mất). Không có USB LoRa thì hiện "-" và "(LoRa không phản hồi)", phần còn lại vẫn chạy.
 - Pi nhóm 3: đã tắt AutorunProg (supervisord) để không tranh GPIO/LCD. Bật lại: sửa `autostart=true`, `autorestart=true` trong `/etc/supervisor/conf.d/AutorunProg.conf` rồi `sudo supervisorctl update`.
+
+## 4. Chạy
+
+**Laptop (master)** — EMQX đã chạy sẵn (`systemctl status emqx`):
+```bash
+cd buoi_11+12
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+cd master && cp .env.example .env   # dien MONGODB_URI (dung lai cua buoi 9)
+../.venv/bin/python server.py       # web: http://localhost:8000
+```
+(Laptop có ROS: chạy `env -u PYTHONPATH ../.venv/bin/python server.py`.)
+
+**pi4-tdbao** — copy `chung/trung_binh.py`, `slave1/slave1.py`, `gateway/gateway.py` vào `~/iot_buoi11/`:
+```bash
+cd ~/iot_buoi11
+IOT_MQTT_HOST=<IP laptop> nohup python3 -u slave1.py > slave1.log 2>&1 &
+IOT_MQTT_HOST=<IP laptop> IOT_SLAVE2_HOST=<IP Pi slave 2> nohup python3 -u gateway.py > gateway.log 2>&1 &
+```
+
+**Pi Slave 2** — copy `chung/trung_binh.py`, `slave2/slave2.py`, `slave2/IoT_Driver_USB.py` vào `~/iot_buoi11/`:
+```bash
+cd ~/iot_buoi11
+IOT_GATEWAY_HOST=<IP pi4-tdbao> nohup python3 -u slave2.py > slave2.log 2>&1 &
+```
+IP đổi theo mạng (DHCP) → xem bằng `ip -4 -br addr` rồi sửa biến môi trường. Mặc định trong code là mạng trường: laptop 192.168.44.179, pi4-tdbao 192.168.44.211, Pi nhóm 3 192.168.44.176.
+
+Pi Slave 2 phải **không còn chương trình nào khác giữ GPIO 18/24/26 hoặc LCD** (vd supervisord của bài cũ) — kiểm tra bằng `pgrep -af python3`. grove.py bản cũ (0.6, không có `grove.display`) vẫn chạy được: `slave2.py` tự điều khiển LCD qua I2C.
+
+## 5. Kiểm thử
+
+- Logic master + trung bình 20 mẫu: `cd buoi_11+12 && .venv/bin/pytest -q` (máy có ROS: thêm `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1` phía trước)
+- Xem dữ liệu chạy trên broker: `mosquitto_sub -h localhost -t 'buoi11/#' -v`
+- Gửi lệnh tay (không qua web): `mosquitto_pub -h localhost -t buoi11/dieu_khien -r -m '{"led1":1,"led2":0,"led3":0,"buzzer":0,"relay":0,"light":0,"alarm":0}'` (xong thì xóa retained: `mosquitto_pub -h localhost -t buoi11/dieu_khien -r -n`)
+- Database: MongoDB Atlas → DB `iot_buoi11`, collection `trang_thai` (mỗi giây), `trung_binh` (mỗi 20 giây), `cai_dat` (mỗi lần Set).
