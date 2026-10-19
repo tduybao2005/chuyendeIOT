@@ -55,7 +55,7 @@ LoRa node 3 (giống buổi 10): reg 9 = Light, reg 8 = Alarm Light.
 - Ngưỡng: nhiệt độ TB ≥ T **hoặc** độ ẩm TB ≥ H → các LED đã tick bị ép BẬT; hết vượt → theo nút. Ô trống = bỏ điều kiện đó.
 - Mỗi lần **Set** thay toàn bộ cài đặt cũ (lưu vào collection `cai_dat`, khởi động lại master sẽ nạp bản cuối).
 - Thời gian bản ghi do master gán (đồng hồ Pi nhóm 3 bị sai).
-- Node 3 nhận lệnh ghi LoRa nhưng **không trả lời lệnh đọc** → Light / Alarm Light trên web là giá trị vừa ghi (slave 2 ghi lại mỗi ~2 s để bù gói mất). Không có USB LoRa thì hiện "-" và "(LoRa không phản hồi)", phần còn lại vẫn chạy.
+- LoRa: slave 2 ghi Light (reg 9) / Alarm (reg 8) rồi **đọc lại** 2 reg này để web hiện trạng thái thật của node 3; node chưa theo lệnh thì ghi lại. Node 3 chỉ trả lời khi địa chỉ master trong khung lệnh = **9** (dongle CP2102 trên trường; địa chỉ 0 như buổi 10 thì node không trả lời) — đổi bằng `IOT_LORA_DIA_CHI`. Không có USB LoRa / node tắt thì hiện "(LoRa không phản hồi)", phần còn lại vẫn chạy.
 - Pi nhóm 3: đã tắt AutorunProg (supervisord) để không tranh GPIO/LCD. Bật lại: sửa `autostart=true`, `autorestart=true` trong `/etc/supervisor/conf.d/AutorunProg.conf` rồi `sudo supervisorctl update`.
 
 ## 4. Chạy

@@ -44,6 +44,7 @@ GATEWAY_HOST = os.environ.get("IOT_GATEWAY_HOST", "192.168.44.211")
 CONG_SLAVE2 = 5005
 CONG_GATEWAY = 5006
 LORA_COM = os.environ.get("IOT_LORA_COM", "/dev/ttyUSB0")
+LORA_DIA_CHI = int(os.environ.get("IOT_LORA_DIA_CHI", "9"))
 NODE = 3
 REG_DEN = {"light": 9, "alarm": 8}
 
@@ -104,26 +105,48 @@ def vong_nhan_lenh():
 
 def vong_lora():
     try:
-        lora = LORA_USB(COM=LORA_COM, address=0)
+        lora = LORA_USB(COM=LORA_COM, address=LORA_DIA_CHI)
     except Exception as loi:
         print("Khong mo duoc USB LoRa:", loi)
         return
+    time.sleep(3)
+    da_ghi = {"light": None, "alarm": None}
+
+    def doc(reg):
+        lora.ser.reset_input_buffer()
+        gia_tri = lora.read_data(NODE, reg)
+        return None if gia_tri == -1 else (1 if gia_tri else 0)
+
     while True:
         with khoa:
             muon = dict(muon_node)
         try:
             for ten, reg in REG_DEN.items():
-                if muon[ten] is not None:
+                if muon[ten] is not None and muon[ten] != da_ghi[ten]:
                     lora.write_data(NODE, reg, muon[ten])
+                    da_ghi[ten] = muon[ten]
                     time.sleep(0.3)
-            ok = True
+            tra_loi = False
+            for ten, reg in REG_DEN.items():
+                gia_tri = doc(reg)
+                if gia_tri is not None and gia_tri != node[ten]:
+                    time.sleep(0.3)
+                    if doc(reg) != gia_tri:
+                        gia_tri = None
+                if gia_tri is not None:
+                    tra_loi = True
+                    with khoa:
+                        node[ten] = gia_tri
+                    if muon[ten] is not None and gia_tri != muon[ten]:
+                        da_ghi[ten] = None
+                time.sleep(0.3)
         except Exception as loi:
-            print("Loi ghi LoRa:", loi)
-            ok = False
+            print("Loi LoRa:", loi)
+            tra_loi = False
+            time.sleep(1)
         with khoa:
-            node["lora_ok"] = ok and any(v is not None for v in muon.values())
-            node.update({ten: muon[ten] for ten in REG_DEN})
-        co_lenh_moi.wait(1.4)
+            node["lora_ok"] = tra_loi
+        co_lenh_moi.wait(1)
         co_lenh_moi.clear()
 
 
